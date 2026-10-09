@@ -1,6 +1,11 @@
 import { decorForTile, isTall, type DecorItem } from '../world/decor'
+import { hash2 } from '../world/noise2d'
 import { buildingRing } from '../world/surroundings'
 import type { IslandState } from '../sim/state'
+
+/** Share of the trees, bushes and rocks next to a building that are kept, and how much smaller they are drawn. */
+const FRONT_KEEP = 0.45
+const FRONT_SCALE = 0.8
 
 const HALF_W = 32
 const HALF_H = 16
@@ -38,6 +43,10 @@ function allFrontDecor(state: IslandState): FrontItem[] {
     const ty = (i - tx) / map.width
     for (const item of decorForTile(ctx, tx, ty)) {
       if (!isTall(item.kind)) continue
+      // Next to a building the forest is thinner and the trees smaller, so the building stays visible and clickable
+      // but some trees still stand in front of it.
+      if (hash2(tx * 3 + 1, ty * 5 + 2, state.id + 77) > FRONT_KEEP) continue
+      item.scale *= FRONT_SCALE
       items.push({ item, tx, ty, wx: (item.x - item.y) * HALF_W, wy: (item.x + item.y) * HALF_H, depth: item.x + item.y })
     }
   }
