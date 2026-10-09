@@ -69,7 +69,7 @@ function jobFor(row) {
     job.guide = `docs/vorlagen/buildings/${id === 'scaffold_2x2' ? 'house_pioneers' : id}_guide.png`
     job.prompt =
       `Turn the grey isometric block on the magenta background into ${desc}. ` +
-      'Keep the exact silhouette, size, position and 2:1 isometric perspective of the block: the building must stand on the diamond-shaped ground area, fill the block volume and not extend beyond it, a roof may overhang only slightly. Do not draw any outline, frame or hexagon around the building. ' +
+      'Keep the exact silhouette, size, position and 2:1 isometric perspective of the block: the building must stand on the diamond-shaped ground area, fill the block volume and not extend beyond it, a roof may overhang only slightly. Do not draw any outline, frame or hexagon around the building. Draw no smoke and no steam (it is added later by the game). ' +
       `${STYLE} Keep the flat magenta background (#FF00FF) completely empty and use no magenta or pink colour in the building. No text, no people.`
     if (FARMS.has(id)) {
       job.prompt =
@@ -98,6 +98,12 @@ function jobFor(row) {
     // The path shapes are drawn by the script from one generated cobblestone texture, so they always fit the tile.
     job.kind = 'road'
     job.derivedFrom = 'road_texture'
+  } else if (dir === 'decor') {
+    job.kind = 'decor'
+    job.prompt = fullPrompt
+  } else if (dir === 'ground') {
+    job.kind = 'ground'
+    job.prompt = fullPrompt
   } else if (dir === 'icons') {
     job.kind = 'icon'
     job.prompt = fullPrompt

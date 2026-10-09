@@ -36,3 +36,12 @@ Weitere Optionen: `--parallel 5`, `--provider flux-2-pro` (je nach Anbieter und 
   Eck, damit sie wie ein bestelltes Feld aussehen und nicht wie ein Modell auf einer Erdplatte.
 - **Symbole, Schiffe, Effekte**: frei erzeugt auf Magenta, freigestellt, auf die Größe eingepasst.
 - Rohbilder bleiben in `art-raw/` (nicht im Git). Fertige PNG liegen in `art/` (Master). Für das Spiel gibt `node scripts/assets/optimize.mjs` daraus kleine WebP-Dateien in `public/sprites/` und die App-Icons in `public/icons/` aus.
+
+## Natürliches Gelände (Dekor und Bodentexturen)
+- `art/decor/` enthält **einzelne Objekte** (Bäume, Kiefern, Palmen, Büsche, Felsen, Gräser, Blumen, Berggipfel in drei Größen und mit Schnee).
+  Das Spiel streut sie nach Rauschen (`src/world/decor.ts`) über den Boden: Haine und Lichtungen im Wald, Gipfel in der Mitte
+  eines Bergs groß und am Fuß klein, Palmen nur in warmen Klimazonen, Kiefern eher in kalten. Es gibt kein Kachelmuster mehr.
+- `art/ground/` enthält vier nahtlose **Bodentexturen** (Gras, Waldboden, Sand, Fels). Das Spiel malt den Boden pro Bildpunkt
+  aus zwei verschieden skalierten Schichten, wackelt die Kachelgrenzen mit Rauschen (natürliche Küsten und Ränder), mischt weich
+  zwischen Geländearten und setzt an der Küste Schaum und Flachwasser (`src/world/ground.ts`).
+- Die festen Geländekacheln `terrain/beach|grass|forest|mountain_*` werden nicht mehr benutzt (nur Wasser noch).

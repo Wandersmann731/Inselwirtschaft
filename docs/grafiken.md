@@ -1,6 +1,6 @@
 # Grafikliste für Inselwirtschaft
 
-Alle Grafiken, die das Spiel für Phase 7 braucht: **175 Dateien**. **Stand:** Alle Dateien sind bereits mit dem ImageGen-Werkzeug erzeugt und liegen fertig zugeschnitten in `art/` (erstellt mit `scripts/assets`, siehe dort die `README.md`). Der Einbau ins Spiel (Sprite-Atlas statt Platzhalterformen) ist Teil von Phase 7. Die Tabellen entstehen aus den Spieldaten (`scripts/make-asset-list.py`), die Datei `docs/grafiken.csv` enthält dieselbe Liste mit fertigen Prompts je Zeile.
+Alle Grafiken, die das Spiel für Phase 7 braucht: **212 Dateien**. **Stand:** Alle Dateien sind bereits mit dem ImageGen-Werkzeug erzeugt und liegen fertig zugeschnitten in `art/` (erstellt mit `scripts/assets`, siehe dort die `README.md`). Der Einbau ins Spiel (Sprite-Atlas statt Platzhalterformen) ist Teil von Phase 7. Die Tabellen entstehen aus den Spieldaten (`scripts/make-asset-list.py`), die Datei `docs/grafiken.csv` enthält dieselbe Liste mit fertigen Prompts je Zeile.
 
 ## 1. Wichtig vorab
 
@@ -24,6 +24,57 @@ Eine Kachel ist im doppelten Maßstab **128 x 64 px**. Ein Gebäude mit `w x h` 
 - Nicht quadratische Gebäude (3x4, 7x6, 6x5, 6x7, 8x6) liefere nur in **einer** Ausrichtung. Gedrehte Gebäude entstehen im Spiel durch Spiegeln.
 
 ## 3. Die Liste
+
+### Gelände-Dekor
+
+Einzelne Objekte (Bäume, Felsen, Berggipfel, Gras), die das Spiel zufällig über den Boden verteilt. So entstehen große, natürliche Flächen ohne Wiederholungsmuster. Der Fußpunkt des Objekts liegt unten in der Bildmitte. Jedes Objekt steht einzeln auf magenta Hintergrund, ohne Boden und ohne Schatten.
+
+| ID | Datei | Größe (px) | Raster | Beschreibung (englisch, für den Prompt) |
+|---|---|---|---|---|
+| `decor_tree_1` | `decor/tree_1.png` | 128x160 | - | single round-crowned broadleaf tree with a short trunk and dense green leaves, a different crown shape and shade of green each time, variant 1 of 4 |
+| `decor_tree_2` | `decor/tree_2.png` | 128x160 | - | single round-crowned broadleaf tree with a short trunk and dense green leaves, a different crown shape and shade of green each time, variant 2 of 4 |
+| `decor_tree_3` | `decor/tree_3.png` | 128x160 | - | single round-crowned broadleaf tree with a short trunk and dense green leaves, a different crown shape and shade of green each time, variant 3 of 4 |
+| `decor_tree_4` | `decor/tree_4.png` | 128x160 | - | single round-crowned broadleaf tree with a short trunk and dense green leaves, a different crown shape and shade of green each time, variant 4 of 4 |
+| `decor_pine_1` | `decor/pine_1.png` | 96x176 | - | single tall conifer (spruce) tree with layered dark green branches, a different shape each time, variant 1 of 3 |
+| `decor_pine_2` | `decor/pine_2.png` | 96x176 | - | single tall conifer (spruce) tree with layered dark green branches, a different shape each time, variant 2 of 3 |
+| `decor_pine_3` | `decor/pine_3.png` | 96x176 | - | single tall conifer (spruce) tree with layered dark green branches, a different shape each time, variant 3 of 3 |
+| `decor_palm_1` | `decor/palm_1.png` | 128x176 | - | single tropical palm tree with a slightly curved trunk and a fan of green fronds, variant 1 of 2 |
+| `decor_palm_2` | `decor/palm_2.png` | 128x176 | - | single tropical palm tree with a slightly curved trunk and a fan of green fronds, variant 2 of 2 |
+| `decor_bush_1` | `decor/bush_1.png` | 96x72 | - | single small green bush with a few berries or small flowers, variant 1 of 3 |
+| `decor_bush_2` | `decor/bush_2.png` | 96x72 | - | single small green bush with a few berries or small flowers, variant 2 of 3 |
+| `decor_bush_3` | `decor/bush_3.png` | 96x72 | - | single small green bush with a few berries or small flowers, variant 3 of 3 |
+| `decor_rock_1` | `decor/rock_1.png` | 96x72 | - | single grey boulder with a few small stones around it, variant 1 of 3 |
+| `decor_rock_2` | `decor/rock_2.png` | 96x72 | - | single grey boulder with a few small stones around it, variant 2 of 3 |
+| `decor_rock_3` | `decor/rock_3.png` | 96x72 | - | single grey boulder with a few small stones around it, variant 3 of 3 |
+| `decor_tuft_1` | `decor/tuft_1.png` | 48x40 | - | small tuft of tall green grass blades, variant 1 of 3 |
+| `decor_tuft_2` | `decor/tuft_2.png` | 48x40 | - | small tuft of tall green grass blades, variant 2 of 3 |
+| `decor_tuft_3` | `decor/tuft_3.png` | 48x40 | - | small tuft of tall green grass blades, variant 3 of 3 |
+| `decor_flowers_1` | `decor/flowers_1.png` | 64x48 | - | small patch of wildflowers in red, yellow and white with green leaves, variant 1 of 2 |
+| `decor_flowers_2` | `decor/flowers_2.png` | 64x48 | - | small patch of wildflowers in red, yellow and white with green leaves, variant 2 of 2 |
+| `decor_pebbles_1` | `decor/pebbles_1.png` | 64x40 | - | few smooth beach pebbles and one shell, variant 1 of 2 |
+| `decor_pebbles_2` | `decor/pebbles_2.png` | 64x40 | - | few smooth beach pebbles and one shell, variant 2 of 2 |
+| `decor_peak_small_1` | `decor/peak_small_1.png` | 192x160 | - | single small rocky grey mountain peak with jagged ridges and a few boulders at its base, variant 1 of 3 |
+| `decor_peak_small_2` | `decor/peak_small_2.png` | 192x160 | - | single small rocky grey mountain peak with jagged ridges and a few boulders at its base, variant 2 of 3 |
+| `decor_peak_small_3` | `decor/peak_small_3.png` | 192x160 | - | single small rocky grey mountain peak with jagged ridges and a few boulders at its base, variant 3 of 3 |
+| `decor_peak_medium_1` | `decor/peak_medium_1.png` | 288x240 | - | single medium rocky grey mountain peak with jagged ridges, sunlit left side and shadowed right side, boulders at its base, variant 1 of 3 |
+| `decor_peak_medium_2` | `decor/peak_medium_2.png` | 288x240 | - | single medium rocky grey mountain peak with jagged ridges, sunlit left side and shadowed right side, boulders at its base, variant 2 of 3 |
+| `decor_peak_medium_3` | `decor/peak_medium_3.png` | 288x240 | - | single medium rocky grey mountain peak with jagged ridges, sunlit left side and shadowed right side, boulders at its base, variant 3 of 3 |
+| `decor_peak_large_1` | `decor/peak_large_1.png` | 416x352 | - | single large rocky grey-brown mountain with several rocky summits and steep cliffs, sunlit left side and shadowed right side, boulders at its base, variant 1 of 3 |
+| `decor_peak_large_2` | `decor/peak_large_2.png` | 416x352 | - | single large rocky grey-brown mountain with several rocky summits and steep cliffs, sunlit left side and shadowed right side, boulders at its base, variant 2 of 3 |
+| `decor_peak_large_3` | `decor/peak_large_3.png` | 416x352 | - | single large rocky grey-brown mountain with several rocky summits and steep cliffs, sunlit left side and shadowed right side, boulders at its base, variant 3 of 3 |
+| `decor_peak_snow_1` | `decor/peak_snow_1.png` | 416x384 | - | single large grey mountain with a snow-covered summit and steep rocky cliffs, sunlit left side and shadowed right side, boulders at its base, variant 1 of 2 |
+| `decor_peak_snow_2` | `decor/peak_snow_2.png` | 416x384 | - | single large grey mountain with a snow-covered summit and steep rocky cliffs, sunlit left side and shadowed right side, boulders at its base, variant 2 of 2 |
+
+### Bodentexturen
+
+Nahtlose Draufsicht-Texturen für den Boden zwischen den Objekten. Sie müssen kontrastarm sein, damit man keine Wiederholung sieht.
+
+| ID | Datei | Größe (px) | Raster | Beschreibung (englisch, für den Prompt) |
+|---|---|---|---|---|
+| `ground_grass` | `ground/grass.png` | 512x512 | - | seamless top-down ground texture of lush green grass with soft lighter and darker patches and tiny blades, low contrast, no flowers, no objects, no large features |
+| `ground_forest` | `ground/forest.png` | 512x512 | - | seamless top-down ground texture of a dark green forest floor with moss, fallen leaves and soil, low contrast, no trees, no large features |
+| `ground_sand` | `ground/sand.png` | 512x512 | - | seamless top-down ground texture of pale beach sand with fine ripples, low contrast, no stones, no large features |
+| `ground_rock` | `ground/rock.png` | 512x512 | - | seamless top-down ground texture of grey-brown rocky ground with small stones and fine cracks, low contrast, no large features |
 
 ### Gelände
 
@@ -130,13 +181,13 @@ Alle Betriebe stehen auf 2x2 Kacheln. Felder und Plantagen sollen den Boden der 
 | `fishery` | `buildings/fishery.png` | 256x224 | 2x2 | fisherman's hut on the shore with drying racks of fish, nets and a small rowing boat |
 | `grain_farm` | `buildings/grain_farm.png` | 256x208 | 2x2 | flat golden wheat field filling the whole ground with a few haystacks and a small farmhouse at the back corner |
 | `mill` | `buildings/mill.png` | 256x272 | 2x2 | windmill with a timber tower, four sails and flour sacks at the door |
-| `bakery` | `buildings/bakery.png` | 256x240 | 2x2 | bakery with a brick oven, chimney with smoke, loaves of bread in the window |
+| `bakery` | `buildings/bakery.png` | 256x240 | 2x2 | bakery with a brick oven, a clearly visible brick chimney on the roof, loaves of bread in the window |
 | `stonemason` | `buildings/stonemason.png` | 256x224 | 2x2 | stonemason's yard with cut stone blocks, chisels and a small workshop |
-| `smelter` | `buildings/smelter.png` | 256x272 | 2x2 | ironworks smelter with a brick furnace, tall chimney with smoke and glowing molten metal |
-| `toolmaker` | `buildings/toolmaker.png` | 256x240 | 2x2 | tool smithy with an anvil, hammers and tools hanging on the wall, forge glow |
+| `smelter` | `buildings/smelter.png` | 256x272 | 2x2 | ironworks smelter with a brick furnace, a tall brick chimney on the roof and glowing molten metal |
+| `toolmaker` | `buildings/toolmaker.png` | 256x240 | 2x2 | tool smithy with an anvil, hammers and tools hanging on the wall, forge glow and a brick chimney on the roof |
 | `salt_mine` | `buildings/salt_mine.png` | 256x224 | 2x2 | salt mine with piles of white crystals, a wooden hoist and barrels |
 | `potato_farm` | `buildings/potato_farm.png` | 256x208 | 2x2 | flat ploughed potato field filling the whole ground: ridged brown soil with green potato plants in rows, a small barn at the back corner |
-| `distillery` | `buildings/distillery.png` | 256x240 | 2x2 | distillery with a copper still, oak barrels and a brick building |
+| `distillery` | `buildings/distillery.png` | 256x240 | 2x2 | distillery with a copper still, oak barrels and a brick building with a brick chimney on the roof |
 | `hops_farm` | `buildings/hops_farm.png` | 256x208 | 2x2 | flat hop yard filling the whole ground: rows of tall poles with green hop vines, a small drying barn at the back corner |
 | `sugar_plantation` | `buildings/sugar_plantation.png` | 256x208 | 2x2 | flat sugar cane plantation filling the whole ground with rows of tall green cane and a small press shed at the back corner |
 | `cattle_farm` | `buildings/cattle_farm.png` | 256x208 | 2x2 | flat green paddock filling the whole ground with a low wooden fence, a few brown cows and a small barn at the back corner |
@@ -148,7 +199,7 @@ Alle Betriebe stehen auf 2x2 Kacheln. Felder und Plantagen sollen den Boden der 
 | `indigo_farm` | `buildings/indigo_farm.png` | 256x208 | 2x2 | flat indigo field filling the whole ground: rows of blue-green indigo plants, a small dye shed at the back corner |
 | `dyer` | `buildings/dyer.png` | 256x240 | 2x2 | dyer's workshop with colourful blue and purple cloths drying on lines and dye vats |
 | `whaler` | `buildings/whaler.png` | 256x240 | 2x2 | whaling station on a cold shore with a whale-bone arch, boiling barrels and a harpoon boat |
-| `oil_boiler` | `buildings/oil_boiler.png` | 256x240 | 2x2 | oil boilery with big iron cauldrons, barrels, dark brick walls and smoke |
+| `oil_boiler` | `buildings/oil_boiler.png` | 256x240 | 2x2 | oil boilery with big iron cauldrons, barrels, dark brick walls and a tall brick chimney on the roof |
 | `vineyard` | `buildings/vineyard.png` | 256x208 | 2x2 | flat vineyard filling the whole ground: rows of grape vines on wires, a small press house at the back corner |
 | `winery` | `buildings/winery.png` | 256x240 | 2x2 | winery with big wooden presses and wine barrels in a stone building |
 | `gold_mine` | `buildings/gold_mine.png` | 256x224 | 2x2 | gold mine entrance with timber supports, carts full of gold ore and gleaming nuggets |

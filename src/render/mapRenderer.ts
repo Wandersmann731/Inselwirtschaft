@@ -17,8 +17,9 @@ import { drawBuildings, drawRoads, type TileRange } from './buildingRenderer'
 import { OverlayRenderer } from './overlayRenderer'
 import { sprites } from './sprites'
 import { WaterPattern } from './water'
-import { CHUNK_PX_H, CHUNK_PX_W, TerrainCache, chunkOrigin } from './terrainCache'
-import { SEA_COLOR, diamondPath } from './terrainStyle'
+import { groundTextures } from './groundTextures'
+import { CHUNK_H, CHUNK_W, TerrainCache } from './terrainCache'
+import { SEA_COLOR, diamondPath, paintTile } from './terrainStyle'
 
 const SELECTION_COLOR = '#ffd23f'
 const ZOOM_LIMITS = { min: world.minZoom, max: world.maxZoom }
@@ -163,8 +164,8 @@ export class MapRenderer {
     ctx.setTransform(k, 0, 0, k, dpr * (viewport.width / 2 - this.camera.x * zoom), dpr * (viewport.height / 2 - this.camera.y * zoom))
     const range = this.visibleTileRange(map)
     this.drawWater(now)
-    this.drawTerrain(range)
     const state = this.getState()
+    this.drawTerrain(map, state)
     drawRoads(ctx, state, range)
     drawBuildings(ctx, state, range, now)
     this.overlay.draw(ctx, state, this.getTool())
@@ -202,16 +203,57 @@ export class MapRenderer {
     }
   }
 
-  private drawTerrain({ minI, maxI, minJ, maxJ }: TileRange): void {
-    const size = world.chunkSize
+  /**
+   * The land: rectangles of ground and scattered objects (see terrainChunk.ts). Rectangles that are not made yet
+   * are shown as flat coloured tiles for a moment.
+   */
+  private drawTerrain(map: GameMap, state: IslandState): void {
+    const rect = visibleWorldRect(this.camera, this.viewport)
+    const textures = groundTextures()
+    const bounds = mapBounds(map)
+    const wanted: { rx: number; ry: number }[] = []
+    for (let ry = Math.floor(rect.minY / CHUNK_H); ry <= Math.floor(rect.maxY / CHUNK_H); ry++) {
+      for (let rx = Math.floor(rect.minX / CHUNK_W); rx <= Math.floor(rect.maxX / CHUNK_W); rx++) {
+        const x0 = rx * CHUNK_W
+        const y0 = ry * CHUNK_H
+        if (x0 > bounds.maxX + 150 || x0 + CHUNK_W < bounds.minX - 150 || y0 > bounds.maxY + 60 || y0 + CHUNK_H < bounds.minY - 300) continue
+        wanted.push({ rx, ry })
+      }
+    }
+
+    const request = textures
+      ? { map, seed: state.id, climate: state.climate, occupancy: state.occupancy, roads: state.roads, textures }
+      : null
+    if (request) {
+      for (const { rx, ry } of wanted) this.cache.request(rx, ry, request)
+      this.cache.process(10)
+    }
+
     this.chunksDrawn = 0
-    for (let cy = Math.floor(minJ / size); cy <= Math.floor(maxJ / size); cy++) {
-      for (let cx = Math.floor(minI / size); cx <= Math.floor(maxI / size); cx++) {
-        const chunk = this.cache.getChunk(cx, cy)
-        if (!chunk) continue
-        const origin = chunkOrigin(cx, cy)
-        this.ctx.drawImage(chunk, origin.x, origin.y, CHUNK_PX_W, CHUNK_PX_H)
+    for (const { rx, ry } of wanted) {
+      const entry = request ? this.cache.get(rx, ry) : null
+      if (entry?.canvas) {
+        this.ctx.drawImage(entry.canvas, rx * CHUNK_W, ry * CHUNK_H, CHUNK_W, CHUNK_H)
         this.chunksDrawn++
+      }
+      if (!entry?.ready) this.drawFlatTiles(map, rx, ry)
+    }
+  }
+
+  /** Coloured diamonds for the tiles of one rectangle, until its real picture exists. */
+  private drawFlatTiles(map: GameMap, rx: number, ry: number): void {
+    const x0 = rx * CHUNK_W
+    const y0 = ry * CHUNK_H
+    const corners = [[x0, y0], [x0 + CHUNK_W, y0], [x0, y0 + CHUNK_H], [x0 + CHUNK_W, y0 + CHUNK_H]].map(([wx, wy]) => worldToTile(wx, wy))
+    const minX = Math.max(0, Math.floor(Math.min(...corners.map((c) => c.x))))
+    const maxX = Math.min(map.width - 1, Math.ceil(Math.max(...corners.map((c) => c.x))))
+    const minY = Math.max(0, Math.floor(Math.min(...corners.map((c) => c.y))))
+    const maxY = Math.min(map.height - 1, Math.ceil(Math.max(...corners.map((c) => c.y))))
+    for (let ty = minY; ty <= maxY; ty++) {
+      for (let tx = minX; tx <= maxX; tx++) {
+        const top = tileToWorld(tx, ty)
+        if (top.x < x0 || top.x >= x0 + CHUNK_W || top.y < y0 || top.y >= y0 + CHUNK_H) continue
+        paintTile(this.ctx, map.tiles[ty * map.width + tx], top.x, top.y)
       }
     }
   }

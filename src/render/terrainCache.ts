@@ -1,87 +1,100 @@
-import { world } from '../data'
+import type { GroundTextures } from '../world/ground'
 import type { GameMap } from '../world/terrain'
-import { Terrain } from '../world/terrain'
-import { HALF_H, HALF_W } from './iso'
-import { paintTile } from './terrainStyle'
+import { CHUNK_H, CHUNK_W, chunkTiles, layoutSignature, renderChunk } from './terrainChunk'
 
-const CHUNK = world.chunkSize
-export const CHUNK_PX_W = CHUNK * world.tileWidth
-export const CHUNK_PX_H = CHUNK * world.tileHeight
+interface Entry {
+  tiles: number[]
+  canvas: HTMLCanvasElement | null
+  /** True once a picture was made (it may be null for rectangles without land). */
+  ready: boolean
+  signature: number
+  queued: boolean
+}
 
-/** World position of the top-left corner of a chunk's bitmap. */
-export function chunkOrigin(cx: number, cy: number): { x: number; y: number } {
-  const i0 = cx * CHUNK
-  const j0 = cy * CHUNK
-  return { x: (i0 - j0 - CHUNK) * HALF_W, y: (i0 + j0) * HALF_H }
+export interface ChunkRequest {
+  map: GameMap
+  seed: number
+  climate: string
+  occupancy: number[]
+  roads: number[]
+  textures: GroundTextures
 }
 
 /**
- * Caches static terrain as offscreen bitmaps, one per chunk of chunkSize x chunkSize
- * tiles, created when first visible. Chunks that are only water are stored as null.
- * Least recently used chunks are dropped once maxCachedChunks is exceeded.
+ * Keeps the pictures of the terrain rectangles. They are made a few at a time, so the game does not stall when
+ * you scroll or zoom out, and made again when a building or road changes on their tiles.
  */
 export class TerrainCache {
-  private chunks = new Map<number, HTMLCanvasElement | null>()
+  private entries = new Map<string, Entry>()
+  private queue: { rx: number; ry: number }[] = []
   private map: GameMap | null = null
   private scale = 1
+  private latest: ChunkRequest | null = null
 
-  /** Drops everything if the map object or the bitmap scale changed. */
+  /** Drops everything if the map or the picture scale changed. */
   prepare(map: GameMap, scale: number): void {
     if (map !== this.map || scale !== this.scale) {
-      this.chunks.clear()
+      this.entries.clear()
+      this.queue = []
       this.map = map
       this.scale = scale
     }
   }
 
-  getChunk(cx: number, cy: number): HTMLCanvasElement | null {
-    const map = this.map
-    if (!map) return null
-    const key = cy * Math.ceil(map.width / CHUNK) + cx
-    if (this.chunks.has(key)) {
-      const hit = this.chunks.get(key) ?? null
-      this.chunks.delete(key)
-      this.chunks.set(key, hit)
-      return hit
+  /** Asks for a rectangle. Returns what can be drawn now (null while it is being made) and whether a picture exists. */
+  request(rx: number, ry: number, request: ChunkRequest): { canvas: HTMLCanvasElement | null; ready: boolean; tiles: number[] } {
+    this.latest = request
+    const key = `${rx},${ry}`
+    let entry = this.entries.get(key)
+    if (!entry) {
+      entry = { tiles: chunkTiles(request.map, rx, ry), canvas: null, ready: false, signature: 0, queued: false }
+    } else {
+      this.entries.delete(key) // move to the end: most recently used
     }
-    const canvas = this.render(map, cx, cy)
-    this.chunks.set(key, canvas)
-    if (this.chunks.size > world.maxCachedChunks) {
-      this.chunks.delete(this.chunks.keys().next().value!)
+    this.entries.set(key, entry)
+    const signature = layoutSignature(entry.tiles, request.occupancy, request.roads)
+    if ((!entry.ready || signature !== entry.signature) && !entry.queued) {
+      entry.queued = true
+      this.queue.push({ rx, ry })
     }
-    return canvas
+    this.evict()
+    return { canvas: entry.canvas, ready: entry.ready, tiles: entry.tiles }
   }
 
-  private render(map: GameMap, cx: number, cy: number): HTMLCanvasElement | null {
-    const i0 = cx * CHUNK
-    const j0 = cy * CHUNK
-    const i1 = Math.min(map.width, i0 + CHUNK)
-    const j1 = Math.min(map.height, j0 + CHUNK)
-    let hasLand = false
-    for (let j = j0; j < j1 && !hasLand; j++) {
-      for (let i = i0; i < i1; i++) {
-        if (map.tiles[j * map.width + i] !== Terrain.Water) {
-          hasLand = true
-          break
-        }
-      }
-    }
-    if (!hasLand) return null
+  /** The current state of a rectangle without asking for it. */
+  get(rx: number, ry: number): { canvas: HTMLCanvasElement | null; ready: boolean; tiles: number[] } | null {
+    const entry = this.entries.get(`${rx},${ry}`)
+    return entry ? { canvas: entry.canvas, ready: entry.ready, tiles: entry.tiles } : null
+  }
 
-    const canvas = document.createElement('canvas')
-    canvas.width = CHUNK_PX_W * this.scale
-    canvas.height = CHUNK_PX_H * this.scale
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return null
-    ctx.scale(this.scale, this.scale)
-    const origin = chunkOrigin(cx, cy)
-    for (let j = j0; j < j1; j++) {
-      for (let i = i0; i < i1; i++) {
-        const terrain = map.tiles[j * map.width + i]
-        if (terrain === Terrain.Water) continue
-        paintTile(ctx, terrain, (i - j) * HALF_W - origin.x, (i + j) * HALF_H - origin.y, i, j)
-      }
+  /** Makes queued rectangles until the time budget is used up. */
+  process(budgetMs: number): void {
+    const started = performance.now()
+    while (this.queue.length > 0 && performance.now() - started < budgetMs) {
+      const job = this.queue.shift()!
+      const entry = this.entries.get(`${job.rx},${job.ry}`)
+      const request = this.latest
+      if (!entry || !request) continue
+      entry.canvas = renderChunk(job.rx, job.ry, entry.tiles, request, this.scale)
+      entry.signature = layoutSignature(entry.tiles, request.occupancy, request.roads)
+      entry.ready = true
+      entry.queued = false
     }
-    return canvas
+  }
+
+  /** Rectangles waiting to be made. */
+  get pending(): number {
+    return this.queue.length
+  }
+
+  private evict(): void {
+    const limit = this.scale > 1 ? 28 : 80
+    while (this.entries.size > limit) {
+      const oldest = this.entries.keys().next().value!
+      this.entries.delete(oldest)
+    }
+    this.queue = this.queue.filter((job) => this.entries.has(`${job.rx},${job.ry}`))
   }
 }
+
+export { CHUNK_H, CHUNK_W }
