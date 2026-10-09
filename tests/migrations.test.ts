@@ -1,8 +1,26 @@
 import { describe, expect, it } from 'vitest'
 import { migrateState } from '../src/sim/migrations'
+import { generateIsland } from '../src/world/islandGenerator'
 import { CURRENT_SAVE_VERSION, createInitialState } from '../src/sim/state'
 
 describe('migrateState', () => {
+  it('upgrades a version 1 save by generating the island from its seed', () => {
+    const v1 = {
+      version: 1,
+      seed: 5,
+      rngState: 5,
+      tick: 40,
+      speed: 1,
+      coins: 9000,
+      map: { width: 0, height: 0, tiles: [] },
+    }
+    const migrated = migrateState(v1)
+    expect(migrated.version).toBe(CURRENT_SAVE_VERSION)
+    expect(migrated.tick).toBe(40)
+    expect(migrated.coins).toBe(9000)
+    expect(migrated.map).toEqual(generateIsland(5))
+  })
+
   it('returns a current save unchanged', () => {
     const state = createInitialState(1)
     expect(migrateState(JSON.parse(JSON.stringify(state)))).toEqual(state)
