@@ -1020,3 +1020,13 @@ body,
   font-size: 13px;
   font-style: italic;
 }
+
+.hud-material {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.hud-material.low {
+  color: #ff6b5b;
+}

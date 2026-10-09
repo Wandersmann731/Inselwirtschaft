@@ -57,6 +57,7 @@ export function App({ loop, onQuit }: { loop: GameLoop; onQuit: () => void }) {
         highestTier={state.highestTier}
         speed={state.speed}
         islandName={island.name}
+        stock={island.stock}
         onSpeedChange={(speed) => loop.setSpeed(speed)}
         onOpenMenu={() => setShowMenu(true)}
         debug={debug}
