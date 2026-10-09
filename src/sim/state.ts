@@ -6,7 +6,7 @@ import type { GameMap } from '../world/terrain'
 export type { GameMap }
 
 /** Bump when the GameState shape changes and add a migration in migrations.ts. */
-export const CURRENT_SAVE_VERSION = 9
+export const CURRENT_SAVE_VERSION = 10
 
 export type GameSpeed = number
 
@@ -37,6 +37,8 @@ export interface ProductionState {
   utilization: number
   inputs: Record<string, number>
   output: number
+  /** Byproducts waiting to be sent to the store, by good id. */
+  extra: Record<string, number>
   status: ProductionStatus
   shipments: Shipment[]
 }

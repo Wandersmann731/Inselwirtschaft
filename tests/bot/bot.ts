@@ -203,8 +203,8 @@ export class Bot {
     const rest = Math.max(0, foodDemand * 1.2 - fishing)
     const bakeries = Math.ceil(rest / perCycle('bakery'))
     return [
-      { type: 'grain_farm', want: Math.ceil(rest / perCycle('mill')) },
-      { type: 'mill', want: bakeries },
+      { type: 'grain_farm', want: Math.ceil(rest / perCycle('grain_farm')) },
+      { type: 'mill', want: Math.ceil(rest / perCycle('mill')) },
       { type: 'bakery', want: bakeries },
     ]
   }
@@ -219,8 +219,8 @@ export class Bot {
     const makers: Record<string, string[]> = {
       food: ['fishery', 'grain_farm', 'mill', 'bakery'],
       cloth: ['sheep_farm', 'weaver'],
-      alcohol: ['potato_farm', 'distillery'],
-      salt: ['salt_mine'],
+      alcohol: ['potato_farm'],
+      salt: ['salt_mine', 'saltworks'],
     }
     for (const [need, types] of Object.entries(makers)) {
       const values = level[need]
@@ -287,8 +287,8 @@ export class Bot {
       { type: 'sheep_farm', want: Math.max(1, Math.ceil(((demand.cloth ?? 0) * 1.2) / perCycle('sheep_farm'))) },
       { type: 'weaver', want: Math.max(1, Math.ceil(((demand.cloth ?? 0) * 1.2) / perCycle('weaver'))) },
       { type: 'potato_farm', want: settlers ? Math.max(1, Math.ceil(((demand.alcohol ?? 0) * 1.2) / perCycle('potato_farm'))) : 0 },
-      { type: 'distillery', want: settlers ? Math.max(1, Math.ceil(((demand.alcohol ?? 0) * 1.2) / perCycle('distillery'))) : 0 },
       { type: 'salt_mine', want: settlers ? Math.max(1, Math.ceil(((demand.salt ?? 0) * 1.2) / perCycle('salt_mine'))) : 0 },
+      { type: 'saltworks', want: settlers ? Math.max(1, Math.ceil(((demand.salt ?? 0) * 1.2) / perCycle('saltworks'))) : 0 },
       { type: 'quarry', want: needBricks ? 1 + Math.floor(n / 30) : 0 },
       { type: 'stonemason', want: needBricks ? 1 + Math.floor(n / 30) : 0 },
     ]

@@ -37,9 +37,9 @@ function parseCsv(text) {
 }
 
 /** Field buildings: flat ground with a small building, not a raised block. */
-const WORKSHOPS = new Set(['weaver', 'bakery', 'mill', 'stonemason', 'smelter', 'toolmaker', 'distillery', 'tannery', 'tobacco_factory', 'dyer', 'oil_boiler', 'winery', 'goldsmith', 'market_house'])
-const PLOTS = new Set(['forester', 'fishery', 'quarry', 'ore_mine', 'salt_mine', 'gold_mine', 'gem_mine', ...WORKSHOPS])
-const MINES = new Set(['quarry', 'ore_mine', 'salt_mine', 'gold_mine', 'gem_mine'])
+const WORKSHOPS = new Set(['brewery', 'saltworks', 'butcher', 'hunting_lodge', 'marble_mason', 'weaver', 'bakery', 'mill', 'stonemason', 'smelter', 'toolmaker', 'distillery', 'tannery', 'tobacco_factory', 'dyer', 'oil_boiler', 'winery', 'goldsmith', 'market_house'])
+const PLOTS = new Set(['forester', 'fishery', 'quarry', 'ore_mine', 'salt_mine', 'gold_mine', 'gem_mine', 'marble_quarry', ...WORKSHOPS])
+const MINES = new Set(['quarry', 'ore_mine', 'salt_mine', 'gold_mine', 'gem_mine', 'marble_quarry'])
 const FARMS = new Set([
   'cotton_plantation', 'sheep_farm', 'potato_farm', 'tobacco_plantation', 'hops_farm', 'spice_plantation',
   'grain_farm', 'sugar_plantation', 'vineyard', 'silk_plantation', 'indigo_farm', 'cattle_farm',

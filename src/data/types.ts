@@ -102,6 +102,8 @@ export interface BuildingDef {
   kind?: 'road'
   inputs?: BuildingInput[]
   output?: { good: string; amount: number }
+  /** Goods that come out in addition to the output each cycle (the butcher also makes hides). */
+  byproducts?: { good: string; amount: number }[]
   cycleTicks?: number
   needsRoad?: boolean
 }

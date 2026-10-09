@@ -1,6 +1,6 @@
 # Grafikliste für Inselwirtschaft
 
-Alle Grafiken, die das Spiel für Phase 7 braucht: **389 Dateien**. **Stand:** Alle Dateien sind bereits mit dem ImageGen-Werkzeug erzeugt und liegen fertig zugeschnitten in `art/` (erstellt mit `scripts/assets`, siehe dort die `README.md`). Der Einbau ins Spiel (Sprite-Atlas statt Platzhalterformen) ist Teil von Phase 7. Die Tabellen entstehen aus den Spieldaten (`scripts/make-asset-list.py`), die Datei `docs/grafiken.csv` enthält dieselbe Liste mit fertigen Prompts je Zeile.
+Alle Grafiken, die das Spiel für Phase 7 braucht: **410 Dateien**. **Stand:** Alle Dateien sind bereits mit dem ImageGen-Werkzeug erzeugt und liegen fertig zugeschnitten in `art/` (erstellt mit `scripts/assets`, siehe dort die `README.md`). Der Einbau ins Spiel (Sprite-Atlas statt Platzhalterformen) ist Teil von Phase 7. Die Tabellen entstehen aus den Spieldaten (`scripts/make-asset-list.py`), die Datei `docs/grafiken.csv` enthält dieselbe Liste mit fertigen Prompts je Zeile.
 
 ## 1. Wichtig vorab
 
@@ -264,11 +264,15 @@ Alle Betriebe stehen auf 2x2 Kacheln. Felder und Plantagen sollen den Boden der 
 | `smelter` | `buildings/smelter.png` | 256x272 | 2x2 | ironworks smelter with a brick furnace, a tall brick chimney on the roof and glowing molten metal |
 | `toolmaker` | `buildings/toolmaker.png` | 256x240 | 2x2 | tool smithy with an anvil, hammers and tools hanging on the wall, forge glow and a brick chimney on the roof |
 | `salt_mine` | `buildings/salt_mine.png` | 256x224 | 2x2 | salt mine with piles of white crystals, a wooden hoist and barrels |
+| `saltworks` | `buildings/saltworks.png` | 256x224 | 2x2 | salt works: long shallow evaporation pans with white salt crystals, a low wooden boiling house with a chimney, salt sacks |
 | `potato_farm` | `buildings/potato_farm.png` | 256x208 | 2x2 | flat ploughed potato field filling the whole ground: ridged brown soil with green potato plants in rows, a small barn at the back corner |
 | `distillery` | `buildings/distillery.png` | 256x240 | 2x2 | distillery with a copper still, oak barrels and a brick building with a brick chimney on the roof |
+| `brewery` | `buildings/brewery.png` | 256x240 | 2x2 | brewery with a big copper brewing kettle, stacked oak barrels, a brick chimney on the roof and sacks of hops |
 | `hops_farm` | `buildings/hops_farm.png` | 256x208 | 2x2 | flat hop yard filling the whole ground: rows of tall poles with green hop vines, a small drying barn at the back corner |
 | `sugar_plantation` | `buildings/sugar_plantation.png` | 256x208 | 2x2 | flat sugar cane plantation filling the whole ground with rows of tall green cane and a small press shed at the back corner |
 | `cattle_farm` | `buildings/cattle_farm.png` | 256x208 | 2x2 | flat green paddock filling the whole ground with a low wooden fence, a few brown cows and a small barn at the back corner |
+| `butcher` | `buildings/butcher.png` | 256x224 | 2x2 | butcher's shop with hanging meat and sausages, a wooden chopping block, a stone cellar entrance and a cattle pen at the side |
+| `hunting_lodge` | `buildings/hunting_lodge.png` | 256x224 | 2x2 | hunter's lodge: small timber hut with antlers over the door, drying hides on a frame, a stack of firewood and a bow |
 | `tannery` | `buildings/tannery.png` | 256x224 | 2x2 | tannery with hides stretched on frames and wooden tanning vats |
 | `tobacco_plantation` | `buildings/tobacco_plantation.png` | 256x208 | 2x2 | flat tobacco field filling the whole ground: rows of broad-leaf tobacco plants, a small wooden drying barn at the back corner |
 | `tobacco_factory` | `buildings/tobacco_factory.png` | 256x240 | 2x2 | tobacco manufactory: workshop with hanging leaves and rolling tables |
@@ -279,9 +283,10 @@ Alle Betriebe stehen auf 2x2 Kacheln. Felder und Plantagen sollen den Boden der 
 | `whaler` | `buildings/whaler.png` | 256x240 | 2x2 | whaling station on a cold shore with a whale-bone arch, boiling barrels and a harpoon boat |
 | `oil_boiler` | `buildings/oil_boiler.png` | 256x240 | 2x2 | oil boilery with big iron cauldrons, barrels, dark brick walls and a tall brick chimney on the roof |
 | `vineyard` | `buildings/vineyard.png` | 256x208 | 2x2 | flat vineyard filling the whole ground: rows of grape vines on wires, a small press house at the back corner |
-| `winery` | `buildings/winery.png` | 256x240 | 2x2 | winery with big wooden presses and wine barrels in a stone building |
 | `gold_mine` | `buildings/gold_mine.png` | 256x224 | 2x2 | gold mine entrance with timber supports, carts full of gold ore and gleaming nuggets |
 | `gem_mine` | `buildings/gem_mine.png` | 256x224 | 2x2 | gemstone mine with blue and red crystals and a timber entrance |
+| `marble_quarry` | `buildings/marble_quarry.png` | 256x240 | 2x2 | marble quarry cut into a white rocky slope with big pale marble blocks, a wooden crane and a ramp |
+| `marble_mason` | `buildings/marble_mason.png` | 256x240 | 2x2 | marble mason's workshop with a stone saw, pale marble slabs and half carved statues, a stone building with a tile roof |
 | `goldsmith` | `buildings/goldsmith.png` | 256x240 | 2x2 | goldsmith's workshop with a display of gold jewellery and a small furnace |
 | `cotton_plantation_2` | `buildings/cotton_plantation_2.png` | 256x208 | 2x2 | flat cotton field filling the whole ground: neat rows of cotton plants with white cotton bolls, a small wooden storage shed at the back corner (a different look: variant 2 of 4, change the colours, the layout of rows and the building style) |
 | `cotton_plantation_3` | `buildings/cotton_plantation_3.png` | 256x208 | 2x2 | flat cotton field filling the whole ground: neat rows of cotton plants with white cotton bolls, a small wooden storage shed at the back corner (a different look: variant 3 of 4, change the colours, the layout of rows and the building style) |
@@ -340,6 +345,24 @@ Alle Betriebe stehen auf 2x2 Kacheln. Felder und Plantagen sollen den Boden der 
 | `gem_mine_2` | `buildings/gem_mine_2.png` | 256x224 | 2x2 | gemstone mine with blue and red crystals and a timber entrance (a different look: variant 2 of 4, change the colours, the layout of rows and the building style) |
 | `gem_mine_3` | `buildings/gem_mine_3.png` | 256x224 | 2x2 | gemstone mine with blue and red crystals and a timber entrance (a different look: variant 3 of 4, change the colours, the layout of rows and the building style) |
 | `gem_mine_4` | `buildings/gem_mine_4.png` | 256x224 | 2x2 | gemstone mine with blue and red crystals and a timber entrance (a different look: variant 4 of 4, change the colours, the layout of rows and the building style) |
+| `marble_quarry_2` | `buildings/marble_quarry_2.png` | 256x240 | 2x2 | marble quarry cut into a white rocky slope with big pale marble blocks, a wooden crane and a ramp (a different look: variant 2 of 4, change the colours, the layout of rows and the building style) |
+| `marble_quarry_3` | `buildings/marble_quarry_3.png` | 256x240 | 2x2 | marble quarry cut into a white rocky slope with big pale marble blocks, a wooden crane and a ramp (a different look: variant 3 of 4, change the colours, the layout of rows and the building style) |
+| `marble_quarry_4` | `buildings/marble_quarry_4.png` | 256x240 | 2x2 | marble quarry cut into a white rocky slope with big pale marble blocks, a wooden crane and a ramp (a different look: variant 4 of 4, change the colours, the layout of rows and the building style) |
+| `brewery_2` | `buildings/brewery_2.png` | 256x240 | 2x2 | brewery with a big copper brewing kettle, stacked oak barrels, a brick chimney on the roof and sacks of hops (a different look: variant 2 of 4, change the colours, the layout of rows and the building style) |
+| `brewery_3` | `buildings/brewery_3.png` | 256x240 | 2x2 | brewery with a big copper brewing kettle, stacked oak barrels, a brick chimney on the roof and sacks of hops (a different look: variant 3 of 4, change the colours, the layout of rows and the building style) |
+| `brewery_4` | `buildings/brewery_4.png` | 256x240 | 2x2 | brewery with a big copper brewing kettle, stacked oak barrels, a brick chimney on the roof and sacks of hops (a different look: variant 4 of 4, change the colours, the layout of rows and the building style) |
+| `saltworks_2` | `buildings/saltworks_2.png` | 256x224 | 2x2 | salt works: long shallow evaporation pans with white salt crystals, a low wooden boiling house with a chimney, salt sacks (a different look: variant 2 of 4, change the colours, the layout of rows and the building style) |
+| `saltworks_3` | `buildings/saltworks_3.png` | 256x224 | 2x2 | salt works: long shallow evaporation pans with white salt crystals, a low wooden boiling house with a chimney, salt sacks (a different look: variant 3 of 4, change the colours, the layout of rows and the building style) |
+| `saltworks_4` | `buildings/saltworks_4.png` | 256x224 | 2x2 | salt works: long shallow evaporation pans with white salt crystals, a low wooden boiling house with a chimney, salt sacks (a different look: variant 4 of 4, change the colours, the layout of rows and the building style) |
+| `butcher_2` | `buildings/butcher_2.png` | 256x224 | 2x2 | butcher's shop with hanging meat and sausages, a wooden chopping block, a stone cellar entrance and a cattle pen at the side (a different look: variant 2 of 4, change the colours, the layout of rows and the building style) |
+| `butcher_3` | `buildings/butcher_3.png` | 256x224 | 2x2 | butcher's shop with hanging meat and sausages, a wooden chopping block, a stone cellar entrance and a cattle pen at the side (a different look: variant 3 of 4, change the colours, the layout of rows and the building style) |
+| `butcher_4` | `buildings/butcher_4.png` | 256x224 | 2x2 | butcher's shop with hanging meat and sausages, a wooden chopping block, a stone cellar entrance and a cattle pen at the side (a different look: variant 4 of 4, change the colours, the layout of rows and the building style) |
+| `hunting_lodge_2` | `buildings/hunting_lodge_2.png` | 256x224 | 2x2 | hunter's lodge: small timber hut with antlers over the door, drying hides on a frame, a stack of firewood and a bow (a different look: variant 2 of 4, change the colours, the layout of rows and the building style) |
+| `hunting_lodge_3` | `buildings/hunting_lodge_3.png` | 256x224 | 2x2 | hunter's lodge: small timber hut with antlers over the door, drying hides on a frame, a stack of firewood and a bow (a different look: variant 3 of 4, change the colours, the layout of rows and the building style) |
+| `hunting_lodge_4` | `buildings/hunting_lodge_4.png` | 256x224 | 2x2 | hunter's lodge: small timber hut with antlers over the door, drying hides on a frame, a stack of firewood and a bow (a different look: variant 4 of 4, change the colours, the layout of rows and the building style) |
+| `marble_mason_2` | `buildings/marble_mason_2.png` | 256x240 | 2x2 | marble mason's workshop with a stone saw, pale marble slabs and half carved statues, a stone building with a tile roof (a different look: variant 2 of 4, change the colours, the layout of rows and the building style) |
+| `marble_mason_3` | `buildings/marble_mason_3.png` | 256x240 | 2x2 | marble mason's workshop with a stone saw, pale marble slabs and half carved statues, a stone building with a tile roof (a different look: variant 3 of 4, change the colours, the layout of rows and the building style) |
+| `marble_mason_4` | `buildings/marble_mason_4.png` | 256x240 | 2x2 | marble mason's workshop with a stone saw, pale marble slabs and half carved statues, a stone building with a tile roof (a different look: variant 4 of 4, change the colours, the layout of rows and the building style) |
 | `weaver_2` | `buildings/weaver_2.png` | 256x240 | 2x2 | weaver's workshop with a big wooden loom visible, cloth drying on frames (a different look: variant 2 of 4, change the colours, the layout of rows and the building style) |
 | `weaver_3` | `buildings/weaver_3.png` | 256x240 | 2x2 | weaver's workshop with a big wooden loom visible, cloth drying on frames (a different look: variant 3 of 4, change the colours, the layout of rows and the building style) |
 | `weaver_4` | `buildings/weaver_4.png` | 256x240 | 2x2 | weaver's workshop with a big wooden loom visible, cloth drying on frames (a different look: variant 4 of 4, change the colours, the layout of rows and the building style) |
@@ -373,9 +396,6 @@ Alle Betriebe stehen auf 2x2 Kacheln. Felder und Plantagen sollen den Boden der 
 | `oil_boiler_2` | `buildings/oil_boiler_2.png` | 256x240 | 2x2 | oil boilery with big iron cauldrons, barrels, dark brick walls and a tall brick chimney on the roof (a different look: variant 2 of 4, change the colours, the layout of rows and the building style) |
 | `oil_boiler_3` | `buildings/oil_boiler_3.png` | 256x240 | 2x2 | oil boilery with big iron cauldrons, barrels, dark brick walls and a tall brick chimney on the roof (a different look: variant 3 of 4, change the colours, the layout of rows and the building style) |
 | `oil_boiler_4` | `buildings/oil_boiler_4.png` | 256x240 | 2x2 | oil boilery with big iron cauldrons, barrels, dark brick walls and a tall brick chimney on the roof (a different look: variant 4 of 4, change the colours, the layout of rows and the building style) |
-| `winery_2` | `buildings/winery_2.png` | 256x240 | 2x2 | winery with big wooden presses and wine barrels in a stone building (a different look: variant 2 of 4, change the colours, the layout of rows and the building style) |
-| `winery_3` | `buildings/winery_3.png` | 256x240 | 2x2 | winery with big wooden presses and wine barrels in a stone building (a different look: variant 3 of 4, change the colours, the layout of rows and the building style) |
-| `winery_4` | `buildings/winery_4.png` | 256x240 | 2x2 | winery with big wooden presses and wine barrels in a stone building (a different look: variant 4 of 4, change the colours, the layout of rows and the building style) |
 | `goldsmith_2` | `buildings/goldsmith_2.png` | 256x240 | 2x2 | goldsmith's workshop with a display of gold jewellery and a small furnace (a different look: variant 2 of 4, change the colours, the layout of rows and the building style) |
 | `goldsmith_3` | `buildings/goldsmith_3.png` | 256x240 | 2x2 | goldsmith's workshop with a display of gold jewellery and a small furnace (a different look: variant 3 of 4, change the colours, the layout of rows and the building style) |
 | `goldsmith_4` | `buildings/goldsmith_4.png` | 256x240 | 2x2 | goldsmith's workshop with a display of gold jewellery and a small furnace (a different look: variant 4 of 4, change the colours, the layout of rows and the building style) |
@@ -398,6 +418,10 @@ Alle Symbole 128 x 128 px, später im Spiel etwa 32 bis 48 px groß: einfache, k
 | ID | Datei | Größe (px) | Raster | Beschreibung (englisch, für den Prompt) |
 |---|---|---|---|---|
 | `good_tools` | `icons/goods/tools.png` | 128x128 | - | pile of hammer, saw and pickaxe (Werkzeug) |
+| `good_saltstone` | `icons/goods/saltstone.png` | 128x128 | - | heap of rough grey-white rock salt chunks (Salzstein) |
+| `good_marble_stone` | `icons/goods/marble_stone.png` | 128x128 | - | rough block of pale grey marble with veins (Marmorstein) |
+| `good_cattle` | `icons/goods/cattle.png` | 128x128 | - | brown cow standing, side view (Schlachtvieh) |
+| `good_dye` | `icons/goods/dye.png` | 128x128 | - | three small clay pots of blue, green and red dye (Farbstoffe) |
 | `good_wood` | `icons/goods/wood.png` | 128x128 | - | stack of cut logs (Holz) |
 | `good_bricks` | `icons/goods/bricks.png` | 128x128 | - | stack of red clay bricks (Ziegel) |
 | `good_marble` | `icons/goods/marble.png` | 128x128 | - | block of white marble with grey veins (Marmor) |
@@ -412,7 +436,6 @@ Alle Symbole 128 x 128 px, später im Spiel etwa 32 bis 48 px groß: einfache, k
 | `good_grain` | `icons/goods/grain.png` | 128x128 | - | sheaf of golden wheat ears (Getreide) |
 | `good_flour` | `icons/goods/flour.png` | 128x128 | - | open sack of white flour (Mehl) |
 | `good_food` | `icons/goods/food.png` | 128x128 | - | loaf of bread and a fish on a board (Nahrung) |
-| `good_potatoes` | `icons/goods/potatoes.png` | 128x128 | - | few brown potatoes (Kartoffeln) |
 | `good_hops` | `icons/goods/hops.png` | 128x128 | - | cluster of green hop cones (Hopfen) |
 | `good_sugar` | `icons/goods/sugar.png` | 128x128 | - | bundle of sugar cane stalks (Zuckerrohr) |
 | `good_alcohol` | `icons/goods/alcohol.png` | 128x128 | - | clay bottle and a small keg of spirits (Alkohol) |
@@ -421,11 +444,9 @@ Alle Symbole 128 x 128 px, später im Spiel etwa 32 bis 48 px groß: einfache, k
 | `good_tobacco` | `icons/goods/tobacco.png` | 128x128 | - | rolled cigars and a clay pipe (Tabak) |
 | `good_spices` | `icons/goods/spices.png` | 128x128 | - | wooden bowl with red, yellow and green spices (Gewürze) |
 | `good_raw_silk` | `icons/goods/raw_silk.png` | 128x128 | - | white silk cocoons and a thread (Rohseide) |
-| `good_indigo` | `icons/goods/indigo.png` | 128x128 | - | blue indigo dye lump and a blue-leaved plant (Indigo) |
 | `good_silk` | `icons/goods/silk.png` | 128x128 | - | folded bolt of shiny purple silk (Seidenstoffe) |
 | `good_blubber` | `icons/goods/blubber.png` | 128x128 | - | wooden barrel of whale blubber, yellowish (Tran) |
 | `good_lamp_oil` | `icons/goods/lamp_oil.png` | 128x128 | - | brass oil lamp with a flame (Lampenöl) |
-| `good_grapes` | `icons/goods/grapes.png` | 128x128 | - | bunch of purple grapes with leaves (Trauben) |
 | `good_wine` | `icons/goods/wine.png` | 128x128 | - | dark green wine bottle with a glass of red wine (Wein) |
 | `good_gold` | `icons/goods/gold.png` | 128x128 | - | pile of gold nuggets (Gold) |
 | `good_gems` | `icons/goods/gems.png` | 128x128 | - | three cut gemstones, red, blue and green (Edelsteine) |

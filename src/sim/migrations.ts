@@ -94,6 +94,36 @@ export const MIGRATIONS: Record<number, Migration> = {
     nextRouteId: 1,
     islands: (data.islands as object[]).map((island) => ({ trade: {}, ...island })),
   }),
+  // v10: chains follow the production diagrams. Removed: winery, potatoes, grapes, indigo. New: byproducts of producers.
+  9: (data) => {
+    const gone = new Set(['winery'])
+    const dropGoods = ['grapes', 'potatoes']
+    const clean = (record: Record<string, number>): Record<string, number> => {
+      const next = { ...record }
+      if (next.indigo !== undefined) {
+        next.dye = (next.dye ?? 0) + next.indigo
+        delete next.indigo
+      }
+      for (const good of dropGoods) delete next[good]
+      return next
+    }
+    const islands = (data.islands as Record<string, unknown>[]).map((island) => {
+      const buildings = island.buildings as { id: number; type: string; production?: Record<string, unknown> }[]
+      const removed = new Set(buildings.filter((b) => gone.has(b.type)).map((b) => b.id))
+      const trade = Object.fromEntries(Object.entries((island.trade ?? {}) as Record<string, unknown>).filter(([good]) => !dropGoods.includes(good) && good !== 'indigo'))
+      return {
+        ...island,
+        stock: clean(island.stock as Record<string, number>),
+        trade,
+        occupancy: (island.occupancy as number[]).map((id) => (removed.has(id) ? 0 : id)),
+        buildings: buildings
+          .filter((b) => !removed.has(b.id))
+          .map((b) => (b.production ? { ...b, production: { extra: {}, ...b.production, inputs: clean((b.production.inputs ?? {}) as Record<string, number>) } } : b)),
+      }
+    })
+    const ships = (data.ships as { cargo: Record<string, number> }[]).map((ship) => ({ ...ship, cargo: clean(ship.cargo) }))
+    return { ...data, islands, ships }
+  },
 }
 
 /** Brings a raw saved object up to the current version or throws if that is impossible. */

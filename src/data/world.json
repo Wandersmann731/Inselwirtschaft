@@ -47,7 +47,7 @@
       "name": "Sonnenhain",
       "climate": "steppe",
       "size": [60, 90],
-      "deposits": ["stone", "salt"]
+      "deposits": ["stone", "salt", "marble"]
     },
     {
       "role": "colony",

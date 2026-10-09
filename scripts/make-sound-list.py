@@ -94,12 +94,20 @@ work = {
     "tobacco_factory": "leaves being rolled and pressed, light rustling, a wooden press",
     "dyer": "stirring a big dye vat with a wooden paddle, bubbling and splashing",
     "oil_boiler": "large cauldron boiling thickly, bubbling, a ladle",
-    "winery": "grapes being pressed, juice dripping into a barrel, wooden press creaking",
+    "vineyard": "wind in vine leaves, a wooden press creaking, juice dripping into a barrel",
     "goldsmith": "tiny hammer tapping on metal, a small bellows, delicate ringing",
+    "brewery": "large wooden mash paddle stirring a bubbling copper kettle, barrels rolled, dripping liquid",
+    "saltworks": "salt brine boiling gently in pans, crackling fire under it, wooden rake on crystals",
+    "butcher": "heavy cleaver chopping on a wooden block, meat slapped on a table, a hook creaking",
+    "hunting_lodge": "forest hut: leather being scraped, a wooden door, distant bird calls and rustling leaves",
+    "marble_quarry": "stone saw grinding through marble, hammer taps on stone, echoing rock",
+    "marble_mason": "fine chisel tapping on marble, light stone dust sweeping, a polishing cloth",
     "market_house": "light market chatter without words, coins, crates being set down",
     "shipyard": "hammering and sawing on a large wooden ship hull, rope creaking",
 }
 for bid, text in work.items():
+    if bid not in buildings:
+        continue
     name = buildings[bid]["name"]
     add(f"work_{bid}", "Betriebe", "loop", 6, 2 if bid in ("forester", "quarry", "smelter", "mill", "toolmaker") else 3, f"{name} arbeitet (leise, nur wenn die Kamera nah ist)", f"{text}, {STYLE_LOOP}, quiet")
 add("work_chapel_bell", "Betriebe", "sfx", 4.0, 2, "Kapelle läutet zu jeder vollen Spielminute", f"single church bell tolling 3 times, warm, distant, {STYLE_SFX}")

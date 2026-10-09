@@ -14,13 +14,15 @@
     { "id": "sugar", "name": "Zuckerrohranbau" },
     { "id": "silk", "name": "Seidenanbau" },
     { "id": "indigo", "name": "Indigoanbau" },
-    { "id": "whales", "name": "Walfang" }
+    { "id": "whales", "name": "Walfang" },
+    { "id": "game", "name": "Wildbestand" }
   ],
   "deposits": [
     { "id": "stone", "name": "Naturstein" },
     { "id": "ore", "name": "Eisenerz" },
     { "id": "salt", "name": "Salz" },
     { "id": "gold", "name": "Gold" },
-    { "id": "gems", "name": "Edelsteine" }
+    { "id": "gems", "name": "Edelsteine" },
+    { "id": "marble", "name": "Marmor" }
   ]
 }

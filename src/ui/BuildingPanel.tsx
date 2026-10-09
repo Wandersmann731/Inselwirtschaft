@@ -59,6 +59,11 @@ export function BuildingPanel({
               Ausgang {resourceName(def.output.good)}: {production.output} / {config.production.outputBufferAmount}
             </div>
           )}
+          {def.byproducts?.map((extra) => (
+            <div key={extra.good} className="panel-line">
+              Nebenprodukt {resourceName(extra.good)}: {Math.floor(production.extra[extra.good] ?? 0)} / {config.production.outputBufferAmount}
+            </div>
+          ))}
           {production.shipments.length > 0 && (
             <div className="panel-line">Unterwegs: {production.shipments.length} Lieferung(en)</div>
           )}

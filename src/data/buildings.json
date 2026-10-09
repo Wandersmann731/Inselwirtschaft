@@ -329,7 +329,7 @@
       { "good": "flour", "amount": 1 }
     ],
     "output": { "good": "food", "amount": 1 },
-    "cycleTicks": 20,
+    "cycleTicks": 10,
     "needsRoad": true,
     "smoke": [0.59, 0.2]
   },
@@ -398,10 +398,27 @@
     "unlockTier": "pioneers",
     "placement": "mountain",
     "color": "#d8dde6",
-    "output": { "good": "salt", "amount": 1 },
+    "output": { "good": "saltstone", "amount": 1 },
     "cycleTicks": 40,
     "needsRoad": true,
     "requiresDeposit": "salt"
+  },
+  {
+    "id": "saltworks",
+    "name": "Saline",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 2, "wood": 5, "bricks": 0, "marble": 0, "coins": 300 },
+    "upkeep": { "active": 10, "idle": 2 },
+    "unlockTier": "pioneers",
+    "placement": "land",
+    "color": "#e5e8ef",
+    "inputs": [
+      { "good": "saltstone", "amount": 1 }
+    ],
+    "output": { "good": "salt", "amount": 1 },
+    "cycleTicks": 40,
+    "needsRoad": true
   },
   {
     "id": "potato_farm",
@@ -413,32 +430,45 @@
     "unlockTier": "pioneers",
     "placement": "land",
     "color": "#a8864a",
-    "output": { "good": "potatoes", "amount": 1 },
+    "output": { "good": "alcohol", "amount": 1 },
     "cycleTicks": 40,
     "needsRoad": true,
     "requiresFertility": "potatoes"
   },
   {
     "id": "distillery",
-    "name": "Brennerei",
+    "name": "Rumbrennerei",
     "category": "production",
     "size": [2, 2],
     "cost": { "tools": 2, "wood": 5, "bricks": 0, "marble": 0, "coins": 350 },
     "upkeep": { "active": 12, "idle": 3 },
-    "unlockTier": "pioneers",
+    "unlockTier": "citizens",
     "placement": "land",
     "color": "#b5651d",
     "inputs": [
-      {
-        "good": "potatoes",
-        "amount": 1,
-        "alternatives": ["hops", "sugar"]
-      }
+      { "good": "sugar", "amount": 1 }
     ],
     "output": { "good": "alcohol", "amount": 1 },
-    "cycleTicks": 30,
+    "cycleTicks": 20,
     "needsRoad": true,
     "smoke": [0.59, 0.16]
+  },
+  {
+    "id": "brewery",
+    "name": "Brauerei",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 2, "wood": 5, "bricks": 0, "marble": 0, "coins": 350 },
+    "upkeep": { "active": 12, "idle": 3 },
+    "unlockTier": "settlers",
+    "placement": "land",
+    "color": "#c7922a",
+    "inputs": [
+      { "good": "hops", "amount": 1 }
+    ],
+    "output": { "good": "alcohol", "amount": 1 },
+    "cycleTicks": 20,
+    "needsRoad": true
   },
   {
     "id": "hops_farm",
@@ -447,7 +477,7 @@
     "size": [2, 2],
     "cost": { "tools": 1, "wood": 4, "bricks": 0, "marble": 0, "coins": 250 },
     "upkeep": { "active": 8, "idle": 2 },
-    "unlockTier": "pioneers",
+    "unlockTier": "settlers",
     "placement": "land",
     "color": "#7fae3a",
     "requiresFertility": "hops",
@@ -462,7 +492,7 @@
     "size": [2, 2],
     "cost": { "tools": 1, "wood": 4, "bricks": 0, "marble": 0, "coins": 300 },
     "upkeep": { "active": 10, "idle": 2 },
-    "unlockTier": "pioneers",
+    "unlockTier": "citizens",
     "placement": "land",
     "color": "#c9d98a",
     "requiresFertility": "sugar",
@@ -481,8 +511,46 @@
     "placement": "land",
     "color": "#b08968",
     "requiresFertility": "cattle",
-    "output": { "good": "hides", "amount": 1 },
+    "output": { "good": "cattle", "amount": 1 },
     "cycleTicks": 40,
+    "needsRoad": true
+  },
+  {
+    "id": "butcher",
+    "name": "Fleischerei",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 2, "wood": 5, "bricks": 0, "marble": 0, "coins": 300 },
+    "upkeep": { "active": 10, "idle": 2 },
+    "unlockTier": "pioneers",
+    "placement": "land",
+    "color": "#b5544a",
+    "inputs": [
+      { "good": "cattle", "amount": 1 }
+    ],
+    "output": { "good": "food", "amount": 1 },
+    "cycleTicks": 20,
+    "byproducts": [
+      { "good": "hides", "amount": 1 }
+    ],
+    "needsRoad": true
+  },
+  {
+    "id": "hunting_lodge",
+    "name": "Jagdhütte",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 1, "wood": 4, "bricks": 0, "marble": 0, "coins": 200 },
+    "upkeep": { "active": 6, "idle": 2 },
+    "unlockTier": "pioneers",
+    "placement": "land",
+    "color": "#7a5a38",
+    "requiresFertility": "game",
+    "output": { "good": "food", "amount": 1 },
+    "cycleTicks": 40,
+    "byproducts": [
+      { "good": "hides", "amount": 1 }
+    ],
     "needsRoad": true
   },
   {
@@ -575,7 +643,7 @@
     "placement": "land",
     "color": "#3b4cc0",
     "requiresFertility": "indigo",
-    "output": { "good": "indigo", "amount": 1 },
+    "output": { "good": "dye", "amount": 1 },
     "cycleTicks": 40,
     "needsRoad": true
   },
@@ -591,7 +659,7 @@
     "color": "#9a5fb5",
     "inputs": [
       { "good": "raw_silk", "amount": 1 },
-      { "good": "indigo", "amount": 1 }
+      { "good": "dye", "amount": 1 }
     ],
     "output": { "good": "silk", "amount": 1 },
     "cycleTicks": 30,
@@ -609,7 +677,7 @@
     "color": "#5f7f94",
     "requiresFertility": "whales",
     "output": { "good": "blubber", "amount": 1 },
-    "cycleTicks": 40,
+    "cycleTicks": 30,
     "needsRoad": true
   },
   {
@@ -626,7 +694,7 @@
       { "good": "blubber", "amount": 1 }
     ],
     "output": { "good": "lamp_oil", "amount": 1 },
-    "cycleTicks": 30,
+    "cycleTicks": 60,
     "needsRoad": true,
     "smoke": [0.61, 0.15]
   },
@@ -641,23 +709,6 @@
     "placement": "land",
     "color": "#7b3f7a",
     "requiresFertility": "wine",
-    "output": { "good": "grapes", "amount": 1 },
-    "cycleTicks": 40,
-    "needsRoad": true
-  },
-  {
-    "id": "winery",
-    "name": "Kelterei",
-    "category": "production",
-    "size": [2, 2],
-    "cost": { "tools": 3, "wood": 6, "bricks": 3, "marble": 0, "coins": 600 },
-    "upkeep": { "active": 15, "idle": 4 },
-    "unlockTier": "merchants",
-    "placement": "land",
-    "color": "#5e2a5c",
-    "inputs": [
-      { "good": "grapes", "amount": 1 }
-    ],
     "output": { "good": "wine", "amount": 1 },
     "cycleTicks": 30,
     "needsRoad": true
@@ -690,6 +741,38 @@
     "requiresDeposit": "gems",
     "output": { "good": "gems", "amount": 1 },
     "cycleTicks": 50,
+    "needsRoad": true
+  },
+  {
+    "id": "marble_quarry",
+    "name": "Marmorsteinbruch",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 3, "wood": 6, "bricks": 0, "marble": 0, "coins": 450 },
+    "upkeep": { "active": 12, "idle": 3 },
+    "unlockTier": "citizens",
+    "placement": "mountain",
+    "color": "#cfd3da",
+    "requiresDeposit": "marble",
+    "output": { "good": "marble_stone", "amount": 1 },
+    "cycleTicks": 40,
+    "needsRoad": true
+  },
+  {
+    "id": "marble_mason",
+    "name": "Marmorsteinmetz",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 3, "wood": 6, "bricks": 3, "marble": 0, "coins": 500 },
+    "upkeep": { "active": 12, "idle": 3 },
+    "unlockTier": "citizens",
+    "placement": "land",
+    "color": "#e8eaee",
+    "inputs": [
+      { "good": "marble_stone", "amount": 1 }
+    ],
+    "output": { "good": "marble", "amount": 1 },
+    "cycleTicks": 40,
     "needsRoad": true
   },
   {
