@@ -1,6 +1,7 @@
 import { config, getBuilding } from '../data'
 import { generateIsland } from '../world/islandGenerator'
 import { createProduction } from './productionState'
+import { createHouse } from './tiers'
 import { CURRENT_SAVE_VERSION, type GameState } from './state'
 
 type RawState = Record<string, unknown>
@@ -29,6 +30,15 @@ export const MIGRATIONS: Record<number, Migration> = {
     buildings: (data.buildings as { type: string }[]).map((building) =>
       getBuilding(building.type).output ? { ...building, production: createProduction() } : building,
     ),
+  }),
+  // v5 adds houses with residents and the highest tier reached.
+  4: (data) => ({
+    ...data,
+    highestTier: 0,
+    buildings: (data.buildings as { type: string }[]).map((building) => {
+      const tier = getBuilding(building.type).houseTier
+      return tier ? { ...building, house: createHouse(tier) } : building
+    }),
   }),
 }
 

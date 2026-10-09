@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { buildings, tiers } from '../data'
 import type { BuildingCategory } from '../data'
 import type { BuildController } from '../game/buildController'
+import type { GameState } from '../sim/state'
+import { isBuildingUnlocked } from '../sim/tiers'
 import { formatCost } from './messages'
 
 const CATEGORIES: { id: BuildingCategory; label: string }[] = [
@@ -13,7 +15,7 @@ const CATEGORIES: { id: BuildingCategory; label: string }[] = [
 
 const tierName = (id: string): string => tiers.find((tier) => tier.id === id)?.name ?? id
 
-export function BuildMenu({ tool }: { tool: BuildController }) {
+export function BuildMenu({ tool, state }: { tool: BuildController; state: GameState }) {
   const [open, setOpen] = useState<BuildingCategory | null>(null)
   const items = buildings.filter((def) => def.category === open)
 
@@ -26,6 +28,7 @@ export function BuildMenu({ tool }: { tool: BuildController }) {
               key={def.id}
               type="button"
               className="build-item"
+              disabled={!isBuildingUnlocked(state, def.id)}
               onClick={() => (def.kind === 'road' ? tool.startRoads() : tool.startPlacing(def.id))}
             >
               <span className="build-item-name">{def.name}</span>

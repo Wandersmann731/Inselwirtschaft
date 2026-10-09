@@ -96,10 +96,11 @@ body,
 .hud-stats {
   display: flex;
   align-items: center;
-  gap: 14px;
+  flex-wrap: wrap;
+  gap: 0 14px;
   min-width: 0;
-  overflow-x: auto;
   font-size: 15px;
+  line-height: 1.25;
 }
 
 .build-menu,
@@ -288,4 +289,43 @@ body,
 .panel-toggle {
   width: 100%;
   margin-top: 8px;
+}
+
+.build-item:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.need-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0;
+  font-size: 13px;
+}
+
+.need-name {
+  flex: 0 0 84px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.need-bar {
+  flex: 1 1 auto;
+  height: 8px;
+  margin: 0;
+}
+
+.need-percent {
+  flex: 0 0 38px;
+  text-align: right;
+}
+
+.panel-line.invalid {
+  color: #ff8a80;
+}
+
+.need-bar .panel-bar-fill {
+  display: block;
 }

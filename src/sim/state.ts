@@ -5,7 +5,7 @@ import type { GameMap } from '../world/terrain'
 export type { GameMap }
 
 /** Bump when the GameState shape changes and add a migration in migrations.ts. */
-export const CURRENT_SAVE_VERSION = 4
+export const CURRENT_SAVE_VERSION = 5
 
 export type GameSpeed = number
 
@@ -36,6 +36,21 @@ export interface ProductionState {
   shipments: Shipment[]
 }
 
+export interface HouseState {
+  tier: string
+  residents: number
+  /** Fulfilment per need id in percent. */
+  needs: Record<string, number>
+  /** Economy cycles in a row with a full house and all needs at 100 %. */
+  upgradeTimer: number
+  /** Economy cycles in a row in shortage. */
+  shortageTimer: number
+  /** An aristocrat house that collapsed. Only demolition helps. */
+  ruin: boolean
+  /** All upgrade conditions hold but the building materials are missing. */
+  missingMaterials: boolean
+}
+
 export interface PlacedBuilding {
   id: number
   type: string
@@ -48,6 +63,8 @@ export interface PlacedBuilding {
   active: boolean
   /** Only for buildings that produce something. */
   production?: ProductionState
+  /** Only for housing. */
+  house?: HouseState
 }
 
 export interface GameState {
@@ -62,6 +79,8 @@ export interface GameState {
   map: GameMap
   buildings: PlacedBuilding[]
   nextBuildingId: number
+  /** Index in tiers.json of the highest civilisation tier ever reached. Unlocks buildings. */
+  highestTier: number
   /** Per tile: id of the building covering it, 0 for none. Same indexing as map.tiles. */
   occupancy: number[]
   /** Per tile: 1 if a road lies there. */
@@ -81,6 +100,7 @@ export function createInitialState(seed: number = config.startSeed): GameState {
     map,
     buildings: [],
     nextBuildingId: 1,
+    highestTier: 0,
     occupancy: new Array(map.tiles.length).fill(0),
     roads: new Array(map.tiles.length).fill(0),
   }
