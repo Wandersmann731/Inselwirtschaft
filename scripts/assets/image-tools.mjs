@@ -255,3 +255,106 @@ export async function roadTile(textureFile, name, { halfWidth = 0.2, textureRepe
   }
   return sharp(out, { raw: { width: W, height: H, channels: 4 } }).resize(TILE_W, TILE_H, { kernel: 'lanczos3' }).png().toBuffer()
 }
+
+/** Makes a texture tile without seams: blends it with a copy shifted by half its size. Returns raw RGB data. */
+export async function tileableTexture(file, size = 512) {
+  const { data } = await sharp(file).resize(size, size).removeAlpha().raw().toBuffer({ resolveWithObject: true })
+  const out = Buffer.alloc(size * size * 3)
+  const half = size / 2
+  for (let y = 0; y < size; y++) {
+    const wy = Math.sin((Math.PI * (y + 0.5)) / size) ** 2
+    for (let x = 0; x < size; x++) {
+      const w = Math.sin((Math.PI * (x + 0.5)) / size) ** 2 * wy
+      const a = (y * size + x) * 3
+      const b = (((y + half) % size) * size + ((x + half) % size)) * 3
+      for (let c = 0; c < 3; c++) out[a + c] = Math.round(data[a + c] * w + data[b + c] * (1 - w))
+    }
+  }
+  return { data: out, size }
+}
+
+function sampleWrapped(texture, u, v) {
+  const { data, size } = texture
+  const x = (((u % 1) + 1) % 1) * size
+  const y = (((v % 1) + 1) % 1) * size
+  const x0 = Math.floor(x)
+  const y0 = Math.floor(y)
+  const fx = x - x0
+  const fy = y - y0
+  const at = (px, py) => ((py % size) * size + (px % size)) * 3
+  const i00 = at(x0, y0)
+  const i10 = at(x0 + 1, y0)
+  const i01 = at(x0, y0 + 1)
+  const i11 = at(x0 + 1, y0 + 1)
+  const rgb = [0, 0, 0]
+  for (let c = 0; c < 3; c++) {
+    rgb[c] = (data[i00 + c] * (1 - fx) + data[i10 + c] * fx) * (1 - fy) + (data[i01 + c] * (1 - fx) + data[i11 + c] * fx) * fy
+  }
+  return rgb
+}
+
+/**
+ * One frame of the water animation. The tile shows exactly one period of the seamless texture, so neighbouring
+ * tiles join without a seam. Over the frames the texture drifts by one full period and is gently warped with
+ * waves of whole periods, so frame 0 follows after the last frame without a jump.
+ */
+export async function waterFrame(texture, frame, frames, { amplitude = 0.018 } = {}) {
+  const W = TILE_W * SUPER
+  const H = TILE_H * SUPER
+  const t = frame / frames
+  const out = Buffer.alloc(W * H * 4)
+  const overscan = 0.004 // tiles overlap a little so no hairline gaps show between them
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const a = (x + 0.5 - W / 2) / (W / 2)
+      const sum = ((y + 0.5) / H) * 2
+      const u = (sum + a) / 2
+      const v = (sum - a) / 2
+      if (u < -overscan || u > 1 + overscan || v < -overscan || v > 1 + overscan) continue
+      const uu = u + t + amplitude * Math.sin(2 * Math.PI * (2 * v + t))
+      const vv = v + amplitude * Math.sin(2 * Math.PI * (2 * u + t + 0.25))
+      const [r, g, b] = sampleWrapped(texture, uu, vv)
+      const o = (y * W + x) * 4
+      out[o] = r
+      out[o + 1] = g
+      out[o + 2] = b
+      out[o + 3] = 255
+    }
+  }
+  return sharp(out, { raw: { width: W, height: H, channels: 4 } }).resize(TILE_W, TILE_H, { kernel: 'lanczos3' }).png().toBuffer()
+}
+
+/**
+ * One frame of rising smoke. Five puffs start at the chimney, drift up, grow and fade out; they are spread evenly
+ * over the loop, so every puff is invisible at the start and end of its life and the loop has no jump.
+ */
+export async function smokeFrame(puffFiles, frame, frames, width = 128, height = 192) {
+  const t = frame / frames
+  const count = 5
+  const puffs = []
+  for (let i = 0; i < count; i++) {
+    const age = (t + i / count) % 1
+    const size = Math.round(30 + 48 * age)
+    const alpha = Math.sin(Math.PI * age) ** 0.7 * 0.88
+    const cx = width / 2 + 8 * Math.sin(2 * Math.PI * (1.3 * age + i * 0.37)) + 14 * age
+    const cy = height - 30 - (height - 80) * age
+    const source = puffFiles[i % puffFiles.length]
+    const { data, info } = await sharp(source).resize(size, size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+    const grey = 0.74 + 0.1 * age // the AI puffs are almost white: tint them grey like smoke
+    for (let p = 0; p < data.length; p += 4) {
+      data[p] = Math.round(data[p] * grey)
+      data[p + 1] = Math.round(data[p + 1] * grey)
+      data[p + 2] = Math.round(data[p + 2] * grey)
+      data[p + 3] = Math.round(data[p + 3] * alpha)
+    }
+    puffs.push({ age, left: Math.round(cx - info.width / 2), top: Math.round(cy - info.height / 2), image: await sharp(data, { raw: info }).png().toBuffer() })
+  }
+  puffs.sort((a, b) => b.age - a.age) // old puffs behind young ones
+  // Draw on a larger canvas so puffs may reach over the edge, then cut out the frame.
+  const margin = 100
+  const big = await sharp({ create: { width: width + 2 * margin, height: height + 2 * margin, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+    .composite(puffs.map(({ image, left, top }) => ({ input: image, left: left + margin, top: top + margin })))
+    .png()
+    .toBuffer()
+  return sharp(big).extract({ left: margin, top: margin, width, height }).png().toBuffer()
+}

@@ -36,6 +36,12 @@ function parseCsv(text) {
   return rows
 }
 
+/** Field buildings: flat ground with a small building, not a raised block. */
+const FARMS = new Set([
+  'cotton_plantation', 'sheep_farm', 'potato_farm', 'tobacco_plantation', 'hops_farm', 'spice_plantation',
+  'grain_farm', 'sugar_plantation', 'vineyard', 'silk_plantation', 'indigo_farm', 'cattle_farm',
+])
+
 /** Extra hints for buildings where the model kept the grey guide block as plain walls. */
 const FOUNDATION = {
   cotton_plantation: 'a brown earth cross-section with a thin grass edge and small stones',
@@ -65,9 +71,21 @@ function jobFor(row) {
       `Turn the grey isometric block on the magenta background into ${desc}. ` +
       'Keep the exact silhouette, size, position and 2:1 isometric perspective of the block: the building must stand on the diamond-shaped ground area, fill the block volume and not extend beyond it, a roof may overhang only slightly. Do not draw any outline, frame or hexagon around the building. ' +
       `${STYLE} Keep the flat magenta background (#FF00FF) completely empty and use no magenta or pink colour in the building. No text, no people.`
-    if (FOUNDATION[id]) {
+    if (FARMS.has(id)) {
+      job.prompt =
+        `Turn the flat grey diamond on the magenta background into ${desc}. The grey box at the back corner becomes the small farm building. ` +
+        'The ground must be perfectly flat and end exactly at the edges of the diamond: no raised slab, no thickness, no earth cross-section, no side walls, no plinth, no outline around the diamond. ' +
+        `The rows and plants follow the two isometric grid directions of the diamond. ${STYLE} ` +
+        'Keep the flat magenta background (#FF00FF) completely empty and use no magenta or pink colour. No text, no people.'
+    } else if (FOUNDATION[id]) {
       job.prompt += ` The grey block is only a volume guide: none of its plain grey, white or beige side walls may remain. The sides of the base must be ${FOUNDATION[id]}.`
     }
+  } else if (dir === 'terrain' && id.startsWith('water_')) {
+    // Water is animated: all frames are made from one generated texture so the waves flow on and loop.
+    job.kind = 'water'
+    job.derivedFrom = 'water_texture'
+    job.frame = Number(id.split('_')[1]) - 1
+    job.frames = 8
   } else if (dir === 'terrain') {
     job.kind = 'tile'
     job.guide = 'docs/vorlagen/terrain/tile_guide.png'
@@ -89,7 +107,13 @@ function jobFor(row) {
     if (id === 'ship_top' || id === 'island_icon' || id.startsWith('smoke_')) {
       job.prompt = `${desc}, game sprite, centred, simple bold shapes, thick dark-brown outline, saturated colours, plain flat magenta background (#FF00FF), no text, no frame, no watermark, hand-painted cel-shaded`
     }
-    if (id.startsWith('smoke_')) job.aspectRatio = '2:3'
+    if (id.startsWith('smoke_')) {
+      // Smoke is animated from three generated puffs that rise, grow and fade, so the loop is seamless.
+      job.kind = 'smoke'
+      job.derivedFrom = 'smoke_puff_1'
+      job.frame = Number(id.split('_')[1]) - 1
+      job.frames = 12
+    }
   } else if (dir === 'app') {
     job.kind = 'app'
     job.prompt = fullPrompt
@@ -108,6 +132,38 @@ export function loadJobs() {
   const text = fs.readFileSync(path.join(ROOT, 'docs', 'grafiken.csv'), 'utf8')
   const rows = parseCsv(text).slice(1)
   const jobs = rows.map(jobFor)
+  if (jobs.some((job) => job.kind === 'water')) {
+    jobs.unshift({
+      id: 'water_texture',
+      group: 'Gelände',
+      file: 'terrain/_water_texture.png',
+      width: 512,
+      height: 512,
+      kind: 'texture',
+      aspectRatio: '1:1',
+      desc: 'water texture',
+      prompt:
+        'Flat texture of calm blue sea water seen straight from above (orthographic, no perspective): a few large soft lighter wave crest lines flowing across a medium blue surface, ' +
+        'hand-painted cel-shaded with gentle highlights, fills the whole square image edge to edge, no objects, no foam at the borders, no text, no frame',
+    })
+  }
+  if (jobs.some((job) => job.kind === 'smoke')) {
+    for (let n = 1; n <= 3; n++) {
+      jobs.unshift({
+        id: `smoke_puff_${n}`,
+        group: 'Effekte',
+        file: `effects/_puff_${n}.png`,
+        width: 128,
+        height: 128,
+        kind: 'puff',
+        aspectRatio: '1:1',
+        desc: 'smoke puff',
+        prompt:
+          'A single round fluffy puff of light grey smoke, cartoon style with soft dark-brown outline, game sprite, centred, plain flat magenta background (#FF00FF), no text, no frame, no watermark' +
+          (n === 2 ? ', slightly wider than tall' : n === 3 ? ', slightly lopsided with a little swirl' : ''),
+      })
+    }
+  }
   if (jobs.some((job) => job.kind === 'road')) {
     jobs.unshift({
       id: 'road_texture',

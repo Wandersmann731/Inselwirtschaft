@@ -8,7 +8,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import sharp from 'sharp'
-import { fitInto, maskPolygon, padToSquare, removeBackground, roadTile, SIZE } from './image-tools.mjs'
+import { fitInto, maskPolygon, padToSquare, removeBackground, roadTile, smokeFrame, SIZE, tileableTexture, waterFrame } from './image-tools.mjs'
 import { startServer } from './mcp-client.mjs'
 import { loadJobs, ROOT } from './manifest.mjs'
 
@@ -39,6 +39,7 @@ fs.mkdirSync(path.join(RAW, 'inputs'), { recursive: true })
 fs.mkdirSync(path.join(RAW, 'server'), { recursive: true })
 
 // slightly inside the tile so no edge pixels of the background show
+const textures = {}
 const DIAMOND = [[64, 1], [127, 32], [64, 63], [1, 32]]
 
 /** Produces the raw picture for a job (one API call). Returns the path of the raw file. */
@@ -61,10 +62,29 @@ async function makeRaw(job, server) {
 /** Cuts the raw picture out and saves the finished PNG. Returns a note about the result. */
 async function finish(job, rawFile) {
   const target = path.join(OUT, job.file)
-  fs.mkdirSync(path.dirname(target), { recursive: true })
+  if (job.kind !== 'texture' && job.kind !== 'puff') fs.mkdirSync(path.dirname(target), { recursive: true })
   const load = async () => sharp(rawFile).resize(SIZE, SIZE, { fit: 'fill' }).png().toBuffer()
 
   if (job.kind === 'texture') return 'Rohbild gespeichert'
+
+  if (job.kind === 'puff') {
+    const cut = await removeBackground(await sharp(rawFile).png().toBuffer())
+    fs.writeFileSync(path.join(RAW, `${job.id}.png`), await fitInto(cut, 128, 128, { margin: 0.05 }))
+    return 'Wolke gespeichert'
+  }
+
+  if (job.kind === 'water') {
+    textures.water ??= await tileableTexture(path.join(RAW, 'water_texture.webp'))
+    fs.writeFileSync(target, await waterFrame(textures.water, job.frame, job.frames))
+    return 'ok'
+  }
+
+  if (job.kind === 'smoke') {
+    const puffs = [1, 2, 3].map((n) => path.join(RAW, `smoke_puff_${n}.png`))
+    for (const puff of puffs) await waitFor(puff)
+    fs.writeFileSync(target, await smokeFrame(puffs, job.frame, job.frames))
+    return 'ok'
+  }
 
   if (job.kind === 'road') {
     const buffer = await roadTile(path.join(RAW, `${job.derivedFrom}.webp`), job.id.replace('road_', ''))

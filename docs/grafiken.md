@@ -1,6 +1,6 @@
 # Grafikliste für Inselwirtschaft
 
-Alle Grafiken, die das Spiel für Phase 7 braucht: **165 Dateien**. **Stand:** Alle Dateien sind bereits mit dem ImageGen-Werkzeug erzeugt und liegen fertig zugeschnitten in `public/art/` (erstellt mit `scripts/assets`, siehe dort die `README.md`). Der Einbau ins Spiel (Sprite-Atlas statt Platzhalterformen) ist Teil von Phase 7. Die Tabellen entstehen aus den Spieldaten (`scripts/make-asset-list.py`), die Datei `docs/grafiken.csv` enthält dieselbe Liste mit fertigen Prompts je Zeile.
+Alle Grafiken, die das Spiel für Phase 7 braucht: **175 Dateien**. **Stand:** Alle Dateien sind bereits mit dem ImageGen-Werkzeug erzeugt und liegen fertig zugeschnitten in `public/art/` (erstellt mit `scripts/assets`, siehe dort die `README.md`). Der Einbau ins Spiel (Sprite-Atlas statt Platzhalterformen) ist Teil von Phase 7. Die Tabellen entstehen aus den Spieldaten (`scripts/make-asset-list.py`), die Datei `docs/grafiken.csv` enthält dieselbe Liste mit fertigen Prompts je Zeile.
 
 ## 1. Wichtig vorab
 
@@ -27,14 +27,18 @@ Eine Kachel ist im doppelten Maßstab **128 x 64 px**. Ein Gebäude mit `w x h` 
 
 ### Gelände
 
-Jede Kachel ist eine **nahtlose Raute** (128 x 64 px), außerhalb der Raute transparent. Die Varianten sollen sich nur im Detail unterscheiden, damit das Muster nicht auffällt. Wasser besteht aus 4 Bildern einer Schleife (Wellen). Wald: Bäume bleiben innerhalb der Raute.
+Jede Kachel ist eine **nahtlose Raute** (128 x 64 px), außerhalb der Raute transparent. Die Varianten sollen sich nur im Detail unterscheiden, damit das Muster nicht auffällt. Wasser besteht aus 8 Bildern einer nahtlosen Wellen-Schleife. Wald: Bäume bleiben innerhalb der Raute.
 
 | ID | Datei | Größe (px) | Raster | Beschreibung (englisch, für den Prompt) |
 |---|---|---|---|---|
-| `water_1` | `terrain/water_1.png` | 128x64 | 1x1 Kachel | calm blue sea water surface with gentle light ripples, tileable, variant 1 of 4 |
-| `water_2` | `terrain/water_2.png` | 128x64 | 1x1 Kachel | calm blue sea water surface with gentle light ripples, tileable, variant 2 of 4 |
-| `water_3` | `terrain/water_3.png` | 128x64 | 1x1 Kachel | calm blue sea water surface with gentle light ripples, tileable, variant 3 of 4 |
-| `water_4` | `terrain/water_4.png` | 128x64 | 1x1 Kachel | calm blue sea water surface with gentle light ripples, tileable, variant 4 of 4 |
+| `water_1` | `terrain/water_1.png` | 128x64 | 1x1 Kachel | calm blue sea water surface with gentle light ripples, tileable, variant 1 of 8 |
+| `water_2` | `terrain/water_2.png` | 128x64 | 1x1 Kachel | calm blue sea water surface with gentle light ripples, tileable, variant 2 of 8 |
+| `water_3` | `terrain/water_3.png` | 128x64 | 1x1 Kachel | calm blue sea water surface with gentle light ripples, tileable, variant 3 of 8 |
+| `water_4` | `terrain/water_4.png` | 128x64 | 1x1 Kachel | calm blue sea water surface with gentle light ripples, tileable, variant 4 of 8 |
+| `water_5` | `terrain/water_5.png` | 128x64 | 1x1 Kachel | calm blue sea water surface with gentle light ripples, tileable, variant 5 of 8 |
+| `water_6` | `terrain/water_6.png` | 128x64 | 1x1 Kachel | calm blue sea water surface with gentle light ripples, tileable, variant 6 of 8 |
+| `water_7` | `terrain/water_7.png` | 128x64 | 1x1 Kachel | calm blue sea water surface with gentle light ripples, tileable, variant 7 of 8 |
+| `water_8` | `terrain/water_8.png` | 128x64 | 1x1 Kachel | calm blue sea water surface with gentle light ripples, tileable, variant 8 of 8 |
 | `beach_1` | `terrain/beach_1.png` | 128x64 | 1x1 Kachel | pale sand with a few pebbles and shells, tileable, variant 1 of 3 |
 | `beach_2` | `terrain/beach_2.png` | 128x64 | 1x1 Kachel | pale sand with a few pebbles and shells, tileable, variant 2 of 3 |
 | `beach_3` | `terrain/beach_3.png` | 128x64 | 1x1 Kachel | pale sand with a few pebbles and shells, tileable, variant 3 of 3 |
@@ -121,31 +125,31 @@ Alle Betriebe stehen auf 2x2 Kacheln. Felder und Plantagen sollen den Boden der 
 | `quarry` | `buildings/quarry.png` | 256x240 | 2x2 | stone quarry cut into a rocky slope with stone blocks and a wooden crane |
 | `ore_mine` | `buildings/ore_mine.png` | 256x224 | 2x2 | mine entrance with timber supports, an ore cart on rails and a heap of rubble |
 | `weaver` | `buildings/weaver.png` | 256x240 | 2x2 | weaver's workshop with a big wooden loom visible, cloth drying on frames |
-| `sheep_farm` | `buildings/sheep_farm.png` | 256x224 | 2x2 | sheep farm: small barn with a fenced pasture and woolly sheep |
-| `cotton_plantation` | `buildings/cotton_plantation.png` | 256x208 | 2x2 | cotton field with rows of plants with white cotton bolls and a small storage shed |
+| `sheep_farm` | `buildings/sheep_farm.png` | 256x208 | 2x2 | flat green pasture filling the whole ground with a low wooden fence around it, a few woolly sheep and a small red barn at the back corner |
+| `cotton_plantation` | `buildings/cotton_plantation.png` | 256x208 | 2x2 | flat cotton field filling the whole ground: neat rows of cotton plants with white cotton bolls, a small wooden storage shed at the back corner |
 | `fishery` | `buildings/fishery.png` | 256x224 | 2x2 | fisherman's hut on the shore with drying racks of fish, nets and a small rowing boat |
-| `grain_farm` | `buildings/grain_farm.png` | 256x224 | 2x2 | farmhouse with golden wheat fields around it and haystacks |
+| `grain_farm` | `buildings/grain_farm.png` | 256x208 | 2x2 | flat golden wheat field filling the whole ground with a few haystacks and a small farmhouse at the back corner |
 | `mill` | `buildings/mill.png` | 256x272 | 2x2 | windmill with a timber tower, four sails and flour sacks at the door |
 | `bakery` | `buildings/bakery.png` | 256x240 | 2x2 | bakery with a brick oven, chimney with smoke, loaves of bread in the window |
 | `stonemason` | `buildings/stonemason.png` | 256x224 | 2x2 | stonemason's yard with cut stone blocks, chisels and a small workshop |
 | `smelter` | `buildings/smelter.png` | 256x272 | 2x2 | ironworks smelter with a brick furnace, tall chimney with smoke and glowing molten metal |
 | `toolmaker` | `buildings/toolmaker.png` | 256x240 | 2x2 | tool smithy with an anvil, hammers and tools hanging on the wall, forge glow |
 | `salt_mine` | `buildings/salt_mine.png` | 256x224 | 2x2 | salt mine with piles of white crystals, a wooden hoist and barrels |
-| `potato_farm` | `buildings/potato_farm.png` | 256x208 | 2x2 | potato farm with ploughed ridged fields and a small barn |
+| `potato_farm` | `buildings/potato_farm.png` | 256x208 | 2x2 | flat ploughed potato field filling the whole ground: ridged brown soil with green potato plants in rows, a small barn at the back corner |
 | `distillery` | `buildings/distillery.png` | 256x240 | 2x2 | distillery with a copper still, oak barrels and a brick building |
-| `hops_farm` | `buildings/hops_farm.png` | 256x240 | 2x2 | hop yard with tall poles and green hop vines and a drying barn |
-| `sugar_plantation` | `buildings/sugar_plantation.png` | 256x224 | 2x2 | sugar cane plantation with tall green cane and a press shed |
-| `cattle_farm` | `buildings/cattle_farm.png` | 256x224 | 2x2 | cattle farm with a barn, a fenced paddock and brown cows |
+| `hops_farm` | `buildings/hops_farm.png` | 256x208 | 2x2 | flat hop yard filling the whole ground: rows of tall poles with green hop vines, a small drying barn at the back corner |
+| `sugar_plantation` | `buildings/sugar_plantation.png` | 256x208 | 2x2 | flat sugar cane plantation filling the whole ground with rows of tall green cane and a small press shed at the back corner |
+| `cattle_farm` | `buildings/cattle_farm.png` | 256x208 | 2x2 | flat green paddock filling the whole ground with a low wooden fence, a few brown cows and a small barn at the back corner |
 | `tannery` | `buildings/tannery.png` | 256x224 | 2x2 | tannery with hides stretched on frames and wooden tanning vats |
-| `tobacco_plantation` | `buildings/tobacco_plantation.png` | 256x224 | 2x2 | tobacco plantation with broad-leaf plants and a drying barn |
+| `tobacco_plantation` | `buildings/tobacco_plantation.png` | 256x208 | 2x2 | flat tobacco field filling the whole ground: rows of broad-leaf tobacco plants, a small wooden drying barn at the back corner |
 | `tobacco_factory` | `buildings/tobacco_factory.png` | 256x240 | 2x2 | tobacco manufactory: workshop with hanging leaves and rolling tables |
-| `spice_plantation` | `buildings/spice_plantation.png` | 256x224 | 2x2 | spice plantation with pepper vines on poles and colourful sacks of spices |
-| `silk_plantation` | `buildings/silk_plantation.png` | 256x224 | 2x2 | silk farm with mulberry trees, silkworm sheds and white cocoons |
-| `indigo_farm` | `buildings/indigo_farm.png` | 256x208 | 2x2 | indigo farm with blue-green plants and blue dye vats |
+| `spice_plantation` | `buildings/spice_plantation.png` | 256x208 | 2x2 | flat spice plantation filling the whole ground: rows of pepper vines on short poles and colourful sacks of spices, a small hut at the back corner |
+| `silk_plantation` | `buildings/silk_plantation.png` | 256x208 | 2x2 | flat silk farm filling the whole ground: rows of mulberry bushes, white cocoons on racks and a small silkworm shed at the back corner |
+| `indigo_farm` | `buildings/indigo_farm.png` | 256x208 | 2x2 | flat indigo field filling the whole ground: rows of blue-green indigo plants, a small dye shed at the back corner |
 | `dyer` | `buildings/dyer.png` | 256x240 | 2x2 | dyer's workshop with colourful blue and purple cloths drying on lines and dye vats |
 | `whaler` | `buildings/whaler.png` | 256x240 | 2x2 | whaling station on a cold shore with a whale-bone arch, boiling barrels and a harpoon boat |
 | `oil_boiler` | `buildings/oil_boiler.png` | 256x240 | 2x2 | oil boilery with big iron cauldrons, barrels, dark brick walls and smoke |
-| `vineyard` | `buildings/vineyard.png` | 256x224 | 2x2 | vineyard with terraced rows of grape vines and a small press house |
+| `vineyard` | `buildings/vineyard.png` | 256x208 | 2x2 | flat vineyard filling the whole ground: rows of grape vines on wires, a small press house at the back corner |
 | `winery` | `buildings/winery.png` | 256x240 | 2x2 | winery with big wooden presses and wine barrels in a stone building |
 | `gold_mine` | `buildings/gold_mine.png` | 256x224 | 2x2 | gold mine entrance with timber supports, carts full of gold ore and gleaming nuggets |
 | `gem_mine` | `buildings/gem_mine.png` | 256x224 | 2x2 | gemstone mine with blue and red crystals and a timber entrance |
@@ -252,12 +256,18 @@ Rauch gehört zu Gebäuden mit Schornstein (Bäckerei, Erzschmelze, Brennerei, T
 
 | ID | Datei | Größe (px) | Raster | Beschreibung (englisch, für den Prompt) |
 |---|---|---|---|---|
-| `smoke_1` | `effects/smoke_1.png` | 128x192 | - | puff of grey chimney smoke rising, animation frame 1 of 6, soft cartoon smoke, loops seamlessly |
-| `smoke_2` | `effects/smoke_2.png` | 128x192 | - | puff of grey chimney smoke rising, animation frame 2 of 6, soft cartoon smoke, loops seamlessly |
-| `smoke_3` | `effects/smoke_3.png` | 128x192 | - | puff of grey chimney smoke rising, animation frame 3 of 6, soft cartoon smoke, loops seamlessly |
-| `smoke_4` | `effects/smoke_4.png` | 128x192 | - | puff of grey chimney smoke rising, animation frame 4 of 6, soft cartoon smoke, loops seamlessly |
-| `smoke_5` | `effects/smoke_5.png` | 128x192 | - | puff of grey chimney smoke rising, animation frame 5 of 6, soft cartoon smoke, loops seamlessly |
-| `smoke_6` | `effects/smoke_6.png` | 128x192 | - | puff of grey chimney smoke rising, animation frame 6 of 6, soft cartoon smoke, loops seamlessly |
+| `smoke_1` | `effects/smoke_1.png` | 128x192 | - | column of grey chimney smoke rising, animation frame 1 of 12, soft cartoon smoke, loops seamlessly |
+| `smoke_2` | `effects/smoke_2.png` | 128x192 | - | column of grey chimney smoke rising, animation frame 2 of 12, soft cartoon smoke, loops seamlessly |
+| `smoke_3` | `effects/smoke_3.png` | 128x192 | - | column of grey chimney smoke rising, animation frame 3 of 12, soft cartoon smoke, loops seamlessly |
+| `smoke_4` | `effects/smoke_4.png` | 128x192 | - | column of grey chimney smoke rising, animation frame 4 of 12, soft cartoon smoke, loops seamlessly |
+| `smoke_5` | `effects/smoke_5.png` | 128x192 | - | column of grey chimney smoke rising, animation frame 5 of 12, soft cartoon smoke, loops seamlessly |
+| `smoke_6` | `effects/smoke_6.png` | 128x192 | - | column of grey chimney smoke rising, animation frame 6 of 12, soft cartoon smoke, loops seamlessly |
+| `smoke_7` | `effects/smoke_7.png` | 128x192 | - | column of grey chimney smoke rising, animation frame 7 of 12, soft cartoon smoke, loops seamlessly |
+| `smoke_8` | `effects/smoke_8.png` | 128x192 | - | column of grey chimney smoke rising, animation frame 8 of 12, soft cartoon smoke, loops seamlessly |
+| `smoke_9` | `effects/smoke_9.png` | 128x192 | - | column of grey chimney smoke rising, animation frame 9 of 12, soft cartoon smoke, loops seamlessly |
+| `smoke_10` | `effects/smoke_10.png` | 128x192 | - | column of grey chimney smoke rising, animation frame 10 of 12, soft cartoon smoke, loops seamlessly |
+| `smoke_11` | `effects/smoke_11.png` | 128x192 | - | column of grey chimney smoke rising, animation frame 11 of 12, soft cartoon smoke, loops seamlessly |
+| `smoke_12` | `effects/smoke_12.png` | 128x192 | - | column of grey chimney smoke rising, animation frame 12 of 12, soft cartoon smoke, loops seamlessly |
 | `scaffold_2x2` | `effects/scaffold_2x2.png` | 256x224 | 2x2 | wooden construction scaffold around an empty building plot with planks and a rope |
 | `island_icon` | `effects/island_icon.png` | 256x256 | - | small top-down island with a palm tree and a tiny harbour, for a map marker |
 
