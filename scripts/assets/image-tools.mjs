@@ -387,3 +387,65 @@ export async function shrinkMatte(image, passes = 1) {
   for (let i = 0; i < alpha.length; i++) data[i * 4 + 3] = alpha[i]
   return sharp(data, { raw: { width, height, channels: 4 } })
 }
+
+const BODY_COLORS = [[150, 150, 150], [182, 182, 182], [226, 226, 226]] // wall, wall, roof of the guide block
+
+/**
+ * Lets the ground of a plot fade out towards its edge, so it blends into the terrain around it.
+ * The building itself (found in the guide: the grey block) stays fully opaque.
+ */
+export async function featherPlot(buffer, guideFile, width, height) {
+  const guide = await sharp(guideFile).resize(width, height, { kernel: 'nearest' }).removeAlpha().raw().toBuffer()
+  // body = pixels of the guide block, grown by a margin for roofs and shadows
+  const body = new Uint8Array(width * height)
+  for (let i = 0; i < width * height; i++) {
+    const r = guide[i * 3]
+    const g = guide[i * 3 + 1]
+    const b = guide[i * 3 + 2]
+    if (BODY_COLORS.some(([cr, cg, cb]) => Math.abs(r - cr) < 3 && Math.abs(g - cg) < 3 && Math.abs(b - cb) < 3)) body[i] = 1
+  }
+  const grow = 22
+  const rows = new Uint8Array(width * height)
+  for (let y = 0; y < height; y++) {
+    let last = -1e9
+    for (let x = 0; x < width; x++) {
+      if (body[y * width + x]) last = x
+      if (x - last <= grow) rows[y * width + x] = 1
+    }
+    last = 1e9
+    for (let x = width - 1; x >= 0; x--) {
+      if (body[y * width + x]) last = x
+      if (last - x <= grow) rows[y * width + x] = 1
+    }
+  }
+  const grown = new Uint8Array(width * height)
+  for (let x = 0; x < width; x++) {
+    let last = -1e9
+    for (let y = 0; y < height; y++) {
+      if (rows[y * width + x]) last = y
+      if (y - last <= grow) grown[y * width + x] = 1
+    }
+    last = 1e9
+    for (let y = height - 1; y >= 0; y--) {
+      if (rows[y * width + x]) last = y
+      if (last - y <= grow) grown[y * width + x] = 1
+    }
+  }
+  // soft mask of the ground diamond, shrunk a little
+  const top = height - width / 2
+  const cx = width / 2
+  const cy = top + width / 4
+  const k = 0.84
+  const points = [[cx, top], [width, top + width / 4], [cx, top + width / 2], [0, top + width / 4]]
+    .map(([x, y]) => `${cx + (x - cx) * k},${cy + (y - cy) * k}`)
+    .join(' ')
+  const svg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="#000"/><polygon points="${points}" fill="#fff"/></svg>`)
+  const soft = await sharp(svg).blur(11).greyscale().raw().toBuffer()
+  const { data, info } = await sharp(buffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+  for (let i = 0; i < width * height; i++) {
+    if (grown[i]) continue
+    const f = Math.max(0, Math.min(1, (soft[i * (soft.length / (width * height))] / 255 - 0.12) / 0.7))
+    data[i * 4 + 3] = Math.round(data[i * 4 + 3] * f)
+  }
+  return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer()
+}

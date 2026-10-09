@@ -40,6 +40,20 @@ class SpriteStore {
   get(key: string): HTMLImageElement | undefined {
     return this.images.get(key)
   }
+
+  private variantCache = new Map<string, string[]>()
+
+  /** All pictures of one thing: `base` itself and `base_2`, `base_3` ... (or `base_1` ...), whichever exist. */
+  variants(base: string): string[] {
+    let list = this.variantCache.get(base)
+    if (!list || !this.ready) {
+      list = []
+      if (this.images.has(base)) list.push(base)
+      for (let n = 1; n <= 32; n++) if (this.images.has(`${base}_${n}`)) list.push(`${base}_${n}`)
+      if (this.ready) this.variantCache.set(base, list)
+    }
+    return list
+  }
 }
 
 export const sprites = new SpriteStore()

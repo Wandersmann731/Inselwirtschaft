@@ -26,7 +26,9 @@ NEGATIVE = (
     "cropped object, blurry"
 )
 
-from asset_data import B, TILE_H, TILE_W  # noqa: E402
+from asset_data import (  # noqa: E402
+    B, FIELD_VARIANTS, HOUSE_VARIANTS, RUIN_STYLE, RUIN_VARIANTS, TILE_H, TILE_W, VARIANT_BUILDINGS, house_variant,
+)
 
 # --- goods icons -----------------------------------------------------------------------------------
 G = {
@@ -116,11 +118,14 @@ def full_prompt(descriptor, kind="building"):
 rows = []  # id, group, file, canvas, footprint, descriptor
 
 # buildings (+ tier variants for houses)
-house_tiers = ["house_pioneers", "house_settlers", "house_citizens", "house_merchants", "house_aristocrats", "house_ruin"]
+house_tiers = ["house_pioneers", "house_settlers", "house_citizens", "house_merchants", "house_aristocrats"]
 for bid in house_tiers:
-    w, h = (2, 2)
-    cw, ch = canvas((w, h), B[bid][1])
-    rows.append((bid, "Wohnhäuser", f"buildings/{bid}.png", f"{cw}x{ch}", "2x2", B[bid][0]))
+    cw, ch = canvas((2, 2), B[bid][1])
+    for n in range(1, HOUSE_VARIANTS + 1):
+        rows.append((f"{bid}_{n}", "Wohnhäuser", f"buildings/{bid}_{n}.png", f"{cw}x{ch}", "2x2", house_variant(bid, n) + f" (variant {n} of {HOUSE_VARIANTS})"))
+cw, ch = canvas((2, 2), B["house_ruin"][1])
+for n in range(1, RUIN_VARIANTS + 1):
+    rows.append((f"house_ruin_{n}", "Wohnhäuser", f"buildings/house_ruin_{n}.png", f"{cw}x{ch}", "2x2", RUIN_STYLE[n - 1]))
 order = [
     "food_salt_stand", "cloth_stand", "drink_stand", "tobacco_spice_stand", "lamp_oil_stand", "jewelry_stand",
     "chapel", "tavern", "church", "bathhouse", "theater", "cathedral",
@@ -134,6 +139,11 @@ for bid, b in buildings.items():
     if b["category"] == "production":
         cw, ch = canvas(tuple(b["size"]), B[bid][1])
         rows.append((bid, "Produktionsbetriebe", f"buildings/{bid}.png", f"{cw}x{ch}", "x".join(map(str, b["size"])), B[bid][0]))
+for bid in VARIANT_BUILDINGS:
+    b = buildings[bid]
+    cw, ch = canvas(tuple(b["size"]), B[bid][1])
+    for n in range(2, FIELD_VARIANTS + 1):
+        rows.append((f"{bid}_{n}", "Produktionsbetriebe", f"buildings/{bid}_{n}.png", f"{cw}x{ch}", "2x2", B[bid][0] + f" (a different look: variant {n} of {FIELD_VARIANTS}, change the colours, the layout of rows and the building style)"))
 for bid in ["kontor", "market_house", "shipyard"]:
     b = buildings[bid]
     cw, ch = canvas(tuple(b["size"]), B[bid][1])
@@ -290,7 +300,7 @@ notes = {
     "Bodentexturen": "Nahtlose Draufsicht-Texturen für den Boden zwischen den Objekten. Sie müssen kontrastarm sein, damit man keine Wiederholung sieht.",
     "Gelände": "Jede Kachel ist eine **nahtlose Raute** (128 x 64 px), außerhalb der Raute transparent. Die Varianten sollen sich nur im Detail unterscheiden, damit das Muster nicht auffällt. Wasser besteht aus 8 Bildern einer nahtlosen Wellen-Schleife. Wald: Bäume bleiben innerhalb der Raute.",
     "Straßen": "16 Kacheln für alle Verbindungen. Die Namen zeigen die Richtungen, in die die Straße weitergeht: n = oben rechts, e = unten rechts, s = unten links, w = oben links (auf dem Bildschirm). Die Arme enden genau in der Mitte der Rautenkante, damit sie an Nachbarkacheln anschließen.",
-    "Wohnhäuser": "Alle Wohnhäuser stehen auf 2x2 Kacheln. Die fünf Stufen sollen sich klar in Größe und Pracht unterscheiden, so dass man sie am Handy auf einen Blick erkennt. Dazu kommt die Ruine.",
+    "Wohnhäuser": "Alle Wohnhäuser stehen auf 2x2 Kacheln, aber **auf einem kleinen Grundstück**: Das Haus nimmt nur die Mitte der Raute ein, drumherum liegen Garten, Weg, Zaun oder Brennholz. So überlappen Nachbarhäuser nicht. Jede Stufe hat 16 Varianten (verschiedene Dächer, Wände, Anbauten und Gärten), die das Spiel nach der Position auswählt, damit eine Straße voller Häuser nicht gleich aussieht. Dazu kommen 4 Ruinen.",
     "Marktstände": "Stände sind 1x1 Kachel groß und klein. Sie sollen sich durch die Ware und die Farbe der Markise deutlich unterscheiden.",
     "Produktionsbetriebe": "Alle Betriebe stehen auf 2x2 Kacheln. Felder und Plantagen sollen den Boden der Raute **ausfüllen**, damit sie wie ein bepflanztes Feld mit kleinem Gebäude wirken. Steinbruch, Minen und Goldmine stehen auf Bergkacheln. Fischerei und Walfänger stehen an der Küste.",
     "Warensymbole": "Alle Symbole 128 x 128 px, später im Spiel etwa 32 bis 48 px groß: einfache, kräftige Formen, die auch klein erkennbar sind.",

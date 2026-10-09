@@ -5,6 +5,7 @@ import type { IslandState, PlacedBuilding } from '../sim/state'
 import type { ToolSnapshot } from '../game/buildController'
 import { tileToWorld } from './iso'
 import { drawPlacedSprite, placeSprite } from './spriteDraw'
+import { ghostKey } from './spriteKeys'
 import { boxHeight, drawBox, rectPath, type TileRect } from './shapes'
 import { diamondPath } from './terrainStyle'
 
@@ -54,7 +55,7 @@ export class OverlayRenderer {
     ctx.beginPath()
     rectPath(ctx, rect)
     ctx.fill()
-    const placed = placeSprite({ type: typeId, x: origin.x, y: origin.y, rotated, house: undefined })
+    const placed = placeSprite({ type: typeId, x: origin.x, y: origin.y, rotated, house: undefined }, ghostKey(typeId))
     if (placed) {
       drawPlacedSprite(ctx, placed, 0.75)
     } else {

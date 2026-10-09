@@ -65,3 +65,69 @@ B = {
 # Field buildings: flat ground with a small building at the back corner (see the farm guides in make-templates.py).
 FARM_IDS = list(['cotton_plantation', 'sheep_farm', 'potato_farm', 'tobacco_plantation', 'hops_farm', 'spice_plantation', 'grain_farm', 'sugar_plantation', 'vineyard', 'silk_plantation', 'indigo_farm', 'cattle_farm'])
 FARM_BUILDING_HEIGHT = 80
+
+
+# --- house variants ---------------------------------------------------------------------------------
+HOUSE_VARIANTS = 16
+RUIN_VARIANTS = 4
+FIELD_VARIANTS = 4  # extra pictures for often built field buildings and workshops (variant 1 is the plain id)
+PLOT_IDS = ["forester", "fishery", "quarry", "ore_mine", "salt_mine", "gold_mine", "gem_mine"]  # workshops that stand on a small plot like a house
+VARIANT_BUILDINGS = list(FARM_IDS) + PLOT_IDS
+
+# Per tier: the kind of house and lists the variants pick from. Every variant mixes one entry of each list
+# (stepping through the lists with different strides), so no two of the 16 look alike.
+HOUSE_STYLE = {
+    "house_pioneers": {
+        "kind": "small simple one-room settler hut",
+        "roofs": ["thatched roof", "dark shingle roof", "turf roof with grass on top", "reed roof", "weathered wooden plank roof", "rough bark roof"],
+        "walls": ["rough timber log walls", "weathered grey plank walls", "clay and straw walls with timber corners", "dark brown timber walls", "pale whitewashed rough walls", "stacked log walls with moss"],
+        "yards": ["a small vegetable patch", "a woodpile and a chopping stump", "a low wattle fence and a barrel", "a hay stack and a few chickens", "a small well", "a bench and a rain barrel"],
+        "extras": ["a tiny stone chimney", "a small porch", "a lean-to shed on the side", "a wooden door with a tiny window", "a hanging lantern"],
+    },
+    "house_settlers": {
+        "kind": "timber-framed cottage",
+        "roofs": ["red clay tile roof", "grey wooden shingle roof", "orange tile roof", "dark slate roof", "mossy shingle roof", "brown tile roof"],
+        "walls": ["whitewashed plaster walls with dark timber beams", "cream plaster walls with brown beams", "pale yellow plaster walls", "light grey plaster walls with dark beams", "stone ground floor with plaster above", "pale blue-washed plaster walls"],
+        "yards": ["a small fenced flower garden", "an apple tree and a bench", "a vegetable garden with a scarecrow", "a stacked firewood wall and a cart", "a little herb garden", "a small pond with ducks"],
+        "extras": ["a brick chimney", "shuttered windows with flower boxes", "a covered front porch", "a small dormer window", "a side extension"],
+    },
+    "house_citizens": {
+        "kind": "two-storey half-timbered townhouse",
+        "roofs": ["steep red clay tile roof", "dark slate roof", "orange tile roof with a dormer", "grey tile roof", "brown tile gable roof", "green-glazed tile roof"],
+        "walls": ["half-timbered upper floor over a stone ground floor", "plaster walls with dark half-timbering", "brick walls with timber upper floor", "pale plaster with ochre beams", "grey stone walls with timber gable", "white plaster with brown half-timbering"],
+        "yards": ["a small courtyard with a well", "a trimmed hedge and a bench", "a little herb garden behind a fence", "a cobblestone yard with barrels", "a tree and flower beds", "a small cart and crates"],
+        "extras": ["a bay window", "a hanging trade sign", "a wooden balcony", "two chimneys", "a stone staircase to the door"],
+    },
+    "house_merchants": {
+        "kind": "stately three-storey merchant house",
+        "roofs": ["tall red tile gable roof", "dark slate mansard roof", "orange tile roof with several dormers", "copper-green roof", "grey tile roof with a gable end to the street", "brown tile roof with a small tower"],
+        "walls": ["stone ground floor with plaster upper floors", "pale plaster with carved timber beams", "brick walls with stone corners", "cream stone walls with painted shutters", "ochre plaster with white window frames", "grey stone with dark timber"],
+        "yards": ["a stone-paved forecourt with a fountain", "a walled garden with a small tree", "crates and barrels at a loading door", "a trimmed hedge garden", "a courtyard with a cart", "a gated entrance with lanterns"],
+        "extras": ["a balcony with a hanging banner", "a crane beam for goods", "a carved wooden door", "an ornate gable", "a trade sign with a golden emblem"],
+    },
+    "house_aristocrats": {
+        "kind": "elegant manor house",
+        "roofs": ["slate mansard roof with ornamental dormers", "green copper roof", "grey slate roof with a small tower", "red tile roof with carved gables", "dark blue slate roof", "high hipped roof with finials"],
+        "walls": ["cream-coloured stone walls with columns", "white stone walls with tall windows", "pale sandstone walls with a balcony", "warm ochre stone walls", "light grey stone with red brick trim", "white plaster with gilded details"],
+        "yards": ["a formal garden with a fountain", "clipped hedges and statues", "a cobbled forecourt with lanterns", "a rose garden and a gate", "a gravel drive with trimmed trees", "a small orchard with a bench"],
+        "extras": ["a pillared entrance", "a grand staircase", "a balustrade terrace", "a coat of arms above the door", "a clock tower"],
+    },
+}
+
+RUIN_STYLE = [
+    "burnt-out ruin of a stately house with broken walls and charred beams, no roof, a little weeds",
+    "collapsed stone house ruin, one wall standing, roof beams fallen inside, overgrown with weeds",
+    "ruin of a burnt timber house with blackened posts and rubble",
+    "crumbled manor ruin with broken columns and ivy on the remaining wall",
+]
+
+
+def house_variant(tier_id, index):
+    """English description of variant number `index` (1-based) of a house tier."""
+    style = HOUSE_STYLE[tier_id]
+    i = index - 1
+    pick = lambda items, stride, offset: items[(i * stride + offset + i // len(items)) % len(items)]  # noqa: E731
+    return (
+        f"{style['kind']} with a {pick(style['roofs'], 1, 0)}, {pick(style['walls'], 5, 1)}, and {pick(style['extras'], 3, 2)}; "
+        f"on its small plot there is {pick(style['yards'], 7, 3)}"
+    )
