@@ -2,6 +2,8 @@
 
 **71 Töne**: 28 Einzelgeräusche, 37 Schleifen und 6 Musikstücke. Die Liste entsteht mit `python3 scripts/make-sound-list.py`, die Datei `docs/ton.csv` enthält dieselben Zeilen zum Stapelverarbeiten.
 
+> **Stand:** Alle Töne sind bereits erzeugt und liegen als MP3 in `public/audio/` (Geräusche und Schleifen mit ElevenLabs Sound Effects, Musik mit Google Lyria 3 Pro über OpenRouter). Werkzeuge: `scripts/assets/sound.mjs` und `scripts/assets/music.mjs`, siehe `scripts/assets/README.md`. Die Tabellen unten sind die Vorgaben (Prompts), nach denen sie entstanden sind. Einzelne Töne neu erzeugen: `ELEVENLABS_API_KEY=... node scripts/assets/sound.mjs --only <id> --force`.
+
 ## 1. Wichtig vorab
 - **Keine Anno-Bezüge:** Keine Musik, keine Geräusche und keine Stile aus Anno hochladen oder in Prompts nennen. Alles muss eigenes Material sein. In keinem Prompt steht ein Spielname oder Komponistenname, so soll es bleiben.
 - **Rechte:** Nur Töne verwenden, deren Nutzung du privat darfst. Bei KI-Werkzeugen die Bedingungen prüfen (viele erlauben private Nutzung, manche verlangen einen bezahlten Tarif).

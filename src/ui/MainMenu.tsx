@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { audio } from '../audio/engine'
 import { config } from '../data'
 import { AUTOSAVE_SLOT, loadState } from '../save/saveGame'
 import { createInitialState, type GameState } from '../sim/state'
@@ -27,6 +28,15 @@ export function MainMenu({ onStart }: MainMenuProps) {
   const [coins, setCoins] = useState(config.startCoins)
   const [message, setMessage] = useState('')
   const slots = useSlots(reload)
+  useEffect(() => {
+    const unlock = (): void => audio.unlock()
+    document.addEventListener('pointerdown', unlock, true)
+    audio.setMusic(['music_menu'])
+    return () => {
+      document.removeEventListener('pointerdown', unlock, true)
+      audio.setMusic([])
+    }
+  }, [])
   const hasAutosave = slots?.find((entry) => entry.slot === AUTOSAVE_SLOT)?.info != null
 
   const load = async (slot: string): Promise<void> => {

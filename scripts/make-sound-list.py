@@ -121,7 +121,7 @@ with (ROOT / "docs" / "ton.csv").open("w", newline="", encoding="utf-8") as f:
     w = csv.writer(f, delimiter=";")
     w.writerow(["id", "gruppe", "art", "dateiname", "dauer_sekunden", "prioritaet", "wann_im_spiel", "prompt_en"])
     for i, group, kind, seconds, prio, trigger, prompt in rows:
-        w.writerow([i, group, kind, f"audio/{FOLDER[kind]}/{i}.wav", seconds, prio, trigger, prompt])
+        w.writerow([i, group, kind, f"public/audio/{FOLDER[kind]}/{i}.mp3", seconds, prio, trigger, prompt])
 
 md = []
 count = {k: sum(1 for r in rows if r[2] == k) for k in ("sfx", "loop", "music")}
@@ -130,7 +130,9 @@ md.append(
     f"**{len(rows)} Töne**: {count['sfx']} Einzelgeräusche, {count['loop']} Schleifen und {count['music']} Musikstücke. "
     "Die Liste entsteht mit `python3 scripts/make-sound-list.py`, die Datei `docs/ton.csv` enthält dieselben Zeilen zum Stapelverarbeiten.\n"
 )
-md.append("""## 1. Wichtig vorab
+md.append("""> **Stand:** Alle Töne sind bereits erzeugt und liegen als MP3 in `public/audio/` (Geräusche und Schleifen mit ElevenLabs Sound Effects, Musik mit Google Lyria 3 Pro über OpenRouter). Werkzeuge: `scripts/assets/sound.mjs` und `scripts/assets/music.mjs`, siehe `scripts/assets/README.md`. Die Tabellen unten sind die Vorgaben (Prompts), nach denen sie entstanden sind. Einzelne Töne neu erzeugen: `ELEVENLABS_API_KEY=... node scripts/assets/sound.mjs --only <id> --force`.
+
+## 1. Wichtig vorab
 - **Keine Anno-Bezüge:** Keine Musik, keine Geräusche und keine Stile aus Anno hochladen oder in Prompts nennen. Alles muss eigenes Material sein. In keinem Prompt steht ein Spielname oder Komponistenname, so soll es bleiben.
 - **Rechte:** Nur Töne verwenden, deren Nutzung du privat darfst. Bei KI-Werkzeugen die Bedingungen prüfen (viele erlauben private Nutzung, manche verlangen einen bezahlten Tarif).
 - **Priorität:** 1 = zuerst machen (ohne diese klingt das Spiel leer), 2 = danach, 3 = Feinschliff. Mit Priorität 1 sind es **{p1} Töne**.

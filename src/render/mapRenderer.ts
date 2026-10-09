@@ -91,6 +91,11 @@ export class MapRenderer {
     this.camera = zoomCameraAt(this.camera, factor, sx, sy, this.viewport, this.bounds(), ZOOM_LIMITS)
   }
 
+  /** The tile in the middle of the screen. */
+  cameraTile(): Point {
+    return worldToTile(this.camera.x, this.camera.y)
+  }
+
   /** The part of the world that is on screen right now. */
   visibleRect(): Bounds {
     return visibleWorldRect(this.camera, this.viewport)

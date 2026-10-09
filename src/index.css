@@ -778,3 +778,8 @@ body,
 .balance-panel {
   width: min(680px, 96vw);
 }
+
+.volume-slider {
+  flex: 0 0 55%;
+  height: 32px;
+}

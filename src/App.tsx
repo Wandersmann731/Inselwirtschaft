@@ -5,6 +5,7 @@ import type { GameLoop } from './game/gameLoop'
 import { balanceOf } from './sim/economy'
 import { toIslandState } from './sim/islands'
 import { residentsOfTier } from './sim/tiers'
+import { useGameAudio } from './audio/useGameAudio'
 import { getSettings } from './save/settings'
 import { BalancePanel } from './ui/BalancePanel'
 import { BuildBar } from './ui/BuildBar'
@@ -33,6 +34,7 @@ export function App({ loop, onQuit }: { loop: GameLoop; onQuit: () => void }) {
   const [showMenu, setShowMenu] = useState(false)
   const [showBalance, setShowBalance] = useState(false)
   const debug = getSettings().debug
+  useGameAudio({ loop, getRenderer, worldOpen: showWorld })
   const [showTrade, setShowTrade] = useState(false)
   const [showKontor, setShowKontor] = useState(false)
   const island = toIslandState(state, activeIsland)

@@ -55,3 +55,10 @@ Weitere Optionen: `--parallel 5`, `--provider flux-2-pro` (je nach Anbieter und 
   einige stehen also vor dem Gebäude. Unter Gebäuden und Straßen wächst nichts: der Wald wird dort gerodet.
 - Alle Varianten sind erzeugt: 16 je Wohnhausstufe, 4 Ruinen, je 4 für Farmen, Forsthaus, Fischerei und Minen.
 - Auch die Werkstätten (Weberei, Bäckerei, Mühle, Steinmetz, Schmelze, Werkzeugmacher, Brennerei, Gerberei, Tabakmanufaktur, Färberei, Trankocherei, Kelterei, Goldschmied) und das Markthaus stehen auf einem Grundstück (Werkhof aus Erde und Pflaster). Die Schornsteinpositionen für den Rauch stehen in `buildings.json` (`smoke`) und müssen nach dem Neuerzeugen eines Bildes geprüft werden.
+
+## Ton
+- `sound.mjs` erzeugt Geräusche und Schleifen aus `docs/ton.csv` mit der **ElevenLabs Sound-Effects-API** (Schlüssel nur aus der Umgebung: `ELEVENLABS_API_KEY`, wird nie in eine Datei geschrieben). Schleifen nutzen `loop: true`. Die Dauer steht in der CSV (0,5 bis 30 s). Höchstens 4 gleichzeitige Anfragen.
+- `music.mjs` erzeugt die Musikstücke mit **Google Lyria 3 Pro** über OpenRouter (`OPENROUTER_API_KEY`), etwa 0,08 USD je Stück. Der verwendete ElevenLabs-Schlüssel hatte keine Berechtigung für Musik.
+- Beide schreiben MP3 nach `public/audio/{sfx,loops,music}` und aktualisieren `public/audio/index.json` (das Spiel fragt nur Dateien an, die im Index stehen). Nur den Index neu schreiben: `node scripts/assets/audio-index.mjs`.
+- Die Musik ist bewusst nicht im Offline-Speicher (zu groß, wird gestreamt). Geräusche und Schleifen sind es.
+- Im Spiel: `src/audio/engine.ts` (Wiedergabe), `src/audio/mix.ts` (Regeln: welche Umgebung, welche Betriebsgeräusche, welche Ereignisse) und `src/audio/useGameAudio.ts` (Anbindung).
