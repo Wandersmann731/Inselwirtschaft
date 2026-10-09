@@ -26,6 +26,17 @@ export class OverlayRenderer {
   draw(ctx: CanvasRenderingContext2D, state: GameState, tool: ToolSnapshot): void {
     if (tool.mode === 'place' && tool.typeId && tool.origin) this.drawGhost(ctx, state, tool)
     else if (tool.stroke.length > 0) this.drawStroke(ctx, state, tool)
+    else if (tool.mode === 'none' && tool.selectedBuildingId !== null) this.drawSelectedBuilding(ctx, state, tool)
+  }
+
+  private drawSelectedBuilding(ctx: CanvasRenderingContext2D, state: GameState, tool: ToolSnapshot): void {
+    const building = state.buildings.find((b) => b.id === tool.selectedBuildingId)
+    if (!building) return
+    ctx.strokeStyle = '#ffd23f'
+    ctx.lineWidth = 3
+    ctx.beginPath()
+    rectPath(ctx, buildingRect(building))
+    ctx.stroke()
   }
 
   private drawGhost(ctx: CanvasRenderingContext2D, state: GameState, tool: ToolSnapshot): void {

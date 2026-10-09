@@ -5,9 +5,36 @@ import type { GameMap } from '../world/terrain'
 export type { GameMap }
 
 /** Bump when the GameState shape changes and add a migration in migrations.ts. */
-export const CURRENT_SAVE_VERSION = 3
+export const CURRENT_SAVE_VERSION = 4
 
 export type GameSpeed = number
+
+export type ProductionStatusKind = 'producing' | 'waiting' | 'outputFull' | 'noRoad' | 'noHub' | 'inactive'
+
+export interface ProductionStatus {
+  kind: ProductionStatusKind
+  /** For 'waiting': the good that is missing. */
+  good?: string
+}
+
+/** Goods on their way between a producer and the island store. */
+export interface Shipment {
+  /** 'in' goes to the producer's input buffer, 'out' to the island store. */
+  kind: 'in' | 'out'
+  good: string
+  amount: number
+  /** Tick at which the shipment arrives. */
+  arrive: number
+}
+
+export interface ProductionState {
+  /** Ticks of the running cycle, 0 when no cycle is running. */
+  progress: number
+  inputs: Record<string, number>
+  output: number
+  status: ProductionStatus
+  shipments: Shipment[]
+}
 
 export interface PlacedBuilding {
   id: number
@@ -19,6 +46,8 @@ export interface PlacedBuilding {
   rotated: boolean
   /** Inactive buildings are shut down and cost less upkeep. */
   active: boolean
+  /** Only for buildings that produce something. */
+  production?: ProductionState
 }
 
 export interface GameState {

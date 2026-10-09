@@ -1,6 +1,7 @@
 import { config, getBuilding, goods } from '../data'
 import type { BuildingCost, BuildingDef } from '../data'
 import { Terrain } from '../world/terrain'
+import { createProduction } from './productionState'
 import type { GameState, PlacedBuilding } from './state'
 
 export type PlacementErrorCode =
@@ -110,6 +111,7 @@ export function placeBuilding(
   if (def.kind === 'road' || checkPlacement(state, typeId, x, y, rotated)) return state
   const { w, h } = footprint(def, rotated)
   const building: PlacedBuilding = { id: state.nextBuildingId, type: typeId, x, y, rotated, active: true }
+  if (def.output) building.production = createProduction()
   const occupancy = state.occupancy.slice()
   for (let ty = y; ty < y + h; ty++) {
     for (let tx = x; tx < x + w; tx++) occupancy[ty * state.map.width + tx] = building.id

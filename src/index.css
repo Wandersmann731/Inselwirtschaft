@@ -222,3 +222,70 @@ body,
   opacity: 0.45;
   cursor: default;
 }
+
+.building-panel {
+  position: fixed;
+  top: 64px;
+  right: max(12px, env(safe-area-inset-right));
+  width: 270px;
+  padding: 8px 12px 12px;
+  border-radius: 8px;
+  background: var(--hud-bg);
+  font-size: 14px;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 17px;
+}
+
+.panel-close {
+  width: var(--button-size);
+  height: var(--button-size);
+  margin: -8px -8px -8px 0;
+  border: 0;
+  background: transparent;
+  color: var(--hud-text);
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.panel-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+  font-size: 16px;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+}
+
+.panel-bar {
+  height: 6px;
+  margin: 4px 0 8px;
+  border-radius: 3px;
+  background: #2b4254;
+  overflow: hidden;
+}
+
+.panel-bar-fill {
+  height: 100%;
+  background: #4cd964;
+}
+
+.panel-line {
+  margin: 2px 0;
+  color: #d0dae2;
+}
+
+.panel-toggle {
+  width: 100%;
+  margin-top: 8px;
+}

@@ -28,6 +28,10 @@ export function MapCanvas({ getState, tool }: MapCanvasProps) {
           if (tile) tool.setCenter(tile)
         } else {
           renderer.selectAt(x, y)
+          const tile = renderer.tileAt(x, y)
+          const state = getState()
+          const id = tile ? state.occupancy[tile.y * state.map.width + tile.x] : 0
+          tool.selectBuilding(id || null)
         }
       },
       onStrokeStart: (x, y) => {
