@@ -22,3 +22,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+art-raw/
+scripts/assets/node_modules/
