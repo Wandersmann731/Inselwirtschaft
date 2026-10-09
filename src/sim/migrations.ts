@@ -137,6 +137,22 @@ export const MIGRATIONS: Record<number, Migration> = {
     })
     return { ...data, islands }
   },
+  // v12: public buildings got smaller footprints. The occupancy of every island is laid out again from the buildings.
+  11: (data) => {
+    const islands = (data.islands as Record<string, unknown>[]).map((island) => {
+      const { width, height } = island.map as { width: number; height: number }
+      const occupancy: number[] = new Array(width * height).fill(0)
+      for (const b of island.buildings as { id: number; type: string; x: number; y: number; rotated: boolean }[]) {
+        const [w0, h0] = getBuilding(b.type).size
+        const [w, h] = b.rotated ? [h0, w0] : [w0, h0]
+        for (let y = b.y; y < b.y + h && y < height; y++) {
+          for (let x = b.x; x < b.x + w && x < width; x++) occupancy[y * width + x] = b.id
+        }
+      }
+      return { ...island, occupancy }
+    })
+    return { ...data, islands }
+  },
 }
 
 /** Brings a raw saved object up to the current version or throws if that is impossible. */

@@ -14,8 +14,8 @@ import { testIsland } from './helpers'
 describe('footprint', () => {
   it('swaps width and height when rotated', () => {
     const chapel = getBuilding('chapel')
-    expect(footprint(chapel, false)).toEqual({ w: 3, h: 4 })
-    expect(footprint(chapel, true)).toEqual({ w: 4, h: 3 })
+    expect(footprint(chapel, false)).toEqual({ w: 2, h: 3 })
+    expect(footprint(chapel, true)).toEqual({ w: 3, h: 2 })
   })
 })
 
@@ -81,9 +81,9 @@ describe('placement rules', () => {
 
   it('respects rotation for the footprint', () => {
     const state = testIsland()
-    // chapel 3x4 at y=10 would reach y=13 (water row); rotated 4x3 fits
-    expect(checkPlacement(state, 'chapel', 8, 10, false)?.code).toBe('water')
-    expect(checkPlacement(state, 'chapel', 8, 10, true)).toBeNull()
+    // chapel 2x3 at y=11 would reach y=13 (water row); rotated 3x2 fits
+    expect(checkPlacement(state, 'chapel', 8, 11, false)?.code).toBe('water')
+    expect(checkPlacement(state, 'chapel', 8, 11, true)).toBeNull()
   })
 })
 

@@ -3,7 +3,7 @@ import { config, getBuilding, tiers } from '../src/data'
 import { placeBuilding } from '../src/sim/build'
 import { MIGRATIONS, migrateState } from '../src/sim/migrations'
 import { runMarket } from '../src/sim/market'
-import { createInitialState, type IslandState } from '../src/sim/state'
+import { createInitialState, CURRENT_SAVE_VERSION, type IslandState } from '../src/sim/state'
 import { grassField, patchBuilding, patchHouse } from './helpers'
 
 const rich = { coins: 1_000_000, stock: { tools: 500, wood: 500, bricks: 500, marble: 50 } }
@@ -141,9 +141,27 @@ describe('migration from version 10', () => {
     home.occupancy[5 * width + 5] = 1
     home.occupancy[9 * width + 9] = 2
     const migrated = migrateState(game, MIGRATIONS)
-    expect(migrated.version).toBe(11)
+    expect(migrated.version).toBe(CURRENT_SAVE_VERSION)
     expect(migrated.islands[0].buildings.map((b) => b.type)).toEqual(['chapel'])
     expect(migrated.islands[0].occupancy[5 * width + 5]).toBe(0)
     expect(migrated.islands[0].occupancy[9 * width + 9]).toBe(2)
+  })
+})
+
+describe('migration from version 11', () => {
+  it('lays out the occupancy again with the current footprints', () => {
+    const game = JSON.parse(JSON.stringify(createInitialState(3))) as Record<string, any>
+    game.version = 11
+    const home = game.islands[0]
+    const width = home.map.width
+    home.buildings = [{ id: 1, type: 'chapel', x: 5, y: 5, rotated: false, active: true }]
+    // the old chapel was 3 x 4
+    for (let y = 5; y < 9; y++) for (let x = 5; x < 8; x++) home.occupancy[y * width + x] = 1
+    const migrated = migrateState(game, MIGRATIONS)
+    const occupancy = migrated.islands[0].occupancy
+    const [w, h] = getBuilding('chapel').size
+    expect(occupancy.filter((id) => id === 1)).toHaveLength(w * h)
+    expect(occupancy[5 * width + 5]).toBe(1)
+    expect(occupancy[8 * width + 7]).toBe(0)
   })
 })

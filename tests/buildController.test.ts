@@ -12,11 +12,11 @@ function setup() {
 describe('BuildController', () => {
   it('centres the ghost on the tapped tile and recomputes it when rotated', () => {
     const { tool } = setup()
-    tool.startPlacing('chapel') // 3 wide, 4 high
+    tool.startPlacing('chapel') // 2 wide, 3 high
     tool.setCenter({ x: 6, y: 6 })
-    expect(tool.getSnapshot().origin).toEqual({ x: 5, y: 4 })
-    tool.rotate() // 4 wide, 3 high
-    expect(tool.getSnapshot().origin).toEqual({ x: 4, y: 5 })
+    expect(tool.getSnapshot().origin).toEqual({ x: 5, y: 5 })
+    tool.rotate() // 3 wide, 2 high
+    expect(tool.getSnapshot().origin).toEqual({ x: 5, y: 5 })
   })
 
   it('has no ghost until a tile was tapped and cannot confirm then', () => {

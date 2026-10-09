@@ -237,12 +237,12 @@ Stände sind 1x1 Kachel groß und klein. Sie sollen sich durch die Ware und die 
 
 | ID | Datei | Größe (px) | Raster | Beschreibung (englisch, für den Prompt) |
 |---|---|---|---|---|
-| `chapel` | `buildings/chapel.png` | 448x384 | 3x4 | small stone chapel with a slate roof and a little bell tower |
-| `tavern` | `buildings/tavern.png` | 448x384 | 3x4 | large timber inn with a hanging tankard sign, warm lit windows and barrels by the door |
-| `church` | `buildings/church.png` | 832x640 | 7x6 | large stone church with a tall steeple, long nave, buttresses and a round rose window |
-| `bathhouse` | `buildings/bathhouse.png` | 704x512 | 6x5 | bathhouse in classical style with a domed roof, columns, steam rising and a pool courtyard |
-| `theater` | `buildings/theater.png` | 832x608 | 6x7 | renaissance theatre with a half-round arena building, decorated facade, banners and stairs |
-| `cathedral` | `buildings/cathedral.png` | 896x736 | 8x6 | grand gothic cathedral with two tall towers, flying buttresses, stained glass windows |
+| `chapel` | `buildings/chapel.png` | 320x272 | 2x3 | small stone chapel with a slate roof and a little bell tower |
+| `tavern` | `buildings/tavern.png` | 384x320 | 3x3 | large timber inn with a hanging tankard sign, warm lit windows and barrels by the door |
+| `church` | `buildings/church.png` | 576x464 | 4x5 | large stone church with a tall steeple, long nave, buttresses and a round rose window |
+| `bathhouse` | `buildings/bathhouse.png` | 512x384 | 4x4 | bathhouse in classical style with a domed roof, columns, steam rising and a pool courtyard |
+| `theater` | `buildings/theater.png` | 640x480 | 5x5 | renaissance theatre with a half-round arena building, decorated facade, banners and stairs |
+| `cathedral` | `buildings/cathedral.png` | 768x608 | 6x6 | grand gothic cathedral with two tall towers, flying buttresses, stained glass windows |
 
 ### Produktionsbetriebe
 

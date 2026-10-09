@@ -6,7 +6,7 @@ import type { GameMap } from '../world/terrain'
 export type { GameMap }
 
 /** Bump when the GameState shape changes and add a migration in migrations.ts. */
-export const CURRENT_SAVE_VERSION = 11
+export const CURRENT_SAVE_VERSION = 12
 
 export type GameSpeed = number
 

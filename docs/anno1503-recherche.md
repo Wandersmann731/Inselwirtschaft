@@ -268,7 +268,9 @@ Add-on „Schätze, Monster & Piraten“ (2003): 12 Szenarien, 3 Endlosspiele, E
 
 ## 10. Wirkung auf unser Spiel (Beobachtungen, nichts geändert)
 
-**Passt gut:** Keine Steuern; fünf Stufen mit 8/15/28/42/30; Aristokraten ab 1900 Kaufleuten und **Zusammenbruch statt Rückfall** (bestätigt); Kombinat-Verhältnisse (Brot 4:2:1, Fleisch 2:1, Hopfen 2:1, Rum 2:1, Stoff 2:1 bzw. 3:1, Lampenöl 1:2); die Radien der öffentlichen Gebäude in `docs/anno1503-analyse.md` (Kapelle 19, Kirche 21, Badehaus 22) sind durch die Wiki-Tabelle **bestätigt** (nicht gegen unseren Code geprüft); und ein gemeinsames **Inselinventar** mit Marktständen ohne eigenes Lager.
+Stand des Abgleichs: `src/data/tiers.json` und `CLAUDE.md` vom 9.10.2026, 21:50. Das Projekt hat sich währenddessen weiterentwickelt (Commit „Land tax from the first resident … market stands removed“): **Grundsteuer ab dem ersten Bewohner, keine Marktstände mehr, Bewohner holen Waren selbst aus Kontor/Markthaus im Einzugsgebiet.** Das weicht vom Original ab (dort keine Steuern, Einnahmen nur über Marktstände), nähert sich aber der Original-Logik an, dass **alle Waren im gemeinsamen Inselinventar liegen und Stände kein eigenes Lager haben** (3.2). Die Zeile „Keine Steuern“ unten ist damit überholt, und der Hinweis in `CLAUDE.md` („Keine Steuern“) passt nicht mehr zum Code.
+
+**Passt gut:** Fünf Stufen mit 8/15/28/42/30; Aristokraten ab 1900 Kaufleuten und **Zusammenbruch statt Rückfall** (bestätigt); Kombinat-Verhältnisse (Brot 4:2:1, Fleisch 2:1, Hopfen 2:1, Rum 2:1, Stoff 2:1 bzw. 3:1, Lampenöl 1:2); die Radien der öffentlichen Gebäude in `docs/anno1503-analyse.md` (Kapelle 19, Kirche 21, Badehaus 22) sind durch die Wiki-Tabelle **bestätigt** (nicht gegen unseren Code geprüft).
 
 **Weicht ab:**
 1. **Bedürfnisse:** Im Original gibt es **Wahlregeln** (zwei von drei, drei von fünf, fünf von sechs), nicht feste Pflichten. Salz ist ein vollwertiger Ersatz, nicht nur ein „Bonus“. Schule und Universität sind Pflicht, Kirche ersetzt die Kapelle. Bei uns hat jede Stufe feste Bedürfnisse mit Salz als Ersatz.
