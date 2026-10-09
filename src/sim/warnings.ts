@@ -1,5 +1,5 @@
 import { goods } from '../data'
-import type { GameState } from './state'
+import type { IslandState } from './state'
 
 /** A good that will run out soon. */
 export interface ShortageWarning {
@@ -15,7 +15,7 @@ export const WARNING_CYCLES = 3
  * Goods that are used up faster than they are made and whose store lasts fewer than
  * WARNING_CYCLES cycles. Based on the last settled cycle, so nothing shows before the first one.
  */
-export function findShortages(state: GameState): ShortageWarning[] {
+export function findShortages(state: IslandState): ShortageWarning[] {
   const last = state.economy.last
   if (!last) return []
   const warnings: ShortageWarning[] = []

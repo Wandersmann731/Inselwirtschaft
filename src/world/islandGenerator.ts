@@ -5,11 +5,12 @@ import { fractalNoise, noiseField } from './noise'
 import { Terrain, type GameMap } from './terrain'
 
 /** Builds one island from a seed. Same seed always gives the same map. */
-export function generateIsland(seed: number): GameMap {
+export function generateIsland(seed: number, size: [number, number] = [world.island.minSize, world.island.maxSize]): GameMap {
   const cfg = world.island
   const rng = createRng(seed)
-  const width = cfg.minSize + rng.nextInt(cfg.maxSize - cfg.minSize + 1)
-  const height = cfg.minSize + rng.nextInt(cfg.maxSize - cfg.minSize + 1)
+  const [minSize, maxSize] = size
+  const width = minSize + rng.nextInt(maxSize - minSize + 1)
+  const height = minSize + rng.nextInt(maxSize - minSize + 1)
   const noise = fractalNoise(rng, width, height, cfg.noiseCells, cfg.noiseWeights)
   const forestNoise = noiseField(rng, width, height, cfg.forestCell)
 

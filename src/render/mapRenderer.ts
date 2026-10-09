@@ -1,6 +1,6 @@
 import { world } from '../data'
 import type { ToolSnapshot } from '../game/buildController'
-import type { GameState } from '../sim/state'
+import type { IslandState } from '../sim/state'
 import { inMap, TERRAIN_NAMES, type GameMap } from '../world/terrain'
 import {
   centerCamera,
@@ -25,11 +25,11 @@ const HIGH_RES_THRESHOLD = 1.6
 
 /**
  * Draws the map on a canvas. Lives outside React: React only mounts and destroys it.
- * Owns the camera and the selected tile, which are view state and not part of GameState.
+ * Owns the camera and the selected tile, which are view state and not part of IslandState.
  */
 export class MapRenderer {
   private canvas: HTMLCanvasElement
-  private getState: () => GameState
+  private getState: () => IslandState
   private getTool: () => ToolSnapshot
   private debug: boolean
   private ctx: CanvasRenderingContext2D
@@ -49,7 +49,7 @@ export class MapRenderer {
 
   constructor(
     canvas: HTMLCanvasElement,
-    getState: () => GameState,
+    getState: () => IslandState,
     getTool: () => ToolSnapshot,
     debug = false,
   ) {

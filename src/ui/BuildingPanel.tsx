@@ -3,11 +3,11 @@ import { cumulativeNeeds, getTier } from '../sim/tiers'
 import type { BuildController } from '../game/buildController'
 import { STATUS_COLORS } from '../render/buildingRenderer'
 import { upkeepOf } from '../sim/production'
-import type { GameState } from '../sim/state'
+import type { IslandState } from '../sim/state'
 import { needLabel, resourceName, statusText } from './messages'
 
 /** Info panel of the selected building: state of a producer, buffers, upkeep and the off switch. */
-export function BuildingPanel({ tool, state, buildingId }: { tool: BuildController; state: GameState; buildingId: number }) {
+export function BuildingPanel({ tool, state, buildingId }: { tool: BuildController; state: IslandState; buildingId: number }) {
   const building = state.buildings.find((b) => b.id === buildingId)
   if (!building) return null
   const def = getBuilding(building.type)
@@ -70,7 +70,7 @@ export function BuildingPanel({ tool, state, buildingId }: { tool: BuildControll
   )
 }
 
-function HousePanel({ house }: { house: NonNullable<GameState['buildings'][number]['house']> }) {
+function HousePanel({ house }: { house: NonNullable<IslandState['buildings'][number]['house']> }) {
   const tier = getTier(house.tier)
   if (house.ruin) {
     return <div className="panel-status">Ruine: Die Aristokraten sind ausgezogen. Nur Abriss hilft.</div>

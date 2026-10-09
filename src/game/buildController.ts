@@ -81,7 +81,7 @@ export class BuildController {
 
   /** Switches a building on or off (shut down). */
   setActive(id: number, active: boolean): void {
-    this.loop.dispatch((state) => setBuildingActive(state, id, active))
+    this.loop.dispatchIsland((state) => setBuildingActive(state, id, active))
   }
 
   rotate(): void {
@@ -99,7 +99,7 @@ export class BuildController {
   confirm(): void {
     const { mode, typeId, origin, rotated } = this.snapshot
     if (mode !== 'place' || !typeId || !origin) return
-    this.loop.dispatch((state) => placeBuilding(state, typeId, origin.x, origin.y, rotated))
+    this.loop.dispatchIsland((state) => placeBuilding(state, typeId, origin.x, origin.y, rotated))
     // Stay in placing mode so several buildings of one kind can follow each other.
     this.set({ ...this.snapshot, center: null, origin: null })
   }
@@ -124,8 +124,8 @@ export class BuildController {
   strokeEnd(): void {
     const { mode, stroke } = this.snapshot
     if (stroke.length === 0) return
-    if (mode === 'road') this.loop.dispatch((state) => placeRoads(state, stroke))
-    else if (mode === 'demolish') this.loop.dispatch((state) => demolishTiles(state, stroke))
+    if (mode === 'road') this.loop.dispatchIsland((state) => placeRoads(state, stroke))
+    else if (mode === 'demolish') this.loop.dispatchIsland((state) => demolishTiles(state, stroke))
     this.set({ ...this.snapshot, stroke: [] })
   }
 

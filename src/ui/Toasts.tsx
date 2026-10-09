@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { config } from '../data'
+import { toIslandState } from '../sim/islands'
 import type { GameState } from '../sim/state'
 import { findShortages } from '../sim/warnings'
 import { shortageText } from './messages'
@@ -28,12 +30,19 @@ export function Toasts({ state }: { state: GameState }) {
     timers.current.add(timer)
   }
 
-  const cycle = state.economy.last
+  const cycleIndex = Math.floor(state.tick / config.economyCycleTicks)
   useEffect(() => {
-    const shortages = findShortages(state)
-    const now = new Set(shortages.map((warning) => warning.good))
-    for (const warning of shortages) {
-      if (!warned.current.has(warning.good)) push(shortageText(warning.good, warning.cycles))
+    const owned = state.islands.filter((island) => island.owned)
+    const now = new Set<string>()
+    for (const island of owned) {
+      for (const warning of findShortages(toIslandState(state, island.id))) {
+        const key = `${island.id}:${warning.good}`
+        now.add(key)
+        if (!warned.current.has(key)) {
+          const text = shortageText(warning.good, warning.cycles)
+          push(owned.length > 1 ? `${island.name}: ${text}` : text)
+        }
+      }
     }
     warned.current = now
 
@@ -42,7 +51,7 @@ export function Toasts({ state }: { state: GameState }) {
     wasInDebt.current = inDebt
     // Only re-check when a cycle was settled.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cycle])
+  }, [cycleIndex])
 
   useEffect(() => {
     const pending = timers.current

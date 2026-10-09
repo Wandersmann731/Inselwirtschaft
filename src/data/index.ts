@@ -13,7 +13,7 @@ export const goods: GoodDef[] = goodsJson
 export const buildings: BuildingDef[] = buildingsJson as BuildingDef[]
 export const tiers: TierDef[] = tiersJson as TierDef[]
 export const climates: ClimateDef[] = climatesJson
-export const world: WorldConfig = worldJson
+export const world = worldJson as WorldConfig
 
 const buildingMap = new Map(buildings.map((def) => [def.id, def]))
 

@@ -1,9 +1,10 @@
 import { config, getBuilding } from '../data'
 import { generateIsland } from '../world/islandGenerator'
+import { generateWorld, layoutRng, layoutWorld } from '../world/worldGenerator'
 import { emptyLedger } from './ledger'
 import { createProduction } from './productionState'
 import { createHouse } from './tiers'
-import { CURRENT_SAVE_VERSION, createInitialState, type GameState } from './state'
+import { CURRENT_SAVE_VERSION, type GameState, type Island } from './state'
 
 type RawState = Record<string, unknown>
 /** Upgrades a save from version N to N + 1. */
@@ -44,8 +45,9 @@ export const MIGRATIONS: Record<number, Migration> = {
   // v6 makes all houses 2x2 and the islands much larger. The old layout no longer fits:
   // the world is generated again from the seed and the buildings are gone. Time, coins and goods stay.
   5: (data) => {
-    const fresh = createInitialState(Number(data.seed))
-    return { ...fresh, tick: data.tick, speed: data.speed, coins: data.coins, stock: data.stock, rngState: data.rngState }
+    const map = generateIsland(Number(data.seed))
+    const zeros = new Array(map.tiles.length).fill(0)
+    return { ...data, map, buildings: [], nextBuildingId: 1, occupancy: zeros, roads: [...zeros], highestTier: 0 }
   },
   // v7 adds the economy ledger and the utilisation of producers.
   6: (data) => ({
@@ -57,6 +59,32 @@ export const MIGRATIONS: Record<number, Migration> = {
         : building,
     ),
   }),
+  // v8 moves the single island into the archipelago: the old island becomes the home island,
+  // the other islands are generated from the seed.
+  7: (data) => {
+    const generated = generateWorld(Number(data.seed)).islands
+    const home = {
+      ...generated[0],
+      map: data.map,
+      buildings: data.buildings,
+      nextBuildingId: data.nextBuildingId,
+      occupancy: data.occupancy,
+      roads: data.roads,
+      stock: data.stock,
+      economy: data.economy,
+    } as unknown as Island
+    const islands = [home, ...generated.slice(1)]
+    return {
+      seed: data.seed,
+      rngState: data.rngState,
+      tick: data.tick,
+      speed: data.speed,
+      coins: data.coins,
+      highestTier: data.highestTier,
+      islands,
+      world: layoutWorld(islands, layoutRng(Number(data.seed))),
+    }
+  },
 }
 
 /** Brings a raw saved object up to the current version or throws if that is impossible. */

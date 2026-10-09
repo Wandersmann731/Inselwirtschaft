@@ -1,7 +1,38 @@
 [
   {
+    "id": "polar",
+    "name": "Polarzone",
+    "color": "#dbe9f0",
+    "fertilities": []
+  },
+  {
+    "id": "tundra",
+    "name": "Tundrazone",
+    "color": "#9fb59b",
+    "fertilities": ["forest", "cattle", "fur", "potatoes"]
+  },
+  {
     "id": "north",
-    "name": "Nord",
-    "fertilities": ["sheep"]
+    "name": "Nordzone",
+    "color": "#6aa84f",
+    "fertilities": ["forest", "cattle", "fur", "sheep", "grain", "potatoes", "hops"]
+  },
+  {
+    "id": "prairie",
+    "name": "Präriezone",
+    "color": "#a9c24a",
+    "fertilities": ["forest", "cattle", "sheep", "grain", "hops", "wine"]
+  },
+  {
+    "id": "steppe",
+    "name": "Steppenzone",
+    "color": "#d9b44a",
+    "fertilities": ["forest", "cattle", "grain", "cotton", "tobacco", "spices", "wine", "sugar"]
+  },
+  {
+    "id": "jungle",
+    "name": "Dschungelzone",
+    "color": "#2f8f4a",
+    "fertilities": ["forest", "cattle", "cotton", "tobacco", "spices", "silk", "indigo", "sugar"]
   }
 ]

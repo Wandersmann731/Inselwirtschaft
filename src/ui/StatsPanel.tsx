@@ -1,33 +1,33 @@
 import { goods, tiers } from '../data'
 import { balanceOf } from '../sim/economy'
-import type { GameState } from '../sim/state'
+import type { GameState, IslandState } from '../sim/state'
 import { residentsOfTier } from '../sim/tiers'
 import { findShortages } from '../sim/warnings'
 import { formatSigned, formatWhole } from './messages'
 
 const oneDecimal = (value: number): string => value.toFixed(1).replace('.', ',')
 
-/** Statistics window: money of the last cycle, residents per tier and production and use per good. */
-export function StatsPanel({ state, onClose }: { state: GameState; onClose: () => void }) {
-  const last = state.economy.last
-  const warned = new Map(findShortages(state).map((warning) => [warning.good, warning.cycles]))
+/** Statistics window: money of the last cycle, residents per tier and production and use per good on the island on screen. */
+export function StatsPanel({ state, island, onClose }: { state: GameState; island: IslandState; onClose: () => void }) {
+  const last = island.economy.last
+  const warned = new Map(findShortages(island).map((warning) => [warning.good, warning.cycles]))
   const rows = goods.filter(
     (good) =>
-      (state.stock[good.id] ?? 0) >= 1 || (last?.produced[good.id] ?? 0) > 0 || (last?.consumed[good.id] ?? 0) > 0,
+      (island.stock[good.id] ?? 0) >= 1 || (last?.produced[good.id] ?? 0) > 0 || (last?.consumed[good.id] ?? 0) > 0,
   )
 
   return (
     <div className="stats-backdrop" onClick={onClose}>
       <div className="stats-panel" onClick={(event) => event.stopPropagation()}>
         <div className="panel-title">
-          <strong>Statistik</strong>
+          <strong>Statistik: {island.name}</strong>
           <button type="button" className="panel-close" onClick={onClose} aria-label="Schließen">
             ×
           </button>
         </div>
 
         <div className="stats-scroll">
-          <h3>Letzter Zyklus</h3>
+          <h3>Letzter Zyklus dieser Insel</h3>
           {last ? (
             <table className="stats-table">
               <tbody>
@@ -49,7 +49,7 @@ export function StatsPanel({ state, onClose }: { state: GameState; onClose: () =
             <p className="stats-note">Die Zahlen erscheinen nach dem ersten Wirtschaftszyklus (60 Ticks).</p>
           )}
 
-          <h3>Einwohner</h3>
+          <h3>Einwohner (alle Inseln)</h3>
           <table className="stats-table">
             <tbody>
               {tiers.map((tier) => (
@@ -75,7 +75,7 @@ export function StatsPanel({ state, onClose }: { state: GameState; onClose: () =
               {rows.map((good) => (
                 <tr key={good.id} className={warned.has(good.id) ? 'warned' : undefined}>
                   <td>{good.name}</td>
-                  <td>{formatWhole(state.stock[good.id] ?? 0)}</td>
+                  <td>{formatWhole(island.stock[good.id] ?? 0)}</td>
                   <td>{oneDecimal(last?.produced[good.id] ?? 0)}</td>
                   <td>{oneDecimal(last?.consumed[good.id] ?? 0)}</td>
                 </tr>

@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { config, getBuilding, tiers } from '../src/data'
 import { checkPlacement, placeBuilding } from '../src/sim/build'
-import { runCycle } from '../src/sim/cycle'
 import { runPopulation } from '../src/sim/population'
 import { createRng } from '../src/sim/rng'
-import type { GameState } from '../src/sim/state'
-import { tick } from '../src/sim/tick'
+import type { IslandState } from '../src/sim/state'
+import { tickFlat as tick, cycleFlat } from './helpers'
 import { isBuildingUnlocked, residentsOfTier } from '../src/sim/tiers'
 import { grassField, patchHouse } from './helpers'
 
@@ -16,12 +15,12 @@ const ALL_MET = { food: 100, cloth: 100, chapel: 100 }
 const SHORT = { food: 0, cloth: 100, chapel: 100 }
 
 /** One house (id 1) on an otherwise empty field. */
-function oneHouse(): GameState {
+function oneHouse(): IslandState {
   return { ...placeBuilding(grassField(30, 30, rich), 'house_pioneers', 10, 10, false), highestTier: 0 }
 }
 
-const house = (state: GameState) => state.buildings.find((b) => b.house)!.house!
-const cycles = (state: GameState, n: number): GameState => {
+const house = (state: IslandState) => state.buildings.find((b) => b.house)!.house!
+const cycles = (state: IslandState, n: number): IslandState => {
   let next = state
   for (let i = 0; i < n; i++) next = runPopulation(next)
   return next
@@ -46,7 +45,7 @@ describe('moving in and out', () => {
 })
 
 describe('rising a tier', () => {
-  const ready = (): GameState => patchHouse(oneHouse(), 1, { needs: ALL_MET, residents: 8 })
+  const ready = (): IslandState => patchHouse(oneHouse(), 1, { needs: ALL_MET, residents: 8 })
 
   it('rises to settlers after the upgrade delay if all needs are met and materials are there', () => {
     let state = cycles(ready(), upgradeCycles - 1)
@@ -127,7 +126,7 @@ describe('falling a tier', () => {
 })
 
 describe('aristocrats', () => {
-  const aristocrat = (needs: Record<string, number>): GameState =>
+  const aristocrat = (needs: Record<string, number>): IslandState =>
     patchHouse(oneHouse(), 1, { tier: 'aristocrats', residents: 30, needs })
 
   it('turns into a ruin after a short shortage instead of falling back', () => {
@@ -225,6 +224,6 @@ describe('economy cycle in the tick', () => {
     state = placeBuilding(state, 'food_salt_stand', 14, 10, false)
     state = placeBuilding(state, 'cloth_stand', 14, 12, false)
     const before = { ...state, stock: { ...state.stock, food: 100, cloth: 100 } }
-    expect(runCycle(before).coins).toBeGreaterThan(before.coins)
+    expect(cycleFlat(before).coins).toBeGreaterThan(before.coins)
   })
 })

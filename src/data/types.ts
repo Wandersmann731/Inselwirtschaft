@@ -122,7 +122,22 @@ export interface TierDef {
 export interface ClimateDef {
   id: string
   name: string
+  /** Colour of the island on the world map. */
+  color: string
   fertilities: string[]
+}
+
+export type IslandRole = 'home' | 'colony' | 'trader'
+
+/** One island of the archipelago as it is generated at the start of a game. */
+export interface IslandSpec {
+  role: IslandRole
+  name: string
+  climate: string
+  /** Edge length in tiles: min and max. */
+  size: [number, number]
+  /** Minerals that can be mined on the mountains: stone, ore, salt, gold, gems. */
+  deposits: string[]
 }
 
 export interface WorldConfig {
@@ -133,6 +148,15 @@ export interface WorldConfig {
   minZoom: number
   maxZoom: number
   input: { tapSlopPx: number; tapMaxMs: number; wheelZoomSpeed: number }
+  sea: {
+    /** Island tiles per cell of the world map. */
+    cellTiles: number
+    width: number
+    height: number
+    /** Free cells kept between islands. */
+    islandGap: number
+  }
+  archipelago: IslandSpec[]
   island: {
     minSize: number
     maxSize: number

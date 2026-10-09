@@ -1,10 +1,10 @@
 import { config } from '../data'
 import { emptyLedger } from './ledger'
 import { upkeepOf } from './production'
-import type { CycleLedger, GameState } from './state'
+import type { CycleLedger, IslandState } from './state'
 
 /** Total upkeep of all buildings per economy cycle. Shut down buildings cost less. */
-export function totalUpkeep(state: GameState): number {
+export function totalUpkeep(state: IslandState): number {
   return state.buildings.reduce((sum, building) => sum + upkeepOf(building), 0)
 }
 
@@ -18,7 +18,7 @@ export function balanceOf(ledger: CycleLedger): number {
  * the last one and starts an empty one. Producers get the utilisation of the cycle.
  * Coins may go negative, which blocks new construction.
  */
-export function settleCycle(state: GameState): GameState {
+export function settleCycle(state: IslandState): IslandState {
   const upkeep = totalUpkeep(state)
   const last: CycleLedger = { ...state.economy.current, upkeep }
   const buildings = state.buildings.map((building) => {

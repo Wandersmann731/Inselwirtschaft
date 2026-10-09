@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { priceOf } from '../src/data'
 import { placeBuilding } from '../src/sim/build'
 import { runMarket } from '../src/sim/market'
-import type { GameState } from '../src/sim/state'
+import type { IslandState } from '../src/sim/state'
 import { grassField, patchBuilding, patchHouse } from './helpers'
 
 const rich = { coins: 1_000_000, stock: { tools: 500, wood: 500, bricks: 500, marble: 50 } }
 
 /** A house at (10,10) with the given residents, a food stand and a cloth stand next to it and a chapel nearby. */
-function village(residents: number, stock: Record<string, number> = {}): GameState {
+function village(residents: number, stock: Record<string, number> = {}): IslandState {
   let state = grassField(50, 30, { ...rich, coins: 1000 })
   state = placeBuilding(state, 'house_pioneers', 10, 10, false)
   state = placeBuilding(state, 'food_salt_stand', 14, 10, false)
@@ -18,7 +18,7 @@ function village(residents: number, stock: Record<string, number> = {}): GameSta
   return { ...state, coins: 1000, stock: { food: 100, cloth: 100, ...stock } }
 }
 
-const house = (state: GameState) => state.buildings.find((b) => b.house)!.house!
+const house = (state: IslandState) => state.buildings.find((b) => b.house)!.house!
 
 describe('market', () => {
   it('sells food to the residents, takes it from the store and pays the price', () => {

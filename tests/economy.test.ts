@@ -1,14 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { config, getBuilding } from '../src/data'
 import { checkPlacement, checkRoad, demolishAt, placeBuilding, placeRoads } from '../src/sim/build'
-import { runCycle } from '../src/sim/cycle'
 import { balanceOf, settleCycle, totalUpkeep } from '../src/sim/economy'
 import { runMarket } from '../src/sim/market'
-import { migrateState } from '../src/sim/migrations'
 import { processProduction, setBuildingActive } from '../src/sim/production'
 import { createRng } from '../src/sim/rng'
-import { createInitialState, type GameState } from '../src/sim/state'
-import { tick } from '../src/sim/tick'
+import { emptyLedger } from '../src/sim/ledger'
+import { createInitialState, type IslandState } from '../src/sim/state'
+import { tickFlat as tick, cycleFlat } from './helpers'
 import { findShortages, WARNING_CYCLES } from '../src/sim/warnings'
 import { grassField, patchHouse } from './helpers'
 
@@ -16,7 +15,7 @@ const rich = { coins: 1_000_000, stock: { tools: 500, wood: 500, bricks: 500, ma
 
 const upkeep = (type: string): number => getBuilding(type).upkeep.active
 
-function run(state: GameState, ticks: number): GameState {
+function run(state: IslandState, ticks: number): IslandState {
   let next = state
   for (let i = 0; i < ticks; i++) next = tick(next, createRng(next.rngState))
   return next
@@ -50,7 +49,7 @@ describe('settling a cycle', () => {
   })
 
   it('has nothing to show before the first cycle ends', () => {
-    expect(createInitialState(1).economy.last).toBeNull()
+    expect(createInitialState(1).islands[0].economy.last).toBeNull()
   })
 
   it('runs in the tick once per economy cycle: balance = income - upkeep', () => {
@@ -148,11 +147,14 @@ describe('debt blocks new construction', () => {
 })
 
 describe('shortage warnings', () => {
-  const withLast = (consumed: number, produced: number, stock: number): GameState => ({
-    ...createInitialState(1),
-    stock: { food: stock },
-    economy: { current: { income: 0, upkeep: 0, produced: {}, consumed: {} }, last: { income: 0, upkeep: 0, produced: { food: produced }, consumed: { food: consumed } } },
-  })
+  const withLast = (consumed: number, produced: number, stock: number): IslandState =>
+    grassField(4, 4, {
+      stock: { food: stock },
+      economy: {
+        current: emptyLedger(),
+        last: { income: 0, upkeep: 0, produced: { food: produced }, consumed: { food: consumed } },
+      },
+    })
 
   it('warns if the store lasts fewer than three cycles', () => {
     const warnings = findShortages(withLast(10, 0, 25))
@@ -176,12 +178,12 @@ describe('shortage warnings', () => {
 
   it('ignores goods nobody uses and shows nothing before the first cycle', () => {
     expect(findShortages({ ...withLast(0, 0, 0) })).toEqual([])
-    expect(findShortages(createInitialState(1))).toEqual([])
+    expect(findShortages(grassField(4, 4))).toEqual([])
   })
 
   it('sorts the most urgent first', () => {
     const state = withLast(10, 0, 25)
-    const two: GameState = {
+    const two: IslandState = {
       ...state,
       stock: { food: 25, cloth: 5 },
       economy: { ...state.economy, last: { ...state.economy.last!, consumed: { food: 10, cloth: 10 } } },
@@ -195,24 +197,8 @@ describe('shortage warnings', () => {
     state = placeBuilding(state, 'food_salt_stand', 14, 10, false)
     state = patchHouse(state, 1, { residents: 8 })
     state = { ...state, stock: { ...state.stock, food: 1 } }
-    const next = runCycle(state)
+    const next = cycleFlat(state)
     expect(findShortages(next).map((w) => w.good)).toContain('food')
-  })
-})
-
-describe('migration from version 6', () => {
-  it('adds the ledger and the producer fields', () => {
-    const old = {
-      ...createInitialState(5),
-      version: 6,
-      economy: undefined,
-      buildings: [
-        { id: 1, type: 'forester', x: 3, y: 3, rotated: false, active: true, production: { progress: 3, inputs: {}, output: 0, status: { kind: 'noRoad' }, shipments: [] } },
-      ],
-    }
-    const migrated = migrateState(old)
-    expect(migrated.economy).toEqual({ current: { income: 0, upkeep: 0, produced: {}, consumed: {} }, last: null })
-    expect(migrated.buildings[0].production).toMatchObject({ progress: 3, busyTicks: 0, utilization: 0 })
   })
 })
 

@@ -1,12 +1,13 @@
 import { config, getBuilding } from '../data'
 import { adjacentRoadTiles, roadDistances } from '../world/pathfinding'
 import { buildingRect, inRadius } from './coverage'
-import type { GameState } from './state'
+import type { IslandState } from './state'
 
 /** How a producer is tied to the island store: not at all, or with a delivery time. */
 export type Link = { kind: 'ok'; delay: number } | { kind: 'noRoad' } | { kind: 'noHub' }
 
-let cache: { roads: number[]; occupancy: number[]; links: Map<number, Link> } | null = null
+/** One cached result per island, found by its road array. */
+const cache = new WeakMap<number[], { occupancy: number[]; links: Map<number, Link> }>()
 
 /**
  * Link of every producing building. A producer delivers to a market house or Kontor if it
@@ -14,14 +15,15 @@ let cache: { roads: number[]; occupancy: number[]; links: Map<number, Link> } | 
  * producer to the hub. The delay is the road length times config.production.ticksPerRoadTile.
  * The result only changes when roads or buildings change, so it is cached on those.
  */
-export function getLinks(state: GameState): Map<number, Link> {
-  if (cache && cache.roads === state.roads && cache.occupancy === state.occupancy) return cache.links
+export function getLinks(state: IslandState): Map<number, Link> {
+  const hit = cache.get(state.roads)
+  if (hit && hit.occupancy === state.occupancy) return hit.links
   const links = computeLinks(state)
-  cache = { roads: state.roads, occupancy: state.occupancy, links }
+  cache.set(state.roads, { occupancy: state.occupancy, links })
   return links
 }
 
-function computeLinks(state: GameState): Map<number, Link> {
+function computeLinks(state: IslandState): Map<number, Link> {
   const { width, height } = state.map
   const hubs = state.buildings
     .map((building) => ({ building, def: getBuilding(building.type) }))

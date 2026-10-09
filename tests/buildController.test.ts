@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { BuildController } from '../src/game/buildController'
 import { GameLoop } from '../src/game/gameLoop'
+import { liftIsland } from '../src/sim/islands'
 import { testIsland } from './helpers'
 
 function setup() {
-  const loop = new GameLoop(testIsland())
+  const loop = new GameLoop(liftIsland(testIsland()))
   return { loop, tool: new BuildController(loop) }
 }
 
@@ -23,7 +24,7 @@ describe('BuildController', () => {
     tool.startPlacing('house_pioneers')
     expect(tool.getSnapshot().origin).toBeNull()
     tool.confirm()
-    expect(loop.getState().buildings).toHaveLength(0)
+    expect(loop.getIslandState().buildings).toHaveLength(0)
   })
 
   it('builds on confirm, stays in placing mode and clears the ghost', () => {
@@ -31,7 +32,7 @@ describe('BuildController', () => {
     tool.startPlacing('house_pioneers')
     tool.setCenter({ x: 5, y: 5 })
     tool.confirm()
-    expect(loop.getState().buildings).toHaveLength(1)
+    expect(loop.getIslandState().buildings).toHaveLength(1)
     expect(tool.getSnapshot().mode).toBe('place')
     expect(tool.getSnapshot().origin).toBeNull()
   })
@@ -41,7 +42,7 @@ describe('BuildController', () => {
     tool.startPlacing('house_pioneers')
     tool.setCenter({ x: 0, y: 0 }) // water
     tool.confirm()
-    expect(loop.getState().buildings).toHaveLength(0)
+    expect(loop.getIslandState().buildings).toHaveLength(0)
   })
 
   it('draws a road along the drag and applies it on release', () => {
@@ -50,9 +51,9 @@ describe('BuildController', () => {
     tool.strokeStart({ x: 3, y: 3 })
     tool.strokeMove({ x: 6, y: 3 })
     expect(tool.getSnapshot().stroke).toHaveLength(4)
-    expect(loop.getState().roads.some((v) => v === 1)).toBe(false)
+    expect(loop.getIslandState().roads.some((v) => v === 1)).toBe(false)
     tool.strokeEnd()
-    expect(loop.getState().roads.filter((v) => v === 1)).toHaveLength(4)
+    expect(loop.getIslandState().roads.filter((v) => v === 1)).toHaveLength(4)
     expect(tool.getSnapshot().stroke).toHaveLength(0)
   })
 
@@ -66,7 +67,7 @@ describe('BuildController', () => {
     tool.strokeStart({ x: 3, y: 3 })
     tool.strokeMove({ x: 5, y: 3 })
     tool.strokeEnd()
-    expect(loop.getState().roads.some((v) => v === 1)).toBe(false)
+    expect(loop.getIslandState().roads.some((v) => v === 1)).toBe(false)
   })
 
   it('cancel returns to idle', () => {
@@ -96,10 +97,10 @@ describe('BuildController', () => {
     tool.startPlacing('forester')
     tool.setCenter({ x: 5, y: 5 })
     tool.confirm()
-    const id = loop.getState().buildings[0].id
+    const id = loop.getIslandState().buildings[0].id
     tool.setActive(id, false)
-    expect(loop.getState().buildings[0].active).toBe(false)
+    expect(loop.getIslandState().buildings[0].active).toBe(false)
     tool.setActive(id, true)
-    expect(loop.getState().buildings[0].active).toBe(true)
+    expect(loop.getIslandState().buildings[0].active).toBe(true)
   })
 })
