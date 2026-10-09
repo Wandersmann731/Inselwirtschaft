@@ -40,6 +40,8 @@ export interface GameConfig {
 export interface GoodDef {
   id: string
   name: string
+  /** Base price in trade between islands. The trader buys below and sells above it. */
+  tradePrice: number
   /** Coins paid by residents for one unit at a market stand. */
   price?: number
 }
@@ -185,4 +187,27 @@ export interface NamedId {
 export interface LandNames {
   fertilities: NamedId[]
   deposits: NamedId[]
+}
+
+export interface TradeConfig {
+  ship: {
+    name: string
+    /** Tons of cargo. */
+    capacity: number
+    /** World map cells per tick. */
+    speed: number
+    cost: BuildingCost
+  }
+  trader: {
+    /** The trader sells at base price times this. */
+    sellMultiplier: number
+    /** The trader buys at base price times this. */
+    buyMultiplier: number
+    /** Most of one good the trader moves per Kontor and economy cycle. */
+    visitCapacity: number
+    /** Goods the trader has to sell. He buys everything. */
+    sells: string[]
+  }
+  /** Amounts offered in the route editor. The last one stands for "all". */
+  orderAmounts: number[]
 }

@@ -116,7 +116,8 @@ export function checkPlacement(
   return null
 }
 
-function pay(state: IslandState, cost: BuildingCost): Pick<IslandState, 'coins' | 'stock' | 'economy'> {
+/** Takes the cost from the island store and the treasury and notes the goods as used. */
+export function pay(state: IslandState, cost: BuildingCost): Pick<IslandState, 'coins' | 'stock' | 'economy'> {
   const stock = { ...state.stock }
   const ledger = cloneLedger(state.economy.current)
   for (const good of goods) {

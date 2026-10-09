@@ -1,6 +1,7 @@
 import { getBuilding } from '../data'
 import { footprint, demolishTiles, placeBuilding, placeRoads } from '../sim/build'
 import { setBuildingActive } from '../sim/production'
+import { buildShip } from '../sim/ships'
 import type { GameLoop } from './gameLoop'
 import { strokeLine, type Tile } from './stroke'
 
@@ -77,6 +78,12 @@ export class BuildController {
   selectBuilding(id: number | null): void {
     if (this.snapshot.mode !== 'none' || this.snapshot.selectedBuildingId === id) return
     this.set({ ...this.snapshot, selectedBuildingId: id })
+  }
+
+  /** Builds a ship at the shipyard of the island on screen. */
+  buildShip(): void {
+    const islandId = this.loop.activeIsland
+    this.loop.dispatch((state) => buildShip(state, islandId))
   }
 
   /** Switches a building on or off (shut down). */

@@ -740,5 +740,16 @@
     "placement": "land",
     "color": "#c0504d",
     "catchment": 20
+  },
+  {
+    "id": "shipyard",
+    "name": "Werft",
+    "category": "infrastructure",
+    "size": [3, 3],
+    "cost": { "tools": 5, "wood": 20, "bricks": 0, "marble": 0, "coins": 1500 },
+    "upkeep": { "active": 30, "idle": 8 },
+    "unlockTier": "settlers",
+    "placement": "coast",
+    "color": "#6b5b3e"
   }
 ]

@@ -34,6 +34,7 @@ export function stateFromRows(rows: string[], overrides: Partial<IslandState> = 
     roads: new Array(tiles.length).fill(0),
     stock: { ...config.startStock },
     economy: { current: emptyLedger(), last: null },
+    trade: {},
   }
   const game = createStateWith(1, [island], { width: 1, height: 1, cells: [1], placements: [] })
   return { ...game, ...island, highestTier: 3, ...overrides }

@@ -41,6 +41,28 @@ export function WorldMap({ state, activeIsland, onSelect, onClose }: WorldMapPro
       }
     }
 
+    for (const ship of state.ships) {
+      const sx = offsetX + (ship.x + 0.5) * scale
+      const sy = offsetY + (ship.y + 0.5) * scale
+      if (ship.path.length > 0) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'
+        ctx.lineWidth = 1.5 * dpr
+        ctx.setLineDash([4 * dpr, 4 * dpr])
+        ctx.beginPath()
+        ctx.moveTo(sx, sy)
+        for (const point of ship.path) ctx.lineTo(offsetX + (point.x + 0.5) * scale, offsetY + (point.y + 0.5) * scale)
+        ctx.stroke()
+        ctx.setLineDash([])
+      }
+      ctx.fillStyle = '#ffffff'
+      ctx.strokeStyle = '#000000'
+      ctx.lineWidth = 1.5 * dpr
+      ctx.beginPath()
+      ctx.arc(sx, sy, 5 * dpr, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.stroke()
+    }
+
     ctx.font = `${Math.round(13 * dpr)}px system-ui, sans-serif`
     ctx.textAlign = 'center'
     for (const placement of state.world.placements) {
@@ -60,7 +82,7 @@ export function WorldMap({ state, activeIsland, onSelect, onClose }: WorldMapPro
       ctx.fillStyle = '#ffffff'
       ctx.fillText(label, x, y + 5 * dpr)
     }
-  }, [state.world, state.islands, activeIsland, width, height, cells])
+  }, [state.world, state.islands, state.ships, activeIsland, width, height, cells])
 
   const choose = (event: React.PointerEvent<HTMLCanvasElement>): void => {
     const rect = event.currentTarget.getBoundingClientRect()

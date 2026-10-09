@@ -1,13 +1,23 @@
-import { config, getBuilding } from '../data'
+import { config, getBuilding, trade } from '../data'
 import { cumulativeNeeds, getTier } from '../sim/tiers'
 import type { BuildController } from '../game/buildController'
 import { STATUS_COLORS } from '../render/buildingRenderer'
 import { upkeepOf } from '../sim/production'
 import type { IslandState } from '../sim/state'
-import { needLabel, resourceName, statusText } from './messages'
+import { formatCost, needLabel, resourceName, statusText } from './messages'
 
 /** Info panel of the selected building: state of a producer, buffers, upkeep and the off switch. */
-export function BuildingPanel({ tool, state, buildingId }: { tool: BuildController; state: IslandState; buildingId: number }) {
+export function BuildingPanel({
+  tool,
+  state,
+  buildingId,
+  onOpenKontor,
+}: {
+  tool: BuildController
+  state: IslandState
+  buildingId: number
+  onOpenKontor: () => void
+}) {
   const building = state.buildings.find((b) => b.id === buildingId)
   if (!building) return null
   const def = getBuilding(building.type)
@@ -59,6 +69,16 @@ export function BuildingPanel({ tool, state, buildingId }: { tool: BuildControll
       <div className="panel-line">
         Unterhalt: {upkeepOf(building)} Münzen pro Zyklus{building.active ? '' : ' (stillgelegt)'}
       </div>
+      {building.type === 'kontor' && (
+        <button type="button" className="action-button panel-toggle" onClick={onOpenKontor}>
+          Handel einstellen
+        </button>
+      )}
+      {building.type === 'shipyard' && (
+        <button type="button" className="action-button panel-toggle" onClick={() => tool.buildShip()}>
+          Schiff bauen ({formatCost(trade.ship.cost)})
+        </button>
+      )}
       <button
         type="button"
         className="action-button panel-toggle"

@@ -11,10 +11,12 @@ interface BuildBarProps {
   island: IslandState
   onOpenStats: () => void
   onOpenWorld: () => void
+  onOpenTrade: () => void
+  onOpenKontor: () => void
 }
 
 /** Bottom bar: the build menu, or the bar of the active build tool. */
-export function BuildBar({ tool, island, onOpenStats, onOpenWorld }: BuildBarProps) {
+export function BuildBar({ tool, island, onOpenStats, onOpenWorld, onOpenTrade, onOpenKontor }: BuildBarProps) {
   const snapshot = useSyncExternalStore(tool.subscribe, tool.getSnapshot)
   if (!island.owned) return <ForeignBar />
   if (snapshot.mode === 'place') return <PlaceBar tool={tool} snapshot={snapshot} state={island} />
@@ -22,9 +24,9 @@ export function BuildBar({ tool, island, onOpenStats, onOpenWorld }: BuildBarPro
   return (
     <>
       {snapshot.selectedBuildingId !== null && (
-        <BuildingPanel tool={tool} state={island} buildingId={snapshot.selectedBuildingId} />
+        <BuildingPanel tool={tool} state={island} buildingId={snapshot.selectedBuildingId} onOpenKontor={onOpenKontor} />
       )}
-      <BuildMenu tool={tool} state={island} onOpenStats={onOpenStats} onOpenWorld={onOpenWorld} />
+      <BuildMenu tool={tool} state={island} onOpenStats={onOpenStats} onOpenWorld={onOpenWorld} onOpenTrade={onOpenTrade} />
     </>
   )
 
