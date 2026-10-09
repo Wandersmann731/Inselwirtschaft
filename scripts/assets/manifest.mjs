@@ -37,6 +37,8 @@ function parseCsv(text) {
 }
 
 /** Field buildings: flat ground with a small building, not a raised block. */
+const PLOTS = new Set(['forester', 'fishery', 'quarry', 'ore_mine', 'salt_mine', 'gold_mine', 'gem_mine'])
+const MINES = new Set(['quarry', 'ore_mine', 'salt_mine', 'gold_mine', 'gem_mine'])
 const FARMS = new Set([
   'cotton_plantation', 'sheep_farm', 'potato_farm', 'tobacco_plantation', 'hops_farm', 'spice_plantation',
   'grain_farm', 'sugar_plantation', 'vineyard', 'silk_plantation', 'indigo_farm', 'cattle_farm',
@@ -66,12 +68,26 @@ function jobFor(row) {
 
   if (dir === 'buildings' || id === 'scaffold_2x2') {
     job.kind = 'building'
-    job.guide = `docs/vorlagen/buildings/${id === 'scaffold_2x2' ? 'house_pioneers' : id}_guide.png`
+    // variants (house_pioneers_3, farm_2 ...) share the guide of their base building
+    const base = id === 'scaffold_2x2' ? 'house_pioneers' : id.replace(/_\d+$/, '')
+    job.guide = `docs/vorlagen/buildings/${base}_guide.png`
     job.prompt =
       `Turn the grey isometric block on the magenta background into ${desc}. ` +
       'Keep the exact silhouette, size, position and 2:1 isometric perspective of the block: the building must stand on the diamond-shaped ground area, fill the block volume and not extend beyond it, a roof may overhang only slightly. Do not draw any outline, frame or hexagon around the building. Draw no smoke and no steam (it is added later by the game). ' +
       `${STYLE} Keep the flat magenta background (#FF00FF) completely empty and use no magenta or pink colour in the building. No text, no people.`
-    if (FARMS.has(id)) {
+    if (base.startsWith('house_') || FARMS.has(base) || PLOTS.has(base)) job.cutSlab = true
+    if (base.startsWith('house_') || PLOTS.has(base)) {
+      job.prompt =
+        `Turn the grey diamond on the magenta background into the small flat plot of land of a house, and the grey box into ${desc}. ` +
+        'The plot is flat and ends exactly at the edges of the diamond: no raised slab, no thickness, no earth cross-section, no side walls, no plinth and no outline around the diamond. ' +
+        'The house stands in the middle of the plot and is clearly smaller than the plot, so that neighbouring houses never touch: the house itself must not reach the corners of the diamond. ' +
+        `${STYLE} Keep the flat magenta background (#FF00FF) completely empty and use no magenta or pink colour. No text, no people. Draw no smoke.` +
+        (MINES.has(base)
+          ? ' The ground of the plot is bare grey-brown rock, gravel and a few small boulders with no hard border, and the working is cut into a rocky slope, so that it blends into the surrounding mountain.'
+          : PLOTS.has(base)
+            ? ' The ground of the plot is natural: grass, leaf litter, soil, a few stumps or sand, with no hard border, so that it can blend into the surrounding forest or shore.'
+            : '')
+    } else if (FARMS.has(base)) {
       job.prompt =
         `Turn the flat grey diamond on the magenta background into ${desc}. The grey box at the back corner becomes the small farm building. ` +
         'The ground must be perfectly flat and end exactly at the edges of the diamond: no raised slab, no thickness, no earth cross-section, no side walls, no plinth, no outline around the diamond. ' +

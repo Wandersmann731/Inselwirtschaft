@@ -13,6 +13,13 @@ export const DECOR_VARIANTS: Record<DecorKind, number> = {
   peak_small: 3, peak_medium: 3, peak_large: 3, peak_snow: 2,
 }
 
+/** Tall objects stand in front of nearby buildings and are drawn together with them. Low ones stay in the ground picture. */
+const TALL: ReadonlySet<DecorKind> = new Set(['tree', 'pine', 'palm', 'bush', 'rock', 'peak_small', 'peak_medium', 'peak_large', 'peak_snow'])
+
+export function isTall(kind: DecorKind): boolean {
+  return TALL.has(kind)
+}
+
 export interface DecorItem {
   kind: DecorKind
   /** 1-based picture variant. */
@@ -63,10 +70,10 @@ export function decorForTile(ctx: DecorContext, tx: number, ty: number): DecorIt
   if (terrain === Terrain.Forest) {
     const density = fbm(tx * 0.16, ty * 0.16, seed + 3, 3) // groves and clearings
     const coniferShare = fbm(tx * 0.1 + 40, ty * 0.1 + 40, seed + 5, 2) + (COLD.has(ctx.climate) ? 0.22 : -0.12)
-    const count = density < 0.3 ? (chance(1) < 0.5 ? 1 : 0) : density < 0.45 ? 2 : 3 + (chance(2) < 0.4 ? 1 : 0)
+    const count = density < 0.28 ? (chance(1) < 0.65 ? 1 : 0) : density < 0.45 ? 2 + (chance(2) < 0.4 ? 1 : 0) : 4 + (chance(2) < 0.5 ? 1 : 0)
     for (let i = 0; i < count; i++) {
       const pine = hash2(tx * 7 + i, ty * 5, seed + 9) < Math.max(0.05, Math.min(0.95, coniferShare))
-      items.push(make(ctx, 10 + i, tx, ty, pine ? 'pine' : 'tree', 0.9, 0.82, 1.22))
+      items.push(make(ctx, 10 + i, tx, ty, pine ? 'pine' : 'tree', 0.95, 0.62, 1.38))
     }
     if (chance(3) < 0.18) items.push(make(ctx, 20, tx, ty, 'bush', 0.9, 0.7, 1))
     if (chance(4) < 0.2) items.push(make(ctx, 21, tx, ty, 'tuft', 0.9, 0.8, 1.1))
@@ -87,16 +94,16 @@ export function decorForTile(ctx: DecorContext, tx: number, ty: number): DecorIt
     const ridge = fbm(tx * 0.13 + 90, ty * 0.13 + 90, seed + 15, 3) // ridges inside the mountain
     const height = depth + (ridge - 0.5) * 5
     if (height >= 5.5) {
-      if (chance(14) < 0.34) {
-        const snow = height >= 8 && chance(15) < 0.7
+      if (chance(14) < 0.2) {
+        const snow = height >= 8.5 && chance(15) < 0.5
         items.push(make(ctx, 50, tx, ty, snow ? 'peak_snow' : 'peak_large', 0.9, 0.85 + Math.min(0.35, (height - 5.5) * 0.06), 1.15 + Math.min(0.4, (height - 5.5) * 0.06)))
       }
-      if (chance(16) < 0.22) items.push(make(ctx, 51, tx, ty, 'peak_small', 1, 0.6, 0.95))
+      if (chance(16) < 0.14) items.push(make(ctx, 51, tx, ty, 'peak_small', 1, 0.6, 0.95))
     } else if (height >= 3) {
-      if (chance(17) < 0.38) items.push(make(ctx, 52, tx, ty, 'peak_medium', 0.9, 0.8, 1.2))
-      if (chance(18) < 0.2) items.push(make(ctx, 53, tx, ty, 'peak_small', 1, 0.7, 1))
+      if (chance(17) < 0.24) items.push(make(ctx, 52, tx, ty, 'peak_medium', 0.9, 0.8, 1.2))
+      if (chance(18) < 0.14) items.push(make(ctx, 53, tx, ty, 'peak_small', 1, 0.7, 1))
     } else if (height >= 1.2) {
-      if (chance(19) < 0.4) items.push(make(ctx, 54, tx, ty, 'peak_small', 0.9, 0.7, 1.1))
+      if (chance(19) < 0.26) items.push(make(ctx, 54, tx, ty, 'peak_small', 0.9, 0.7, 1.1))
       if (chance(20) < 0.25) items.push(make(ctx, 55, tx, ty, 'rock', 0.9, 0.8, 1.2))
     } else if (chance(21) < 0.4) {
       items.push(make(ctx, 56, tx, ty, 'rock', 0.9, 0.8, 1.3))

@@ -1,4 +1,6 @@
-import { decorForTile, type DecorItem } from '../world/decor'
+import { decorForTile, isTall, type DecorItem } from '../world/decor'
+import { buildingRing } from '../world/surroundings'
+import { drawDecor } from './decorDraw'
 import { groundPixel, type GroundTextures } from '../world/ground'
 import { Terrain, type GameMap } from '../world/terrain'
 import { sprites } from './sprites'
@@ -70,11 +72,14 @@ export function decorOf(ctx: ChunkContext, tiles: number[]): { item: DecorItem; 
     climate: ctx.climate,
     blocked: (x: number, y: number) => ctx.occupancy[y * map.width + x] !== 0 || ctx.roads[y * map.width + x] !== 0,
   }
+  const ring = buildingRing(map, ctx.occupancy)
   const result: { item: DecorItem; wx: number; wy: number }[] = []
   for (const index of tiles) {
     const tx = index % map.width
     const ty = (index - tx) / map.width
     for (const item of decorForTile(decorCtx, tx, ty)) {
+      // tall objects next to a building are drawn together with the building (see frontDecor.ts)
+      if (ring[index] && isTall(item.kind)) continue
       result.push({ item, wx: (item.x - item.y) * HALF_W, wy: (item.x + item.y) * HALF_H })
     }
   }
@@ -117,20 +122,12 @@ export function renderChunk(rx: number, ry: number, tiles: number[], ctx: ChunkC
   for (const { item, wx, wy } of objects) {
     const sprite = sprites.get(`decor/${item.kind}_${item.variant}`)
     if (!sprite) continue
-    const width = (sprite.width / 2) * item.scale
     const height = (sprite.height / 2) * item.scale
+    const width = (sprite.width / 2) * item.scale
     const left = wx - x0 - width / 2
     const top = wy - y0 - height
     if (left > CHUNK_W || left + width < 0 || top > CHUNK_H || top + height < 0) continue
-    if (item.flip) {
-      out.save()
-      out.translate(left + width, top)
-      out.scale(-1, 1)
-      out.drawImage(sprite, 0, 0, width, height)
-      out.restore()
-    } else {
-      out.drawImage(sprite, left, top, width, height)
-    }
+    drawDecor(out, item, wx - x0, wy - y0)
   }
   return canvas
 }

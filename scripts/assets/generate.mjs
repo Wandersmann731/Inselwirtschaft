@@ -8,7 +8,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import sharp from 'sharp'
-import { fitInto, shrinkMatte, maskPolygon, padToSquare, removeBackground, roadTile, smokeFrame, SIZE, tileableTexture, waterFrame } from './image-tools.mjs'
+import { featherPlot, fitInto, shrinkMatte, maskPolygon, padToSquare, removeBackground, roadTile, smokeFrame, SIZE, tileableTexture, waterFrame } from './image-tools.mjs'
 import { startServer } from './mcp-client.mjs'
 import { loadJobs, ROOT } from './manifest.mjs'
 
@@ -98,6 +98,14 @@ async function finish(job, rawFile) {
     if (job.kind === 'building') image = await removeBackground(await image.png().toBuffer())
     let buffer = await image.extract(box).resize(job.width, job.height).png().toBuffer()
     if (job.kind === 'tile') buffer = await maskPolygon(buffer, job.width, job.height, DIAMOND)
+    if (job.cutSlab) {
+      // Plots must be flat: cut away everything below the lower edges of the ground diamond (the painted earth edge).
+      const lift = 14 // the painted earth edge lies on the guide lines, so cut a little above them
+      const bottom = job.height - 1 - lift
+      const edge = job.height - job.width / 2 + job.width / 4 - lift
+      buffer = await maskPolygon(buffer, job.width, job.height, [[0, 0], [job.width, 0], [job.width, edge], [job.width / 2, bottom], [0, edge]])
+      buffer = await featherPlot(buffer, path.join(ROOT, job.guide), job.width, job.height)
+    }
     fs.writeFileSync(target, buffer)
     const { channels } = await sharp(buffer).stats()
     return `deckt ${Math.round((channels[3].mean / 255) * 100)} %`

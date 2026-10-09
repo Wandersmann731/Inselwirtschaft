@@ -6,6 +6,8 @@ import { config } from '../data'
 import { diamondPath } from './terrainStyle'
 import { boxHeight, drawBox, type TileRect } from './shapes'
 import { HALF_H, HALF_W, tileToWorld } from './iso'
+import { drawDecor } from './decorDraw'
+import { frontDecorIn, type FrontItem } from './frontDecor'
 import { sprites } from './sprites'
 import { drawPlacedSprite, placeSprite, type SpritePlacement } from './spriteDraw'
 import { roadKey, smokeKey } from './spriteKeys'
@@ -42,19 +44,28 @@ export function drawRoads(ctx: CanvasRenderingContext2D, state: IslandState, ran
   }
 }
 
-/** Draws all buildings that overlap the visible tile range, back to front. `now` drives the smoke animation. */
+/**
+ * Draws all buildings that overlap the visible tile range, back to front, together with the trees, bushes and rocks
+ * right next to them (so these can stand in front of a building). `now` drives the smoke animation.
+ */
 export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange, now = 0): void {
-  const visible = state.buildings
-    .map((building) => ({ building, rect: buildingRect(building) }))
-    .filter(
-      ({ rect }) =>
-        rect.x <= range.maxI + 4 &&
-        rect.x + rect.w >= range.minI - 4 &&
-        rect.y <= range.maxJ + 4 &&
-        rect.y + rect.h >= range.minJ - 4,
-    )
-    .sort((a, b) => a.rect.x + a.rect.w + a.rect.y + a.rect.h - (b.rect.x + b.rect.w + b.rect.y + b.rect.h))
-  for (const { building, rect } of visible) {
+  type Entry = { depth: number; building?: (typeof state.buildings)[number]; rect?: TileRect; decor?: FrontItem }
+  const entries: Entry[] = []
+  for (const building of state.buildings) {
+    const rect = buildingRect(building)
+    if (rect.x > range.maxI + 4 || rect.x + rect.w < range.minI - 4 || rect.y > range.maxJ + 4 || rect.y + rect.h < range.minJ - 4) continue
+    entries.push({ depth: rect.x + rect.w / 2 + rect.y + rect.h / 2, building, rect })
+  }
+  for (const decor of frontDecorIn(state, range)) entries.push({ depth: decor.depth, decor })
+  entries.sort((a, b) => a.depth - b.depth)
+
+  for (const entry of entries) {
+    if (entry.decor) {
+      drawDecor(ctx, entry.decor.item, entry.decor.wx, entry.decor.wy)
+      continue
+    }
+    const { building, rect } = entry
+    if (!building || !rect) continue
     const def = getBuilding(building.type)
     const house = building.house
     const placed = placeSprite(building)

@@ -14,7 +14,7 @@ import struct
 import zlib
 from pathlib import Path
 
-from asset_data import B, FARM_BUILDING_HEIGHT, FARM_IDS, TILE_H, TILE_W
+from asset_data import B, FARM_BUILDING_HEIGHT, FARM_IDS, PLOT_IDS, TILE_H, TILE_W
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "docs" / "vorlagen"
@@ -134,7 +134,7 @@ def building_guide(bid, w, h, height):
     img.save(OUT / "buildings" / f"{bid}_guide.png")
 
 
-def farm_guide(bid, w, h, height):
+def farm_guide(bid, w, h, height, rx=0.15, ry=0.15, rw=0.8, rh=0.8, box_lift=None):
     """Field building: flat ground (no block) and a small box for the farm building at the back corner."""
     cw, ch = (w + h) * TILE_W // 2, (w + h) * TILE_H // 2 + height
     top, right, bottom, left = footprint_points(w, h, height)
@@ -147,7 +147,7 @@ def farm_guide(bid, w, h, height):
     for a, b in grid_lines(w, h, height):
         img.line(a, b, GRID, 2)
     img.outline([top, right, bottom, left], INK, 3)
-    rx, ry, rw, rh, lift = 0.15, 0.15, 0.8, 0.8, FARM_BUILDING_HEIGHT - 10
+    lift = FARM_BUILDING_HEIGHT - 10 if box_lift is None else box_lift
     a, b, c, d = p(rx, ry), p(rx + rw, ry), p(rx + rw, ry + rh), p(rx, ry + rh)
     img.polygon([d, c, p(rx + rw, ry + rh, lift), p(rx, ry + rh, lift)], LEFT_WALL)
     img.polygon([c, b, p(rx + rw, ry, lift), p(rx + rw, ry + rh, lift)], RIGHT_WALL)
@@ -251,6 +251,9 @@ def main():
             w, h = buildings[bid]["size"]
         if bid in FARM_IDS:
             farm_guide(bid, w, h, height)
+        elif bid.startswith("house_") or bid in PLOT_IDS:
+            # houses stand on a small plot: the block covers only the middle of the ground, so neighbours do not overlap
+            farm_guide(bid, w, h, height, 0.17, 0.17, 0.66, 0.66, box_lift=int(height * 0.62))
         else:
             building_guide(bid, w, h, height)
         building_footprint(bid, w, h, height)

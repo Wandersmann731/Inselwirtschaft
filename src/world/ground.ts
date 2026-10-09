@@ -46,6 +46,8 @@ function sample(texture: Texture, u: number, v: number, out: number[]): void {
   }
 }
 
+const BEACH_TINT = [0.92, 0.78, 0.55]
+const NO_TINT = [1, 1, 1]
 const scratchA = [0, 0, 0]
 const scratchB = [0, 0, 0]
 
@@ -60,7 +62,9 @@ function landColor(terrain: number, tex: GroundTextures, u: number, v: number, s
   sample(texture, (u * 0.9 - v * 0.4) * 0.11 + 0.37, (v * 0.9 + u * 0.4) * 0.11 + 0.61, scratchB)
   const drift = 0.88 + 0.24 * fbm(u * 0.06, v * 0.06, seed + 30, 2)
   const base = terrain === Terrain.Mountain ? 0.9 : terrain === Terrain.Forest ? 0.92 : 1
-  for (let k = 0; k < 3; k++) out[k] = (scratchA[k] * 0.6 + scratchB[k] * 0.4) * drift * base
+  // The beach gets an ochre tint: a warm sandy rim between green land and blue sea.
+  const tint = terrain === Terrain.Beach ? BEACH_TINT : NO_TINT
+  for (let k = 0; k < 3; k++) out[k] = (scratchA[k] * 0.6 + scratchB[k] * 0.4) * drift * base * tint[k]
   if (terrain === Terrain.Grass) {
     // slow patches of lighter, yellower grass
     const patch = Math.max(0, fbm(u * 0.045 + 5, v * 0.045 + 5, seed + 31, 2) - 0.52) * 2.2
