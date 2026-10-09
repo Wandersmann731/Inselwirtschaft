@@ -64,6 +64,9 @@ export function grabRoute(draft: RouteDraft, tile: Tile): RouteDraft | null {
 export function moveRoute(state: IslandState, draft: RouteDraft, tile: Tile): RouteDraft {
   const { grab } = draft
   if (!grab) return draft
+  // Pointer moves inside the same tile change nothing: planning the route again would only cost time.
+  const current = grab.kind === 'via' ? draft.via[grab.index] : draft[grab.kind]
+  if (current && same(current, tile)) return draft
   let moved: RouteDraft
   if (grab.kind === 'via') {
     if (!passable(state, tile.x, tile.y)) return draft

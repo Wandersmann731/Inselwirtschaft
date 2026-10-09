@@ -286,6 +286,10 @@ body,
   top: 64px;
   right: max(12px, env(safe-area-inset-right));
   width: 270px;
+  /* stays above the build menu and scrolls if it has more lines than fit */
+  max-height: calc(100dvh - 64px - 132px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 8px 12px 12px;
   border-radius: 8px;
   background: var(--hud-bg);
@@ -864,6 +868,11 @@ body,
     top: 124px;
   }
 
+  .building-panel {
+    top: 124px;
+    max-height: calc(100dvh - 124px - 150px);
+  }
+
   .build-categories {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -915,4 +924,16 @@ body,
 .tier-tab.active {
   border-color: var(--accent);
   background: #3d5a72;
+}
+
+.panel-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.panel-confirm .action-button {
+  flex: 1 1 120px;
 }

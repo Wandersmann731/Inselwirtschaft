@@ -14,6 +14,8 @@ export interface Settings {
   muted: boolean
   /** Goes to full screen when a game starts (phones only, the browser needs a tap for it). */
   autoFullscreen: boolean
+  /** Short vibration as feedback when something is built or demolished. */
+  vibration: boolean
 }
 
 const KEY = 'inselwirtschaft:settings'
@@ -26,6 +28,7 @@ const DEFAULTS: Settings = {
   volumeMusic: 0.4,
   muted: false,
   autoFullscreen: true,
+  vibration: true,
 }
 
 function load(): Settings {

@@ -1,5 +1,6 @@
 import { getBuilding } from '../data'
-import { footprint, demolishTiles, placeBuilding, placeRoads } from '../sim/build'
+import { demolishBuilding, demolishTiles, footprint, placeBuilding, placeRoads } from '../sim/build'
+import { haptic } from './haptic'
 import { buildSettlement, planSettlement } from '../sim/settlementPlanner'
 import { setBuildingActive } from '../sim/production'
 import { buildShip } from '../sim/ships'
@@ -142,6 +143,7 @@ export class BuildController {
     if (area) {
       if (area.origins.length === 0) return
       this.loop.dispatchIsland((state) => buildSettlement(state, typeId, area.origins))
+      haptic()
       this.set({ ...this.snapshot, area: null })
       return
     }
@@ -149,6 +151,7 @@ export class BuildController {
     const before = this.loop.getIslandState().buildings.length
     this.loop.dispatchIsland((state) => placeBuilding(state, typeId, origin.x, origin.y, rotated))
     if (this.loop.getIslandState().buildings.length === before) return // not possible here: the ghost stays for another try
+    haptic()
     // Production buildings are built one at a time: back to the overview. Houses and the like can follow each other.
     if (getBuilding(typeId).category === 'production') this.cancel()
     else this.set({ ...this.snapshot, center: null, origin: null })
@@ -196,6 +199,7 @@ export class BuildController {
     const plan = this.snapshot.route.plan
     if (this.snapshot.mode !== 'road' || !plan) return
     this.loop.dispatchIsland((state) => placeRoads(state, plan.newTiles))
+    haptic()
     this.cancel() // the road is built: back to the overview
   }
 
@@ -215,6 +219,13 @@ export class BuildController {
     if (!this.drawing) return
     if (this.snapshot.mode === 'place') {
       this.setArea(tile, tile)
+      return
+    }
+    const { mode, stroke } = this.snapshot
+    // Demolishing collects tiles over several taps and drags until it is confirmed.
+    if (mode === 'demolish') {
+      const known = stroke.some((t) => t.x === tile.x && t.y === tile.y)
+      this.set({ ...this.snapshot, stroke: known ? [...stroke.filter((t) => t.x !== tile.x || t.y !== tile.y), tile] : [...stroke, tile] })
       return
     }
     this.set({ ...this.snapshot, stroke: [tile] })
@@ -242,14 +253,42 @@ export class BuildController {
     if (stroke.length === 0) return
     if (mode === 'road') {
       this.loop.dispatchIsland((state) => placeRoads(state, stroke))
+      haptic()
       this.cancel() // the road is built: back to the overview
       return
     }
-    if (mode === 'demolish') this.loop.dispatchIsland((state) => demolishTiles(state, stroke))
+    // demolish: the marked tiles stay until confirmDemolish
+  }
+
+  /** Demolishes everything marked in demolish mode. */
+  confirmDemolish(): void {
+    const { mode, stroke } = this.snapshot
+    if (mode !== 'demolish' || stroke.length === 0) return
+    this.loop.dispatchIsland((state) => demolishTiles(state, stroke))
+    haptic()
     this.set({ ...this.snapshot, stroke: [] })
   }
 
+  /** Unmarks everything in demolish mode. */
+  clearStroke(): void {
+    if (this.snapshot.stroke.length > 0) this.set({ ...this.snapshot, stroke: [] })
+  }
+
+  /** Demolishes one building, from its info panel. */
+  demolish(buildingId: number): void {
+    this.loop.dispatchIsland((state) => demolishBuilding(state, buildingId))
+    haptic()
+    this.set({ ...this.snapshot, selectedBuildingId: null })
+  }
+
+  /** Long press: leaves any build tool and shows the info panel of the building (or nothing). */
+  inspect(buildingId: number | null): void {
+    this.set({ ...IDLE, selectedBuildingId: buildingId })
+  }
+
   strokeCancel(): void {
+    // a second finger came down: a road or area drag is dropped, marked demolish tiles stay
+    if (this.snapshot.mode === 'demolish') return
     if (this.snapshot.stroke.length > 0) this.set({ ...this.snapshot, stroke: [] })
   }
 

@@ -7,6 +7,8 @@ export interface MapInputHandlers {
   onZoom(factor: number, x: number, y: number): void
   /** Short tap or click without movement. */
   onTap(x: number, y: number): void
+  /** One finger held still for a while (not while drawing): show information about what lies there. */
+  onLongPress?(x: number, y: number): void
   /** Grab mode only: a single finger went down; return true to take it as a drag (see onStrokeMove/End), false to pan. */
   onGrab?(x: number, y: number): boolean
   /** Draw and grab mode: a single finger or the mouse starts, continues and ends a stroke. */
@@ -36,6 +38,9 @@ export class MapInput {
   /** In draw mode one finger draws a stroke, in grab mode it may pick up something, instead of panning the map. */
   private mode: 'pan' | 'draw' | 'grab' = 'pan'
   private stroking = false
+  private longPressTimer: number | undefined
+  /** True after a long press fired: the finger lifting is then neither a tap nor the end of a drag. */
+  private longPressed = false
   private pinchDistance = 0
   private pinchCenter: Pos = { x: 0, y: 0 }
 
@@ -56,6 +61,7 @@ export class MapInput {
   }
 
   destroy(): void {
+    this.stopLongPress()
     const { canvas } = this
     canvas.removeEventListener('pointerdown', this.onDown)
     canvas.removeEventListener('pointermove', this.onMove)
@@ -79,13 +85,17 @@ export class MapInput {
       this.tapStartTime = event.timeStamp
       this.moved = false
       this.multiTouch = false
+      this.longPressed = false
       if (this.mode === 'draw') {
         this.stroking = true
         this.handlers.onStrokeStart?.(pos.x, pos.y)
       } else if (this.mode === 'grab' && this.handlers.onGrab?.(pos.x, pos.y)) {
         this.stroking = true
+      } else {
+        this.startLongPress(pos)
       }
     } else if (this.pointers.size === 2) {
+      this.stopLongPress()
       this.cancelStroke()
       this.multiTouch = true
       this.moved = true
@@ -101,8 +111,10 @@ export class MapInput {
     if (this.pointers.size === 1 && this.stroking) {
       this.handlers.onStrokeMove?.(pos.x, pos.y)
     } else if (this.pointers.size === 1) {
+      if (this.longPressed) return
       if (!this.moved && Math.hypot(pos.x - this.tapStart.x, pos.y - this.tapStart.y) > world.input.tapSlopPx) {
         this.moved = true
+        this.stopLongPress()
       }
       if (this.moved) {
         this.handlers.onPan(pos.x - this.lastPan.x, pos.y - this.lastPan.y)
@@ -121,6 +133,7 @@ export class MapInput {
   private onUp = (event: PointerEvent): void => {
     if (!this.pointers.has(event.pointerId)) return
     const wasSingle = this.pointers.size === 1
+    this.stopLongPress()
     this.pointers.delete(event.pointerId)
     this.releaseCapture(event.pointerId)
     if (this.stroking) {
@@ -129,10 +142,27 @@ export class MapInput {
       this.afterPointerRemoved()
       return
     }
-    if (wasSingle && this.mode !== 'draw' && !this.moved && !this.multiTouch && event.timeStamp - this.tapStartTime <= world.input.tapMaxMs) {
+    if (wasSingle && !this.longPressed && this.mode !== 'draw' && !this.moved && !this.multiTouch && event.timeStamp - this.tapStartTime <= world.input.tapMaxMs) {
       this.handlers.onTap(this.tapStart.x, this.tapStart.y)
     }
     this.afterPointerRemoved()
+  }
+
+  private startLongPress(pos: Pos): void {
+    this.stopLongPress()
+    if (!this.handlers.onLongPress) return
+    this.longPressTimer = window.setTimeout(() => {
+      this.longPressTimer = undefined
+      if (this.pointers.size !== 1 || this.moved) return
+      this.longPressed = true
+      this.handlers.onLongPress?.(pos.x, pos.y)
+    }, world.input.longPressMs)
+  }
+
+  private stopLongPress(): void {
+    if (this.longPressTimer === undefined) return
+    window.clearTimeout(this.longPressTimer)
+    this.longPressTimer = undefined
   }
 
   private cancelStroke(): void {
@@ -142,6 +172,7 @@ export class MapInput {
   }
 
   private onCancel = (event: PointerEvent): void => {
+    this.stopLongPress()
     this.cancelStroke()
     this.pointers.delete(event.pointerId)
     this.releaseCapture(event.pointerId)

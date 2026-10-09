@@ -183,7 +183,7 @@ export interface WorldConfig {
   maxCachedChunks: number
   minZoom: number
   maxZoom: number
-  input: { tapSlopPx: number; tapMaxMs: number; wheelZoomSpeed: number }
+  input: { tapSlopPx: number; tapMaxMs: number; wheelZoomSpeed: number; longPressMs: number; doubleTapMs: number }
   /** Worn earth around houses, so a group of houses looks like a grown village and not like single plots. */
   settlement: {
     color: [number, number, number]

@@ -1,4 +1,4 @@
-import { trade } from '../data'
+import { config, trade } from '../data'
 import { findSeaPath, portCell } from '../world/seaPath'
 import { checkPlacement, missingResource, pay, placeBuilding } from './build'
 import { fromIslandState, getIsland, onIsland, toIslandState } from './islands'
@@ -140,7 +140,9 @@ function applyOrder(state: GameState, shipId: number, order: RouteOrder): GameSt
 
   if (island.owned) {
     const stock = island.stock[order.good] ?? 0
-    const amount = order.mode === 'load' ? Math.min(order.amount, stock, free) : Math.min(order.amount, have)
+    // What does not fit into the store stays on board.
+    const room = Math.max(0, config.production.stockCapacity - stock)
+    const amount = order.mode === 'load' ? Math.min(order.amount, stock, free) : Math.min(order.amount, have, room)
     if (amount <= 0) return state
     const sign = order.mode === 'load' ? 1 : -1
     const cargo = { ...ship.cargo, [order.good]: have + sign * amount }
@@ -168,16 +170,21 @@ function applyOrder(state: GameState, shipId: number, order: RouteOrder): GameSt
   return state
 }
 
-/** Empties the cargo of a docked ship into the store of its own island. */
+/** Empties the cargo of a docked ship into the store of its own island. What does not fit stays on board. */
 export function unloadAll(state: GameState, shipId: number): GameState {
   const ship = getShip(state, shipId)
   if (ship.island === null || !getIsland(state, ship.island).owned || cargoTotal(ship) === 0) return state
+  const cargo: Record<string, number> = {}
   const moved = onIsland(state, ship.island, (flat) => {
     const stock = { ...flat.stock }
-    for (const [good, amount] of Object.entries(ship.cargo)) stock[good] = (stock[good] ?? 0) + amount
+    for (const [good, amount] of Object.entries(ship.cargo)) {
+      const taken = Math.min(amount, Math.max(0, config.production.stockCapacity - (stock[good] ?? 0)))
+      stock[good] = (stock[good] ?? 0) + taken
+      if (amount - taken > 0) cargo[good] = amount - taken
+    }
     return { ...flat, stock }
   })
-  return withShip(moved, { ...ship, cargo: {} })
+  return withShip(moved, { ...ship, cargo })
 }
 
 /** Loads the goods for a new Kontor (not the coins) from the store of the island the ship lies at. */

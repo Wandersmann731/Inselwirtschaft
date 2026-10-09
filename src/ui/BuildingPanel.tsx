@@ -1,9 +1,12 @@
+import { useEffect, useRef, useState } from 'react'
 import { config, getBuilding, trade } from '../data'
+import type { BuildingCost } from '../data'
 import { cumulativeNeeds, getTier } from '../sim/tiers'
 import type { BuildController } from '../game/buildController'
 import { upkeepOf } from '../sim/production'
+import { taxOf } from '../sim/market'
 import type { IslandState } from '../sim/state'
-import { formatCost, needLabel, resourceName, statusText } from './messages'
+import { formatCost, formatWhole, needLabel, resourceName, statusText } from './messages'
 import { Icon } from './Icon'
 import { STATUS_ICONS } from './statusIcons'
 
@@ -19,6 +22,12 @@ export function BuildingPanel({
   buildingId: number
   onOpenKontor: () => void
 }) {
+  const [confirming, setConfirming] = useState<number | null>(null)
+  const confirmRef = useRef<HTMLDivElement>(null)
+  // the question may lie below the fold of a small screen: bring it into view
+  useEffect(() => {
+    if (confirming !== null) confirmRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [confirming])
   const building = state.buildings.find((b) => b.id === buildingId)
   if (!building) return null
   const def = getBuilding(building.type)
@@ -85,13 +94,31 @@ export function BuildingPanel({
           Schiff bauen ({formatCost(trade.ship.cost)})
         </button>
       )}
-      <button
-        type="button"
-        className="action-button panel-toggle"
-        onClick={() => tool.setActive(building.id, !building.active)}
-      >
-        {building.active ? 'Stilllegen' : 'Wieder starten'}
-      </button>
+      {building.type !== 'kontor' &&
+        (confirming === building.id ? (
+          <div className="panel-confirm" ref={confirmRef}>
+            <span>Abreißen? Zurück: {formatCost(refundOf(def.cost))}</span>
+            <button type="button" className="action-button danger" onClick={() => tool.demolish(building.id)}>
+              Ja, abreißen
+            </button>
+            <button type="button" className="action-button" onClick={() => setConfirming(null)}>
+              Nein
+            </button>
+          </div>
+        ) : (
+          <button type="button" className="action-button panel-toggle" onClick={() => setConfirming(building.id)}>
+            Abreißen
+          </button>
+        ))}
+      {!building.house && (
+        <button
+          type="button"
+          className="action-button panel-toggle"
+          onClick={() => tool.setActive(building.id, !building.active)}
+        >
+          {building.active ? 'Stilllegen' : 'Wieder starten'}
+        </button>
+      )}
     </div>
   )
 }
@@ -110,7 +137,10 @@ function HousePanel({ house }: { house: NonNullable<IslandState['buildings'][num
         const percent = Math.round(house.needs[need.id] ?? 0)
         return (
           <div key={need.id} className="need-row">
-            <span className="need-name">{needLabel(need)}</span>
+            <span className="need-name">
+              {needLabel(need)}
+              {need.optional && <small> (Bonus)</small>}
+            </span>
             <span className="panel-bar need-bar">
               <span className="panel-bar-fill" style={{ width: `${percent}%`, background: needColor(percent) }} />
             </span>
@@ -118,9 +148,15 @@ function HousePanel({ house }: { house: NonNullable<IslandState['buildings'][num
           </div>
         )
       })}
+      <div className="panel-line">Steuer: {formatWhole(taxOf(house))} Münzen pro Zyklus</div>
       {house.missingMaterials && <div className="panel-line invalid">Aufstieg wartet auf Baumaterial</div>}
     </>
   )
+}
+
+function refundOf(cost: BuildingCost): BuildingCost {
+  const back = (value: number): number => Math.floor(value * config.refundRate)
+  return { coins: back(cost.coins), tools: back(cost.tools), wood: back(cost.wood), bricks: back(cost.bricks), marble: back(cost.marble) }
 }
 
 function needColor(percent: number): string {

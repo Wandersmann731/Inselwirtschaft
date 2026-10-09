@@ -19,11 +19,18 @@ export function processProduction(state: IslandState): IslandState {
   const links = getLinks(state)
   const stock: Stock = { ...state.stock }
   const ledger = cloneLedger(state.economy.current)
+  // Goods of all producers on their way to the store: they count against its capacity, so it never overflows.
+  const underway: Stock = {}
+  for (const building of state.buildings) {
+    for (const shipment of building.production?.shipments ?? []) {
+      if (shipment.kind === 'out' && shipment.arrive > state.tick) underway[shipment.good] = (underway[shipment.good] ?? 0) + shipment.amount
+    }
+  }
   const buildings = state.buildings.map((building) => {
     if (!building.production) return building
     return {
       ...building,
-      production: stepBuilding(building, building.production, links.get(building.id), stock, state.tick, ledger),
+      production: stepBuilding(building, building.production, links.get(building.id), stock, underway, state.tick, ledger),
     }
   })
   return { ...state, stock, buildings, economy: { ...state.economy, current: ledger } }
@@ -34,6 +41,7 @@ function stepBuilding(
   previous: ProductionState,
   link: Link | undefined,
   stock: Stock,
+  underway: Stock,
   now: number,
   ledger: CycleLedger,
 ): ProductionState {
@@ -48,7 +56,7 @@ function stepBuilding(
   if (!link || link.kind !== 'ok') return { ...p, status: { kind: link?.kind ?? 'noRoad' } }
 
   orderInputs(def, p, stock, now, link.delay)
-  shipOutput(def, p, stock, now, link.delay)
+  shipOutput(def, p, stock, underway, now, link.delay)
   p.status = produce(def, p, ledger)
   if (p.status.kind === 'producing') p.busyTicks += 1
   return p
@@ -87,25 +95,25 @@ function orderInputs(def: BuildingDef, p: ProductionState, stock: Stock, now: nu
   }
 }
 
-/** Sends finished goods and byproducts to the island store, as far as the store has room. */
-function shipOutput(def: BuildingDef, p: ProductionState, stock: Stock, now: number, delay: number): void {
+/**
+ * Sends finished goods and byproducts to the island store, as far as the store has room. Goods that other producers
+ * already have on the way count as taken.
+ */
+function shipOutput(def: BuildingDef, p: ProductionState, stock: Stock, underway: Stock, now: number, delay: number): void {
   const output = def.output
   if (!output) return
-  for (const [good, waiting] of Object.entries(p.extra)) {
-    if (waiting <= 0) continue
-    const underway = sum(p.shipments.filter((s) => s.kind === 'out' && s.good === good).map((s) => s.amount))
-    const amount = Math.min(waiting, config.production.stockCapacity - (stock[good] ?? 0) - underway)
-    if (amount <= 0) continue
-    p.extra[good] = waiting - amount
+  const send = (good: string, waiting: number): number => {
+    const room = config.production.stockCapacity - (stock[good] ?? 0) - (underway[good] ?? 0)
+    const amount = Math.min(waiting, room)
+    if (amount <= 0) return 0
+    underway[good] = (underway[good] ?? 0) + amount
     p.shipments.push({ kind: 'out', good, amount, arrive: now + delay })
+    return amount
   }
-  if (p.output <= 0) return
-  const onTheWay = sum(p.shipments.filter((s) => s.kind === 'out').map((s) => s.amount))
-  const room = config.production.stockCapacity - (stock[output.good] ?? 0) - onTheWay
-  const amount = Math.min(p.output, room)
-  if (amount <= 0) return
-  p.output -= amount
-  p.shipments.push({ kind: 'out', good: output.good, amount, arrive: now + delay })
+  for (const [good, waiting] of Object.entries(p.extra)) {
+    if (waiting > 0) p.extra[good] = waiting - send(good, waiting)
+  }
+  if (p.output > 0) p.output -= send(output.good, p.output)
 }
 
 /** Advances the running cycle or starts a new one. Returns what the building is doing. */
