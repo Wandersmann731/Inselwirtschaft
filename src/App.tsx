@@ -5,7 +5,10 @@ import type { GameLoop } from './game/gameLoop'
 import { balanceOf } from './sim/economy'
 import { toIslandState } from './sim/islands'
 import { residentsOfTier } from './sim/tiers'
+import { getSettings } from './save/settings'
+import { BalancePanel } from './ui/BalancePanel'
 import { BuildBar } from './ui/BuildBar'
+import { GameMenu } from './ui/GameMenu'
 import { KontorPanel } from './ui/KontorPanel'
 import type { MapRenderer } from './render/mapRenderer'
 import { MapCanvas } from './ui/MapCanvas'
@@ -17,7 +20,7 @@ import { TopHud } from './ui/TopHud'
 import { TradePanel } from './ui/TradePanel'
 import { WorldMap } from './ui/WorldMap'
 
-export function App({ loop }: { loop: GameLoop }) {
+export function App({ loop, onQuit }: { loop: GameLoop; onQuit: () => void }) {
   const { state, activeIsland } = useSyncExternalStore(loop.subscribe, loop.getView)
   const tool = useMemo(() => new BuildController(loop), [loop])
   const rendererRef = useRef<MapRenderer | null>(null)
@@ -27,6 +30,9 @@ export function App({ loop }: { loop: GameLoop }) {
   const getRenderer = useCallback(() => rendererRef.current, [])
   const [showStats, setShowStats] = useState(false)
   const [showWorld, setShowWorld] = useState(false)
+  const [showMenu, setShowMenu] = useState(false)
+  const [showBalance, setShowBalance] = useState(false)
+  const debug = getSettings().debug
   const [showTrade, setShowTrade] = useState(false)
   const [showKontor, setShowKontor] = useState(false)
   const island = toIslandState(state, activeIsland)
@@ -51,8 +57,13 @@ export function App({ loop }: { loop: GameLoop }) {
         speed={state.speed}
         islandName={island.name}
         onSpeedChange={(speed) => loop.setSpeed(speed)}
+        onOpenMenu={() => setShowMenu(true)}
+        debug={debug}
+        onOpenBalance={() => setShowBalance(true)}
       />
       <Toasts state={state} />
+      {showMenu && <GameMenu loop={loop} onClose={() => setShowMenu(false)} onQuit={onQuit} />}
+      {showBalance && <BalancePanel loop={loop} onClose={() => setShowBalance(false)} />}
       {showStats && <StatsPanel state={state} island={island} onClose={() => setShowStats(false)} />}
       {showWorld && (
         <WorldMap

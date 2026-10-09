@@ -2,9 +2,9 @@ import { useEffect, useRef } from 'react'
 import type { BuildController } from '../game/buildController'
 import { MapInput } from '../input/touch'
 import { MapRenderer } from '../render/mapRenderer'
+import { getSettings } from '../save/settings'
 import type { IslandState } from '../sim/state'
 
-const DEBUG = new URLSearchParams(window.location.search).has('debug')
 
 interface MapCanvasProps {
   getState: () => IslandState
@@ -19,7 +19,7 @@ export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const renderer = new MapRenderer(canvas, getState, tool.getSnapshot, DEBUG)
+    const renderer = new MapRenderer(canvas, getState, tool.getSnapshot, () => getSettings().debug)
     renderer.start()
     onRenderer?.(renderer)
     const input = new MapInput(canvas, {

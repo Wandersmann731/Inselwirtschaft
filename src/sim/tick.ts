@@ -16,6 +16,6 @@ export function tick(state: GameState, rng: Rng): GameState {
 
 /** Returns a new state with the given speed. Unknown speeds are ignored. */
 export function setSpeed(state: GameState, speed: GameSpeed): GameState {
-  if (!config.speeds.includes(speed) || speed === state.speed) return state
+  if (!(config.speeds.includes(speed) || config.debugSpeeds.includes(speed)) || speed === state.speed) return state
   return { ...state, speed }
 }

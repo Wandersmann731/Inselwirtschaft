@@ -15,6 +15,8 @@ import {
 import { mapBounds, tileToWorld, worldToTile, type Bounds, type Point } from './iso'
 import { drawBuildings, drawRoads, type TileRange } from './buildingRenderer'
 import { OverlayRenderer } from './overlayRenderer'
+import { getSettings } from '../save/settings'
+import { findStartSite } from '../world/startSite'
 import { sprites } from './sprites'
 import { WaterPattern } from './water'
 import { groundTextures } from './groundTextures'
@@ -34,7 +36,7 @@ export class MapRenderer {
   private canvas: HTMLCanvasElement
   private getState: () => IslandState
   private getTool: () => ToolSnapshot
-  private debug: boolean
+  private debug: () => boolean
   private ctx: CanvasRenderingContext2D
   private resizeObserver: ResizeObserver
   private cache = new TerrainCache()
@@ -55,7 +57,7 @@ export class MapRenderer {
     canvas: HTMLCanvasElement,
     getState: () => IslandState,
     getTool: () => ToolSnapshot,
-    debug = false,
+    debug: () => boolean = () => false,
   ) {
     const ctx = canvas.getContext('2d')
     if (!ctx) throw new Error('Canvas 2D is not available')
@@ -149,11 +151,17 @@ export class MapRenderer {
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     if (map.width === 0) return
     const now = performance.now()
+    const settings = getSettings()
 
     if (map !== this.cameraMap) {
       this.cameraMap = map
       this.selected = null
       this.camera = centerCamera(mapBounds(map), 1, viewport)
+      if (this.getState().owned && this.getState().buildings.length === 0) {
+        const site = findStartSite(map)
+        const at = tileToWorld(site.x + 0.5, site.y + 0.5)
+        this.camera = clampCamera({ ...this.camera, x: at.x, y: at.y }, viewport, mapBounds(map))
+      }
     }
 
     const { zoom } = this.camera
@@ -163,16 +171,16 @@ export class MapRenderer {
     const k = dpr * zoom
     ctx.setTransform(k, 0, 0, k, dpr * (viewport.width / 2 - this.camera.x * zoom), dpr * (viewport.height / 2 - this.camera.y * zoom))
     const range = this.visibleTileRange(map)
-    this.drawWater(now)
+    this.drawWater(settings.waterAnimation ? now : 0)
     const state = this.getState()
     this.drawTerrain(map, state)
     drawRoads(ctx, state, range)
-    drawBuildings(ctx, state, range, now)
+    drawBuildings(ctx, state, range, now, settings.smoke)
     this.overlay.draw(ctx, state, this.getTool())
     this.drawSelection()
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    if (this.debug) this.drawDebug(map)
+    if (this.debug()) this.drawDebug(map)
   }
 
   /** The sea: an animated pattern over the visible part of the world. */

@@ -1,29 +1,15 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { App } from './App'
-import { sprites } from './render/sprites'
-import { config } from './data'
-import { GameLoop } from './game/gameLoop'
+import { Root } from './Root'
 import './index.css'
-import { startAutosave } from './save/autosave'
-import { loadState } from './save/saveGame'
-import { createInitialState } from './sim/state'
+import { sprites } from './render/sprites'
 
 async function bootstrap(): Promise<void> {
   // Pictures first: the map is drawn with them. Without them (or while they are missing) it falls back to colour shapes.
-  const loadingSprites = sprites.load()
-  const saved = await loadState().catch((error) => {
-    console.warn('Could not load save, starting a new game', error)
-    return null
-  })
-  await loadingSprites
-  const loop = new GameLoop(saved ?? createInitialState(config.startSeed))
-  startAutosave(loop)
-  loop.start()
-
+  await sprites.load()
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <App loop={loop} />
+      <Root />
     </StrictMode>,
   )
 }

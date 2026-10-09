@@ -13,6 +13,10 @@ interface TopHudProps {
   highestTier: number
   speed: GameSpeed
   onSpeedChange: (speed: GameSpeed) => void
+  onOpenMenu: () => void
+  /** Debug mode: also offer the fast speeds and the balancing window. */
+  debug: boolean
+  onOpenBalance: () => void
 }
 
 function speedLabel(speed: GameSpeed): string {
@@ -28,6 +32,9 @@ export function TopHud({
   speed,
   onSpeedChange,
   islandName,
+  onOpenMenu,
+  debug,
+  onOpenBalance,
 }: TopHudProps) {
   const total = Object.values(residentsByTier).reduce((sum, value) => sum + value, 0)
   const balanceClass = balance === null ? 'hud-stat' : balance >= 0 ? 'hud-stat positive' : 'hud-stat negative'
@@ -56,7 +63,15 @@ export function TopHud({
         </div>
       </div>
       <div className="hud-speeds">
-        {config.speeds.map((value) => (
+        {debug && (
+          <button type="button" className="speed-button" onClick={onOpenBalance}>
+            Balance
+          </button>
+        )}
+        <button type="button" className="speed-button" onClick={onOpenMenu} aria-label="Menü">
+          Menü
+        </button>
+        {[...config.speeds, ...(debug ? config.debugSpeeds : [])].map((value) => (
           <button
             key={value}
             type="button"

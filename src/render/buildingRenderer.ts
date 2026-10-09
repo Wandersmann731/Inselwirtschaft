@@ -48,7 +48,7 @@ export function drawRoads(ctx: CanvasRenderingContext2D, state: IslandState, ran
  * Draws all buildings that overlap the visible tile range, back to front, together with the trees, bushes and rocks
  * right next to them (so these can stand in front of a building). `now` drives the smoke animation.
  */
-export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange, now = 0): void {
+export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange, now = 0, showSmoke = true): void {
   type Entry = { depth: number; building?: (typeof state.buildings)[number]; rect?: TileRect; decor?: FrontItem }
   const entries: Entry[] = []
   for (const building of state.buildings) {
@@ -73,7 +73,7 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
     if (placed) {
       drawPlacedSprite(ctx, placed)
       dotHeight = placed.rise * 0.8
-      if (def.smoke && building.production?.status.kind === 'producing') drawSmoke(ctx, placed, def.smoke, now)
+      if (showSmoke && def.smoke && building.production?.status.kind === 'producing') drawSmoke(ctx, placed, def.smoke, now)
     } else {
       dotHeight = house ? houseHeight(house) : boxHeight(rect, def.category)
       drawBox(ctx, rect, dotHeight, house ? houseColor(house) : def.color)
