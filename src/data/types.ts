@@ -78,6 +78,10 @@ export interface BuildingDef {
   radius?: number
   /** Market houses and Kontore: producers within this many tiles of the edge deliver to them. */
   catchment?: number
+  /** The island must have this fertility (from its climate zone). */
+  requiresFertility?: string
+  /** The island must have this mineral deposit; the building stands on the mountains. */
+  requiresDeposit?: string
   /** Market stand: the goods residents can buy here, within `radius`. */
   sells?: string[]
   /** Housing: the civilisation tier a new house starts in. */
@@ -170,4 +174,15 @@ export interface WorldConfig {
     forestThreshold: number
     beachWidth: number
   }
+}
+
+export interface NamedId {
+  id: string
+  name: string
+}
+
+/** Names of the fertilities and mineral deposits an island can have. */
+export interface LandNames {
+  fertilities: NamedId[]
+  deposits: NamedId[]
 }

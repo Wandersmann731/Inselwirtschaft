@@ -3,7 +3,7 @@
     "id": "polar",
     "name": "Polarzone",
     "color": "#dbe9f0",
-    "fertilities": []
+    "fertilities": ["whales"]
   },
   {
     "id": "tundra",

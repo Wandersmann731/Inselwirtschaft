@@ -47,7 +47,7 @@
     "placement": "land",
     "color": "#d36a9b",
     "radius": 4,
-    "sells": ["cloth", "leather"]
+    "sells": ["cloth", "leather", "silk"]
   },
   {
     "id": "chapel",
@@ -135,6 +135,45 @@
     "sells": ["alcohol", "wine"]
   },
   {
+    "id": "tobacco_spice_stand",
+    "name": "Tabak-/Gewürzstand",
+    "category": "public",
+    "size": [1, 1],
+    "cost": { "tools": 1, "wood": 1, "bricks": 0, "marble": 0, "coins": 50 },
+    "upkeep": { "active": 5, "idle": 1 },
+    "unlockTier": "settlers",
+    "placement": "land",
+    "color": "#a0522d",
+    "radius": 4,
+    "sells": ["tobacco", "spices"]
+  },
+  {
+    "id": "lamp_oil_stand",
+    "name": "Lampenölstand",
+    "category": "public",
+    "size": [1, 1],
+    "cost": { "tools": 1, "wood": 1, "bricks": 0, "marble": 0, "coins": 50 },
+    "upkeep": { "active": 5, "idle": 1 },
+    "unlockTier": "citizens",
+    "placement": "land",
+    "color": "#e0a030",
+    "radius": 4,
+    "sells": ["lamp_oil"]
+  },
+  {
+    "id": "jewelry_stand",
+    "name": "Schmuckstand",
+    "category": "public",
+    "size": [1, 1],
+    "cost": { "tools": 1, "wood": 1, "bricks": 0, "marble": 0, "coins": 50 },
+    "upkeep": { "active": 5, "idle": 1 },
+    "unlockTier": "merchants",
+    "placement": "land",
+    "color": "#e0c060",
+    "radius": 4,
+    "sells": ["jewelry"]
+  },
+  {
     "id": "forester",
     "name": "Forsthaus",
     "category": "production",
@@ -146,7 +185,8 @@
     "color": "#2f6b2f",
     "needsRoad": true,
     "output": { "good": "wood", "amount": 1 },
-    "cycleTicks": 30
+    "cycleTicks": 30,
+    "requiresFertility": "forest"
   },
   {
     "id": "quarry",
@@ -160,7 +200,8 @@
     "color": "#7f7f8c",
     "needsRoad": true,
     "output": { "good": "stone", "amount": 1 },
-    "cycleTicks": 30
+    "cycleTicks": 30,
+    "requiresDeposit": "stone"
   },
   {
     "id": "ore_mine",
@@ -174,7 +215,8 @@
     "color": "#4a4a55",
     "needsRoad": true,
     "output": { "good": "ore", "amount": 1 },
-    "cycleTicks": 40
+    "cycleTicks": 40,
+    "requiresDeposit": "ore"
   },
   {
     "id": "weaver",
@@ -209,7 +251,8 @@
     "color": "#d8d4c4",
     "output": { "good": "wool", "amount": 1 },
     "cycleTicks": 40,
-    "needsRoad": true
+    "needsRoad": true,
+    "requiresFertility": "sheep"
   },
   {
     "id": "cotton_plantation",
@@ -223,7 +266,8 @@
     "color": "#efe9f5",
     "output": { "good": "cotton", "amount": 1 },
     "cycleTicks": 40,
-    "needsRoad": true
+    "needsRoad": true,
+    "requiresFertility": "cotton"
   },
   {
     "id": "fishery",
@@ -251,7 +295,8 @@
     "color": "#d9c24a",
     "output": { "good": "grain", "amount": 1 },
     "cycleTicks": 40,
-    "needsRoad": true
+    "needsRoad": true,
+    "requiresFertility": "grain"
   },
   {
     "id": "mill",
@@ -352,7 +397,8 @@
     "color": "#d8dde6",
     "output": { "good": "salt", "amount": 1 },
     "cycleTicks": 40,
-    "needsRoad": true
+    "needsRoad": true,
+    "requiresDeposit": "salt"
   },
   {
     "id": "potato_farm",
@@ -366,7 +412,8 @@
     "color": "#a8864a",
     "output": { "good": "potatoes", "amount": 1 },
     "cycleTicks": 40,
-    "needsRoad": true
+    "needsRoad": true,
+    "requiresFertility": "potatoes"
   },
   {
     "id": "distillery",
@@ -379,10 +426,283 @@
     "placement": "land",
     "color": "#b5651d",
     "inputs": [
-      { "good": "potatoes", "amount": 1 }
+      {
+        "good": "potatoes",
+        "amount": 1,
+        "alternatives": ["hops", "sugar"]
+      }
     ],
     "output": { "good": "alcohol", "amount": 1 },
     "cycleTicks": 30,
+    "needsRoad": true
+  },
+  {
+    "id": "hops_farm",
+    "name": "Hopfenfarm",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 1, "wood": 4, "bricks": 0, "marble": 0, "coins": 250 },
+    "upkeep": { "active": 15, "idle": 4 },
+    "unlockTier": "pioneers",
+    "placement": "land",
+    "color": "#7fae3a",
+    "requiresFertility": "hops",
+    "output": { "good": "hops", "amount": 1 },
+    "cycleTicks": 40,
+    "needsRoad": true
+  },
+  {
+    "id": "sugar_plantation",
+    "name": "Zuckerrohrplantage",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 1, "wood": 4, "bricks": 0, "marble": 0, "coins": 300 },
+    "upkeep": { "active": 20, "idle": 5 },
+    "unlockTier": "pioneers",
+    "placement": "land",
+    "color": "#c9d98a",
+    "requiresFertility": "sugar",
+    "output": { "good": "sugar", "amount": 1 },
+    "cycleTicks": 40,
+    "needsRoad": true
+  },
+  {
+    "id": "cattle_farm",
+    "name": "Rinderfarm",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 1, "wood": 5, "bricks": 0, "marble": 0, "coins": 300 },
+    "upkeep": { "active": 20, "idle": 5 },
+    "unlockTier": "pioneers",
+    "placement": "land",
+    "color": "#b08968",
+    "requiresFertility": "cattle",
+    "output": { "good": "hides", "amount": 1 },
+    "cycleTicks": 40,
+    "needsRoad": true
+  },
+  {
+    "id": "tannery",
+    "name": "Gerberei",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 2, "wood": 5, "bricks": 0, "marble": 0, "coins": 300 },
+    "upkeep": { "active": 20, "idle": 5 },
+    "unlockTier": "pioneers",
+    "placement": "land",
+    "color": "#8d6e4a",
+    "inputs": [
+      { "good": "hides", "amount": 1 }
+    ],
+    "output": { "good": "leather", "amount": 1 },
+    "cycleTicks": 30,
+    "needsRoad": true
+  },
+  {
+    "id": "tobacco_plantation",
+    "name": "Tabakplantage",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 1, "wood": 5, "bricks": 0, "marble": 0, "coins": 350 },
+    "upkeep": { "active": 20, "idle": 5 },
+    "unlockTier": "settlers",
+    "placement": "land",
+    "color": "#9c7a3c",
+    "requiresFertility": "tobacco",
+    "output": { "good": "tobacco_leaf", "amount": 1 },
+    "cycleTicks": 40,
+    "needsRoad": true
+  },
+  {
+    "id": "tobacco_factory",
+    "name": "Tabakmanufaktur",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 2, "wood": 5, "bricks": 0, "marble": 0, "coins": 400 },
+    "upkeep": { "active": 25, "idle": 6 },
+    "unlockTier": "settlers",
+    "placement": "land",
+    "color": "#7a5c2e",
+    "inputs": [
+      { "good": "tobacco_leaf", "amount": 1 }
+    ],
+    "output": { "good": "tobacco", "amount": 1 },
+    "cycleTicks": 30,
+    "needsRoad": true
+  },
+  {
+    "id": "spice_plantation",
+    "name": "Gewürzplantage",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 1, "wood": 5, "bricks": 0, "marble": 0, "coins": 350 },
+    "upkeep": { "active": 20, "idle": 5 },
+    "unlockTier": "settlers",
+    "placement": "land",
+    "color": "#d9732a",
+    "requiresFertility": "spices",
+    "output": { "good": "spices", "amount": 1 },
+    "cycleTicks": 40,
+    "needsRoad": true
+  },
+  {
+    "id": "silk_plantation",
+    "name": "Seidenplantage",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 1, "wood": 5, "bricks": 0, "marble": 0, "coins": 400 },
+    "upkeep": { "active": 25, "idle": 6 },
+    "unlockTier": "citizens",
+    "placement": "land",
+    "color": "#e8dff0",
+    "requiresFertility": "silk",
+    "output": { "good": "raw_silk", "amount": 1 },
+    "cycleTicks": 40,
+    "needsRoad": true
+  },
+  {
+    "id": "indigo_farm",
+    "name": "Indigofarm",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 1, "wood": 5, "bricks": 0, "marble": 0, "coins": 400 },
+    "upkeep": { "active": 25, "idle": 6 },
+    "unlockTier": "citizens",
+    "placement": "land",
+    "color": "#3b4cc0",
+    "requiresFertility": "indigo",
+    "output": { "good": "indigo", "amount": 1 },
+    "cycleTicks": 40,
+    "needsRoad": true
+  },
+  {
+    "id": "dyer",
+    "name": "Färberei",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 3, "wood": 6, "bricks": 3, "marble": 0, "coins": 600 },
+    "upkeep": { "active": 35, "idle": 9 },
+    "unlockTier": "citizens",
+    "placement": "land",
+    "color": "#9a5fb5",
+    "inputs": [
+      { "good": "raw_silk", "amount": 1 },
+      { "good": "indigo", "amount": 1 }
+    ],
+    "output": { "good": "silk", "amount": 1 },
+    "cycleTicks": 30,
+    "needsRoad": true
+  },
+  {
+    "id": "whaler",
+    "name": "Walfänger",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 2, "wood": 6, "bricks": 0, "marble": 0, "coins": 500 },
+    "upkeep": { "active": 30, "idle": 8 },
+    "unlockTier": "citizens",
+    "placement": "coast",
+    "color": "#5f7f94",
+    "requiresFertility": "whales",
+    "output": { "good": "blubber", "amount": 1 },
+    "cycleTicks": 40,
+    "needsRoad": true
+  },
+  {
+    "id": "oil_boiler",
+    "name": "Trankocherei",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 3, "wood": 6, "bricks": 3, "marble": 0, "coins": 600 },
+    "upkeep": { "active": 35, "idle": 9 },
+    "unlockTier": "citizens",
+    "placement": "land",
+    "color": "#6b7d4a",
+    "inputs": [
+      { "good": "blubber", "amount": 1 }
+    ],
+    "output": { "good": "lamp_oil", "amount": 1 },
+    "cycleTicks": 30,
+    "needsRoad": true
+  },
+  {
+    "id": "vineyard",
+    "name": "Weinberg",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 2, "wood": 6, "bricks": 0, "marble": 0, "coins": 500 },
+    "upkeep": { "active": 25, "idle": 6 },
+    "unlockTier": "merchants",
+    "placement": "land",
+    "color": "#7b3f7a",
+    "requiresFertility": "wine",
+    "output": { "good": "grapes", "amount": 1 },
+    "cycleTicks": 40,
+    "needsRoad": true
+  },
+  {
+    "id": "winery",
+    "name": "Kelterei",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 3, "wood": 6, "bricks": 3, "marble": 0, "coins": 600 },
+    "upkeep": { "active": 30, "idle": 8 },
+    "unlockTier": "merchants",
+    "placement": "land",
+    "color": "#5e2a5c",
+    "inputs": [
+      { "good": "grapes", "amount": 1 }
+    ],
+    "output": { "good": "wine", "amount": 1 },
+    "cycleTicks": 30,
+    "needsRoad": true
+  },
+  {
+    "id": "gold_mine",
+    "name": "Goldmine",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 4, "wood": 8, "bricks": 0, "marble": 0, "coins": 800 },
+    "upkeep": { "active": 45, "idle": 11 },
+    "unlockTier": "merchants",
+    "placement": "mountain",
+    "color": "#d4af37",
+    "requiresDeposit": "gold",
+    "output": { "good": "gold", "amount": 1 },
+    "cycleTicks": 50,
+    "needsRoad": true
+  },
+  {
+    "id": "gem_mine",
+    "name": "Edelsteinmine",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 4, "wood": 8, "bricks": 0, "marble": 0, "coins": 800 },
+    "upkeep": { "active": 45, "idle": 11 },
+    "unlockTier": "merchants",
+    "placement": "mountain",
+    "color": "#4fb0c6",
+    "requiresDeposit": "gems",
+    "output": { "good": "gems", "amount": 1 },
+    "cycleTicks": 50,
+    "needsRoad": true
+  },
+  {
+    "id": "goldsmith",
+    "name": "Goldschmied",
+    "category": "production",
+    "size": [2, 2],
+    "cost": { "tools": 4, "wood": 8, "bricks": 4, "marble": 0, "coins": 900 },
+    "upkeep": { "active": 55, "idle": 14 },
+    "unlockTier": "merchants",
+    "placement": "land",
+    "color": "#e0c060",
+    "inputs": [
+      { "good": "gold", "amount": 1 },
+      { "good": "gems", "amount": 1 }
+    ],
+    "output": { "good": "jewelry", "amount": 1 },
+    "cycleTicks": 40,
     "needsRoad": true
   },
   {

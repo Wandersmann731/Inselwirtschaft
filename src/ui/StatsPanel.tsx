@@ -1,9 +1,9 @@
-import { goods, tiers } from '../data'
+import { climates, goods, tiers } from '../data'
 import { balanceOf } from '../sim/economy'
 import type { GameState, IslandState } from '../sim/state'
 import { residentsOfTier } from '../sim/tiers'
 import { findShortages } from '../sim/warnings'
-import { formatSigned, formatWhole } from './messages'
+import { depositName, fertilityName, formatSigned, formatWhole } from './messages'
 
 const oneDecimal = (value: number): string => value.toFixed(1).replace('.', ',')
 
@@ -27,6 +27,13 @@ export function StatsPanel({ state, island, onClose }: { state: GameState; islan
         </div>
 
         <div className="stats-scroll">
+          <h3>Insel</h3>
+          <p className="stats-note">
+            {climates.find((climate) => climate.id === island.climate)?.name ?? island.climate}. Land:{' '}
+            {island.fertilities.length > 0 ? island.fertilities.map(fertilityName).join(', ') : 'keines'}. Vorkommen:{' '}
+            {island.deposits.map(depositName).join(', ')}.
+          </p>
+
           <h3>Letzter Zyklus dieser Insel</h3>
           {last ? (
             <table className="stats-table">

@@ -21,5 +21,15 @@
   { "id": "silk", "name": "Seidenstoffe", "price": 20 },
   { "id": "lamp_oil", "name": "Lampenöl", "price": 14 },
   { "id": "jewelry", "name": "Schmuck", "price": 40 },
-  { "id": "wine", "name": "Wein", "price": 20 }
+  { "id": "wine", "name": "Wein", "price": 20 },
+  { "id": "hides", "name": "Häute" },
+  { "id": "hops", "name": "Hopfen" },
+  { "id": "sugar", "name": "Zuckerrohr" },
+  { "id": "tobacco_leaf", "name": "Tabakblätter" },
+  { "id": "raw_silk", "name": "Rohseide" },
+  { "id": "indigo", "name": "Indigo" },
+  { "id": "blubber", "name": "Tran" },
+  { "id": "grapes", "name": "Trauben" },
+  { "id": "gold", "name": "Gold" },
+  { "id": "gems", "name": "Edelsteine" }
 ]

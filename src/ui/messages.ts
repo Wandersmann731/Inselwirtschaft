@@ -1,4 +1,4 @@
-import { buildings, goods } from '../data'
+import { buildings, goods, landNames } from '../data'
 import type { TierNeed } from '../data'
 import type { BuildingCost } from '../data'
 import type { PlacementError } from '../sim/build'
@@ -29,6 +29,12 @@ export function placementMessage(error: PlacementError): string {
       return 'Die Fläche ist schon belegt'
     case 'notCoast':
       return 'Muss an der Küste stehen'
+    case 'notOwned':
+      return 'Diese Insel gehört dir noch nicht'
+    case 'noFertility':
+      return `Diese Insel hat kein Land für ${fertilityName(error.missing)}`
+    case 'noDeposit':
+      return `Diese Insel hat kein Vorkommen: ${depositName(error.missing)}`
     case 'debt':
       return 'Münzen im Minus: Neubau gesperrt'
     case 'locked':
@@ -93,4 +99,26 @@ export function formatStock(state: IslandState): string {
     .filter((good) => good.id in config.startStock)
     .map((good) => `${good.name} ${formatWhole(state.stock[good.id] ?? 0)}`)
   return [`Münzen ${formatWhole(state.coins)}`, ...materials].join(' · ')
+}
+
+export function fertilityName(id: string | undefined): string {
+  return landNames.fertilities.find((entry) => entry.id === id)?.name ?? String(id)
+}
+
+export function depositName(id: string | undefined): string {
+  return landNames.deposits.find((entry) => entry.id === id)?.name ?? String(id)
+}
+
+/** Short reason why a menu entry cannot be chosen on this island. */
+export function blockerLabel(error: PlacementError, tierName: string): string {
+  switch (error.code) {
+    case 'locked':
+      return `ab ${tierName}`
+    case 'noFertility':
+      return `Braucht: ${fertilityName(error.missing)}`
+    case 'noDeposit':
+      return `Braucht: ${depositName(error.missing)}`
+    default:
+      return placementMessage(error)
+  }
 }

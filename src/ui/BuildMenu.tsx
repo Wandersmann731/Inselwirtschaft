@@ -3,8 +3,8 @@ import { buildings, tiers } from '../data'
 import type { BuildingCategory } from '../data'
 import type { BuildController } from '../game/buildController'
 import type { IslandState } from '../sim/state'
-import { isBuildingUnlocked } from '../sim/tiers'
-import { formatCost } from './messages'
+import { buildingBlocker } from '../sim/build'
+import { blockerLabel, formatCost } from './messages'
 
 const CATEGORIES: { id: BuildingCategory; label: string }[] = [
   { id: 'housing', label: 'Wohnen' },
@@ -30,22 +30,26 @@ export function BuildMenu({ tool, state, onOpenStats, onOpenWorld }: BuildMenuPr
     <div className="build-menu">
       {open && (
         <div className="build-items">
-          {items.map((def) => (
+          {items.map((def) => {
+            const blocker = buildingBlocker(state, def)
+            const unavailable = blocker !== null && blocker.code !== 'debt'
+            return (
             <button
               key={def.id}
               type="button"
               className="build-item"
-              disabled={!isBuildingUnlocked(state, def.id)}
+              disabled={unavailable}
               onClick={() => (def.kind === 'road' ? tool.startRoads() : tool.startPlacing(def.id))}
             >
               <span className="build-item-name">{def.name}</span>
               <span className="build-item-size">
                 {def.kind === 'road' ? 'ziehen' : `${def.size[0]}×${def.size[1]}`}
-                {def.unlockTier !== 'pioneers' && ` · ab ${tierName(def.unlockTier)}`}
+                {unavailable && blocker ? ` · ${blockerLabel(blocker, tierName(def.unlockTier))}` : def.unlockTier !== 'pioneers' ? ` · ab ${tierName(def.unlockTier)}` : ''}
               </span>
               <span className="build-item-cost">{formatCost(def.cost)}</span>
             </button>
-          ))}
+            )
+          })}
         </div>
       )}
       <div className="build-categories">

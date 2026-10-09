@@ -16,10 +16,13 @@ export type PlacementErrorCode =
   | 'funds'
   | 'locked'
   | 'debt'
+  | 'notOwned'
+  | 'noFertility'
+  | 'noDeposit'
 
 export interface PlacementError {
   code: PlacementErrorCode
-  /** For 'funds': the good (or 'coins') that is missing. */
+  /** For 'funds': the good (or 'coins') that is missing. For 'noFertility' and 'noDeposit': what the island lacks. */
   missing?: string
 }
 
@@ -72,6 +75,23 @@ function touchesWater(state: IslandState, x: number, y: number, w: number, h: nu
   return false
 }
 
+/**
+ * Reasons that have nothing to do with the spot: the island is not yours, you are in debt, the
+ * building is not unlocked yet, or the island lacks the fertility or deposit it needs.
+ */
+export function buildingBlocker(state: IslandState, def: BuildingDef): PlacementError | null {
+  if (!state.owned) return { code: 'notOwned' }
+  if (state.coins < 0) return { code: 'debt' }
+  if (!isTierUnlocked(state, def.unlockTier)) return { code: 'locked' }
+  if (def.requiresFertility && !state.fertilities.includes(def.requiresFertility)) {
+    return { code: 'noFertility', missing: def.requiresFertility }
+  }
+  if (def.requiresDeposit && !state.deposits.includes(def.requiresDeposit)) {
+    return { code: 'noDeposit', missing: def.requiresDeposit }
+  }
+  return null
+}
+
 /** Checks the terrain, occupancy and cost rules for placing a building. Null means it can be built. */
 export function checkPlacement(
   state: IslandState,
@@ -81,8 +101,8 @@ export function checkPlacement(
   rotated: boolean,
 ): PlacementError | null {
   const def = getBuilding(typeId)
-  if (state.coins < 0) return { code: 'debt' }
-  if (!isTierUnlocked(state, def.unlockTier)) return { code: 'locked' }
+  const blocked = buildingBlocker(state, def)
+  if (blocked) return blocked
   const { w, h } = footprint(def, rotated)
   for (let ty = y; ty < y + h; ty++) {
     for (let tx = x; tx < x + w; tx++) {
@@ -145,6 +165,7 @@ const roadDef = (): BuildingDef => {
 /** Checks one road tile: terrain, occupancy and cost. Null means a road can be laid there. */
 export function checkRoad(state: IslandState, x: number, y: number): PlacementError | null {
   const def = roadDef()
+  if (!state.owned) return { code: 'notOwned' }
   if (state.coins < 0) return { code: 'debt' }
   const error = tileError(state, def, x, y)
   if (error) return error
