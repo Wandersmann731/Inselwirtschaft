@@ -16,6 +16,7 @@ const ISLAND_KEYS = [
   'stock',
   'economy',
   'trade',
+  'upgradeStop',
 ] as const
 
 export function getIsland(state: GameState, islandId: number): Island {

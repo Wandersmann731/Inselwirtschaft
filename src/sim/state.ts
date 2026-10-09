@@ -6,7 +6,7 @@ import type { GameMap } from '../world/terrain'
 export type { GameMap }
 
 /** Bump when the GameState shape changes and add a migration in migrations.ts. */
-export const CURRENT_SAVE_VERSION = 12
+export const CURRENT_SAVE_VERSION = 13
 
 export type GameSpeed = number
 
@@ -123,6 +123,8 @@ export interface Island {
   economy: Economy
   /** Kontor trade settings by good id. */
   trade: Record<string, TradeLimit>
+  /** Tiers houses may not rise into: saves the building materials an upgrade would use (set at the market house). */
+  upgradeStop?: string[]
 }
 
 /** Where an island lies on the world map. Sizes are in world map cells. */

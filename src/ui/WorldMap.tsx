@@ -90,7 +90,7 @@ export function WorldMap({ state, activeIsland, onSelect, onClose }: WorldMapPro
         ctx.strokeRect(offsetX + placement.x * scale, offsetY + placement.y * scale, placement.w * scale, placement.h * scale)
       }
       ctx.fillStyle = 'rgba(0, 0, 0, 0.55)'
-      const label = island.owned ? island.name : `${island.name} (fremd)`
+      const label = island.owned ? island.name : `${island.name} (${island.role === 'trader' ? 'Händler' : 'frei'})`
       const labelWidth = ctx.measureText(label).width + 10 * dpr
       ctx.fillRect(x - labelWidth / 2, y - 10 * dpr, labelWidth, 20 * dpr)
       ctx.fillStyle = '#ffffff'

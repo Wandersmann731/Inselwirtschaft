@@ -231,3 +231,17 @@ describe('economy cycle in the tick', () => {
     expect(cycleFlat(before).coins).toBeGreaterThan(before.coins)
   })
 })
+
+describe('stopping upgrades at the market house', () => {
+  it('a stopped tier is not reached and no materials are used', async () => {
+    const { setUpgradeStop } = await import('../src/sim/population')
+    const ready = patchHouse(oneHouse(), 1, { needs: ALL_MET, residents: 8 })
+    const stopped = setUpgradeStop(ready, 'settlers', true)
+    const after = cycles(stopped, upgradeCycles + 2)
+    expect(house(after).tier).toBe('pioneers')
+    expect(after.stock.wood).toBe(stopped.stock.wood)
+    const allowed = cycles(setUpgradeStop(stopped, 'settlers', false), upgradeCycles)
+    expect(house(allowed).tier).toBe('settlers')
+    expect(setUpgradeStop(ready, 'settlers', false)).toBe(ready)
+  })
+})

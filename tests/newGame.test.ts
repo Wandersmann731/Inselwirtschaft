@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { config } from '../src/data'
+import { tick } from '../src/sim/tick'
+import { createRng } from '../src/sim/rng'
+import { config, getBuilding } from '../src/data'
 import { addStartKit, createNewGame } from '../src/sim/newGame'
 import { buildShip, sendShip } from '../src/sim/ships'
 import { createInitialState } from '../src/sim/state'
@@ -48,17 +50,42 @@ describe('a new game', () => {
     expect(game.islands[0].stock).toEqual(plain.islands[0].stock)
     expect(game.islands[0].economy).toEqual(plain.islands[0].economy)
     expect(game.coins).toBe(plain.coins)
-    expect(game.islands.slice(1)).toEqual(plain.islands.slice(1))
+    // colonies stay as they are; the trader island gets its town (scenery, not the player's)
+    for (const [i, island] of game.islands.entries()) {
+      if (i === 0) continue
+      if (island.role === 'trader') expect(island.stock).toEqual(plain.islands[i].stock)
+      else expect(island).toEqual(plain.islands[i])
+    }
     expect(config.startCoins).toBeGreaterThan(0)
   })
 
-  it('leaves the other islands untouched and the same seed gives the same game', () => {
+  it('leaves the colonies untouched, builds the trader town, and the same seed gives the same game', () => {
     expect(createNewGame(11)).toEqual(createNewGame(11))
     const game = createNewGame(11)
     for (const island of game.islands.slice(1)) {
-      expect(island.buildings).toEqual([])
       expect(island.owned).toBe(false)
+      if (island.role === 'trader') {
+        const types = island.buildings.map((b) => b.type)
+        expect(types).toContain('kontor')
+        expect(types).toContain('market_house')
+        expect(types.filter((t) => t === 'house_pioneers').length).toBeGreaterThan(8)
+        expect(island.roads.some((r) => r === 1)).toBe(true)
+      } else {
+        expect(island.buildings).toEqual([])
+      }
     }
+  })
+
+  it('the trader town costs and earns the player nothing', () => {
+    let game = createNewGame(11)
+    const coins = game.coins
+    const trader = game.islands.find((island) => island.role === 'trader')!
+    const before = trader.buildings
+    // a whole cycle without any buildings of the player: only the free Kontor's upkeep is paid
+    for (let i = 0; i < config.economyCycleTicks; i++) game = tick(game, createRng(i))
+    const kontorUpkeep = getBuilding('kontor').upkeep.active
+    expect(game.coins).toBe(coins - kontorUpkeep)
+    expect(game.islands.find((island) => island.role === 'trader')!.buildings).toEqual(before)
   })
 
   it('does not add the kit twice', () => {
@@ -81,5 +108,43 @@ describe('a new game', () => {
   it('survives a JSON round trip', () => {
     const game = createNewGame(2)
     expect(JSON.parse(JSON.stringify(game))).toEqual(game)
+  })
+})
+
+describe('migration from version 12 and the harbour', () => {
+  it('builds the town on the empty trader island of an old save and adds the upgrade stops', async () => {
+    const { MIGRATIONS, migrateState } = await import('../src/sim/migrations')
+    const { CURRENT_SAVE_VERSION } = await import('../src/sim/state')
+    const old = JSON.parse(JSON.stringify(createInitialState(4))) as Record<string, any>
+    old.version = 12
+    const migrated = migrateState(old, MIGRATIONS)
+    expect(migrated.version).toBe(CURRENT_SAVE_VERSION)
+    const trader = migrated.islands.find((island) => island.role === 'trader')!
+    expect(trader.buildings.length).toBeGreaterThan(5)
+    expect(migrated.islands.every((island) => Array.isArray(island.upgradeStop))).toBe(true)
+  })
+
+  it('a docked ship lies on open water near the Kontor', async () => {
+    const { dockTile } = await import('../src/sim/harbour')
+    const game = createNewGame(3)
+    const home = toIslandState(game, game.islands[0].id)
+    const dock = dockTile(home)!
+    const kontor = home.buildings.find((b) => b.type === 'kontor')!
+    const { width, tiles } = home.map
+    const tx = Math.floor(dock.x)
+    const ty = Math.floor(dock.y)
+    const inside = tx >= 0 && ty >= 0 && tx < width && ty < home.map.height
+    if (inside) expect(tiles[ty * width + tx]).toBe(Terrain.Water)
+    expect(Math.hypot(dock.x - kontor.x, dock.y - kontor.y)).toBeLessThan(12)
+  })
+})
+
+describe('the trader town is not part of the realm', () => {
+  it('its residents are not counted and do not unlock anything', async () => {
+    const { totalResidents, residentsOfTier, isTierUnlocked } = await import('../src/sim/tiers')
+    const game = createNewGame(11)
+    expect(totalResidents(game)).toBe(0)
+    expect(residentsOfTier(game, 'merchants')).toBe(0)
+    expect(isTierUnlocked(game, 'aristocrats')).toBe(false)
   })
 })

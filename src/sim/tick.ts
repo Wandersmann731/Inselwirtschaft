@@ -9,7 +9,7 @@ import type { GameSpeed, GameState } from './state'
 /** Advances the simulation by one second of game time. Pure: returns a new state. */
 export function tick(state: GameState, rng: Rng): GameState {
   const next = moveShips(
-    onEachIsland({ ...state, tick: state.tick + 1, rngState: rng.getState() }, processProduction),
+    onEachIsland({ ...state, tick: state.tick + 1, rngState: rng.getState() }, (island) => (island.owned ? processProduction(island) : island)),
   )
   return next.tick % config.economyCycleTicks === 0 ? runCycle(next) : next
 }

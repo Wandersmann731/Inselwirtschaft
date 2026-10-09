@@ -9,6 +9,8 @@ interface TopHudProps {
   islandName: string
   /** Store of the island on screen: the building materials are shown. */
   stock: Record<string, number>
+  /** Only the player's islands have a store worth showing. */
+  owned: boolean
   tick: number
   coins: number
   /** Income minus upkeep of the last settled cycle, null before the first one. */
@@ -40,6 +42,7 @@ export function TopHud({
   onSpeedChange,
   islandName,
   stock,
+  owned,
   onOpenMenu,
   debug,
   onOpenBalance,
@@ -57,7 +60,7 @@ export function TopHud({
         <span className={balanceClass}><Icon name={balance !== null && balance < 0 ? 'ui/balance_down' : 'ui/balance_up'} size={20} title="Bilanz" />{' '}
           {balance === null ? '–' : `${formatSigned(balance)} / Zyklus`}
         </span>
-        {MATERIALS.map((good) => (
+        {owned && MATERIALS.map((good) => (
           <span key={good} className={(stock[good] ?? 0) < LOW_MATERIAL ? 'hud-stat hud-material low' : 'hud-stat hud-material'}>
             <Icon name={`goods/${good}`} size={20} title={resourceName(good)} /> {formatWhole(stock[good] ?? 0)}
           </span>

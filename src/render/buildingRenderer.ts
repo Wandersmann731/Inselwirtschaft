@@ -78,6 +78,7 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
       dotHeight = house ? houseHeight(house) : boxHeight(rect, def.category)
       drawBox(ctx, rect, dotHeight, house ? houseColor(house) : def.color)
     }
+    if (!state.owned) continue // the towns of others show no status
     if (building.production) drawStatusDot(ctx, rect, dotHeight, STATUS_COLORS[building.production.status.kind])
     else if (house && !house.ruin && house.residents > 0) drawStatusDot(ctx, rect, dotHeight, houseDotColor(house))
   }
