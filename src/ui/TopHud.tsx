@@ -1,6 +1,7 @@
 import { config, tiers } from '../data'
 import type { GameSpeed } from '../sim/state'
 import { formatSigned, formatWhole } from './messages'
+import { toggleFullscreen, useFullscreen } from './fullscreen'
 import { Icon } from './Icon'
 
 interface TopHudProps {
@@ -36,6 +37,7 @@ export function TopHud({
   debug,
   onOpenBalance,
 }: TopHudProps) {
+  const fullscreen = useFullscreen()
   const total = Object.values(residentsByTier).reduce((sum, value) => sum + value, 0)
   const balanceClass = balance === null ? 'hud-stat' : balance >= 0 ? 'hud-stat positive' : 'hud-stat negative'
   return (
@@ -66,6 +68,17 @@ export function TopHud({
         {debug && (
           <button type="button" className="speed-button" onClick={onOpenBalance}>
             Balance
+          </button>
+        )}
+        {fullscreen.supported && (
+          <button
+            type="button"
+            className="speed-button"
+            onClick={() => void toggleFullscreen()}
+            aria-label={fullscreen.active ? 'Vollbild beenden' : 'Vollbild'}
+            title={fullscreen.active ? 'Vollbild beenden' : 'Vollbild'}
+          >
+            {fullscreen.active ? '⤡' : '⛶'}
           </button>
         )}
         <button type="button" className="speed-button" onClick={onOpenMenu} aria-label="Menü">

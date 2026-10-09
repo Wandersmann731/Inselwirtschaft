@@ -1,6 +1,6 @@
 # Inselwirtschaft
 
-Isometrisches 2D-Aufbauspiel für Android-Smartphones im Querformat, als PWA im Browser.
+Isometrisches 2D-Aufbauspiel für Android-Smartphones (quer und hochkant), als PWA im Browser.
 Es bildet die Wirtschaftsmechaniken aus docs/anno1503-analyse.md nach, mit eigenem Namen
 und eigenen Grafiken. Keine Namen, Grafiken, Texte oder Sounds aus Anno verwenden.
 Das Projekt ist privat und nicht kommerziell.
@@ -26,7 +26,7 @@ Das Projekt ist privat und nicht kommerziell.
 - Isometrische Rautenkacheln 64x32 px. Bis echte Grafik da ist: farbige Platzhalterformen.
 - Touch zuerst: Wischen verschiebt, zwei Finger zoomen (0,5x bis 2x), Tippen wählt,
   langes Drücken zeigt Infos. Maus zusätzlich zum Testen am PC.
-- Querformat, Vollbild, Schaltflächen mindestens 48 px, lesbar auf 6-Zoll-Bildschirmen.
+- Quer- und Hochformat spielbar, Vollbild (Schaltfläche und Einstellung), Schaltflächen mindestens 48 px, lesbar auf 6-Zoll-Bildschirmen.
 - src/sim enthält reine Funktionen ohne DOM, React oder Canvas:
   tick(state: GameState, rng: Rng): GameState. 1 Tick = 1 Sekunde bei 1x.
   Geschwindigkeiten Pause, 1x, 2x, 4x. Wirtschaftszyklus alle 60 Ticks.

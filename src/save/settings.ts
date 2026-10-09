@@ -12,6 +12,8 @@ export interface Settings {
   volumeAmbience: number
   volumeMusic: number
   muted: boolean
+  /** Goes to full screen when a game starts (phones only, the browser needs a tap for it). */
+  autoFullscreen: boolean
 }
 
 const KEY = 'inselwirtschaft:settings'
@@ -23,6 +25,7 @@ const DEFAULTS: Settings = {
   volumeAmbience: 0.6,
   volumeMusic: 0.4,
   muted: false,
+  autoFullscreen: true,
 }
 
 function load(): Settings {

@@ -14,7 +14,6 @@ import { KontorPanel } from './ui/KontorPanel'
 import type { MapRenderer } from './render/mapRenderer'
 import { MapCanvas } from './ui/MapCanvas'
 import { MiniMap } from './ui/MiniMap'
-import { RotateHint } from './ui/RotateHint'
 import { StatsPanel } from './ui/StatsPanel'
 import { Toasts } from './ui/Toasts'
 import { TopHud } from './ui/TopHud'
@@ -88,7 +87,6 @@ export function App({ loop, onQuit }: { loop: GameLoop; onQuit: () => void }) {
         onOpenTrade={() => setShowTrade(true)}
         onOpenKontor={() => setShowKontor(true)}
       />
-      <RotateHint />
     </>
   )
 }

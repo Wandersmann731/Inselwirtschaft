@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { saveState } from '../save/saveGame'
 import type { GameLoop } from '../game/gameLoop'
+import { toggleFullscreen, useFullscreen } from './fullscreen'
 import { SettingsPanel } from './SettingsPanel'
 import { SlotList } from './SlotList'
 import { useSlots } from './slots'
@@ -18,6 +19,7 @@ export function GameMenu({ loop, onClose, onQuit }: GameMenuProps) {
   const [showSettings, setShowSettings] = useState(false)
   const [message, setMessage] = useState('')
   const slots = useSlots(reload)
+  const fullscreen = useFullscreen()
 
   const save = (slot: string): void => {
     saveState(loop.getState(), slot)
@@ -45,6 +47,11 @@ export function GameMenu({ loop, onClose, onQuit }: GameMenuProps) {
             <button type="button" className="action-button" onClick={() => setShowSettings(true)}>
               Einstellungen
             </button>
+            {fullscreen.supported && (
+              <button type="button" className="action-button" onClick={() => void toggleFullscreen()}>
+                {fullscreen.active ? 'Vollbild beenden' : 'Vollbild'}
+              </button>
+            )}
             <button type="button" className="action-button" onClick={onQuit}>
               Zum Startbildschirm
             </button>

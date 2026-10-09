@@ -5,6 +5,8 @@ import type { IslandState } from '../sim/state'
 
 const MAX_WIDTH = 168
 const MAX_HEIGHT = 104
+/** Upright phones have less room, so the overview map is smaller there. */
+const PORTRAIT_SCALE = 0.7
 
 interface MiniMapProps {
   getIsland: () => IslandState
@@ -31,7 +33,8 @@ export function MiniMap({ getIsland, getRenderer }: MiniMapProps) {
 
     const frame = (): void => {
       const island = getIsland()
-      const layout = miniLayout(island.map, MAX_WIDTH, MAX_HEIGHT)
+      const scale = window.matchMedia('(orientation: portrait)').matches ? PORTRAIT_SCALE : 1
+      const layout = miniLayout(island.map, MAX_WIDTH * scale, MAX_HEIGHT * scale)
       layoutRef.current = layout
       const pixelWidth = Math.round(layout.width * dpr)
       const pixelHeight = Math.round(layout.height * dpr)

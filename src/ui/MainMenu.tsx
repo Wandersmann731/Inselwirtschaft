@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { audio } from '../audio/engine'
 import { config } from '../data'
 import { AUTOSAVE_SLOT, loadState } from '../save/saveGame'
+import { getSettings } from '../save/settings'
 import { createNewGame } from '../sim/newGame'
 import type { GameState } from '../sim/state'
+import { enterFullscreenOnPhone, toggleFullscreen, useFullscreen } from './fullscreen'
 import { Icon } from './Icon'
 import { formatWhole } from './messages'
 import { SettingsPanel } from './SettingsPanel'
@@ -21,6 +23,11 @@ function randomSeed(): number {
 }
 
 /** Start screen: continue, new game (seed and start money), load, settings. */
+/** The tap that starts a game also switches a phone to full screen, if the player wants that. */
+function goFullscreen(): void {
+  if (getSettings().autoFullscreen) enterFullscreenOnPhone()
+}
+
 export function MainMenu({ onStart }: MainMenuProps) {
   const [screen, setScreen] = useState<Screen>('main')
   const [showSettings, setShowSettings] = useState(false)
@@ -29,6 +36,7 @@ export function MainMenu({ onStart }: MainMenuProps) {
   const [coins, setCoins] = useState(config.startCoins)
   const [message, setMessage] = useState('')
   const slots = useSlots(reload)
+  const fullscreen = useFullscreen()
   useEffect(() => {
     const unlock = (): void => audio.unlock()
     document.addEventListener('pointerdown', unlock, true)
@@ -41,6 +49,7 @@ export function MainMenu({ onStart }: MainMenuProps) {
   const hasAutosave = slots?.find((entry) => entry.slot === AUTOSAVE_SLOT)?.info != null
 
   const load = async (slot: string): Promise<void> => {
+    goFullscreen()
     try {
       const state = await loadState(slot)
       if (state) onStart(state)
@@ -51,6 +60,7 @@ export function MainMenu({ onStart }: MainMenuProps) {
   }
 
   const startNew = (): void => {
+    goFullscreen()
     const parsed = Math.floor(Number(seed))
     onStart(createNewGame(Number.isFinite(parsed) && parsed > 0 ? parsed : config.startSeed, coins))
   }
@@ -73,6 +83,11 @@ export function MainMenu({ onStart }: MainMenuProps) {
             <button type="button" className="menu-button" onClick={() => setShowSettings(true)}>
               Einstellungen
             </button>
+            {fullscreen.supported && (
+              <button type="button" className="menu-button" onClick={() => void toggleFullscreen()}>
+                {fullscreen.active ? 'Vollbild beenden' : 'Vollbild'}
+              </button>
+            )}
           </div>
         )}
         {screen === 'new' && (

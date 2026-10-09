@@ -10,7 +10,7 @@ interface Props {
   onDeleted?: () => void
 }
 
-type Toggle = 'debug' | 'waterAnimation' | 'smoke' | 'muted'
+type Toggle = 'debug' | 'waterAnimation' | 'smoke' | 'muted' | 'autoFullscreen'
 type Volume = 'volumeEffects' | 'volumeAmbience' | 'volumeMusic'
 
 const VOLUMES: { key: Volume; label: string }[] = [
@@ -21,6 +21,7 @@ const VOLUMES: { key: Volume; label: string }[] = [
 
 const OPTIONS: { key: Toggle; label: string; hint: string }[] = [
   { key: 'muted', label: 'Ton aus', hint: 'Schaltet alle Töne stumm.' },
+  { key: 'autoFullscreen', label: 'Vollbild beim Start', hint: 'Nur auf Handys und Tablets. Im Spiel gibt es dafür auch eine Schaltfläche.' },
   { key: 'waterAnimation', label: 'Bewegtes Wasser', hint: 'Bei langsamen Handys ausschalten.' },
   { key: 'smoke', label: 'Rauch über Schornsteinen', hint: 'Bei langsamen Handys ausschalten.' },
   { key: 'debug', label: 'Entwickleranzeige', hint: 'Zeigt Bilder pro Sekunde und das Balancing-Fenster.' },
