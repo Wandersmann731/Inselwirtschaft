@@ -2,24 +2,20 @@
   "tileWidth": 64,
   "tileHeight": 32,
   "chunkSize": 8,
-  "maxCachedChunks": 40,
+  "maxCachedChunks": 64,
   "minZoom": 0.5,
   "maxZoom": 2,
-  "input": {
-    "tapSlopPx": 10,
-    "tapMaxMs": 500,
-    "wheelZoomSpeed": 0.0015
-  },
+  "input": { "tapSlopPx": 10, "tapMaxMs": 500, "wheelZoomSpeed": 0.0015 },
   "island": {
-    "minSize": 40,
-    "maxSize": 80,
-    "noiseCells": [16, 8, 4],
+    "minSize": 100,
+    "maxSize": 140,
+    "noiseCells": [28, 14, 7],
     "noiseWeights": [1, 0.5, 0.25],
     "noiseShare": 0.4,
     "falloffPower": 2,
     "seaLevel": 0.4,
     "mountainFraction": 0.1,
-    "forestCell": 6,
+    "forestCell": 10,
     "forestThreshold": 0.5,
     "beachWidth": 1
   }

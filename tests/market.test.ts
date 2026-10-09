@@ -55,13 +55,13 @@ describe('market', () => {
 
   it('counts a stand whose range reaches one tile of the house', () => {
     let state = grassField(50, 30, { ...rich })
-    state = placeBuilding(state, 'house_pioneers', 10, 10, false) // x 10..12
-    state = placeBuilding(state, 'food_salt_stand', 16, 10, false) // 3 empty tiles between
+    state = placeBuilding(state, 'house_pioneers', 10, 10, false) // x 10..11
+    state = placeBuilding(state, 'food_salt_stand', 15, 10, false) // 3 empty tiles between
     state = { ...patchHouse(state, 1, { residents: 8 }), coins: 1000, stock: { food: 100, cloth: 100 } }
     expect(house(runMarket(state)).needs.food).toBe(100)
     let far = grassField(50, 30, { ...rich })
     far = placeBuilding(far, 'house_pioneers', 10, 10, false)
-    far = placeBuilding(far, 'food_salt_stand', 17, 10, false) // 4 empty tiles between
+    far = placeBuilding(far, 'food_salt_stand', 16, 10, false) // 4 empty tiles between
     far = { ...patchHouse(far, 1, { residents: 8 }), coins: 1000, stock: { food: 100, cloth: 100 } }
     expect(house(runMarket(far)).needs.food).toBe(0)
   })
@@ -107,7 +107,7 @@ describe('market', () => {
 
   it('serves houses one after another until the store is empty', () => {
     let state = village(8)
-    state = placeBuilding({ ...state, coins: 1_000_000, stock: { ...rich.stock } }, 'house_pioneers', 10, 14, false)
+    state = placeBuilding({ ...state, coins: 1_000_000, stock: { ...rich.stock } }, 'house_pioneers', 12, 13, false)
     state = patchHouse(state, 5, { residents: 8 })
     const next = runMarket({ ...state, stock: { food: 1, cloth: 100 } })
     const homes = next.buildings.filter((b) => b.house)

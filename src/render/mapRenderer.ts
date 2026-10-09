@@ -21,7 +21,7 @@ import { SEA_COLOR, diamondPath } from './terrainStyle'
 const SELECTION_COLOR = '#ffd23f'
 const ZOOM_LIMITS = { min: world.minZoom, max: world.maxZoom }
 /** Above this device-pixels-per-world-pixel the chunk bitmaps are rendered at 2x. */
-const HIGH_RES_THRESHOLD = 1.25
+const HIGH_RES_THRESHOLD = 1.6
 
 /**
  * Draws the map on a canvas. Lives outside React: React only mounts and destroys it.

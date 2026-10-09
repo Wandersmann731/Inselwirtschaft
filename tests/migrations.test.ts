@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { migrateState } from '../src/sim/migrations'
+import { MIGRATIONS, migrateState } from '../src/sim/migrations'
 import { generateIsland } from '../src/world/islandGenerator'
 import { CURRENT_SAVE_VERSION, createInitialState } from '../src/sim/state'
 
@@ -78,9 +78,31 @@ describe('migration from version 3', () => {
       buildings: [building(1, 'forester'), building(2, 'house_pioneers')],
       nextBuildingId: 3,
     }
-    const migrated = migrateState({ ...v3, map })
-    expect(migrated.version).toBe(CURRENT_SAVE_VERSION)
+    const migrated = migrateState({ ...v3, map }, MIGRATIONS, 4)
+    expect(migrated.version).toBe(4)
     expect(migrated.buildings[0].production).toBeDefined()
     expect(migrated.buildings[1].production).toBeUndefined()
+  })
+})
+
+describe('migration from version 5', () => {
+  it('generates the world again but keeps time, coins and goods', () => {
+    const old = {
+      ...createInitialState(5),
+      version: 5,
+      tick: 321,
+      coins: 4242,
+      stock: { wood: 7 },
+      buildings: [{ id: 1, type: 'house_pioneers', x: 3, y: 3, rotated: false, active: true }],
+      nextBuildingId: 2,
+    }
+    const migrated = migrateState(old)
+    expect(migrated.version).toBe(CURRENT_SAVE_VERSION)
+    expect(migrated.tick).toBe(321)
+    expect(migrated.coins).toBe(4242)
+    expect(migrated.stock).toEqual({ wood: 7 })
+    expect(migrated.buildings).toEqual([])
+    expect(migrated.occupancy.every((v) => v === 0)).toBe(true)
+    expect(migrated.map).toEqual(generateIsland(5))
   })
 })

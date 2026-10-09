@@ -184,8 +184,8 @@ describe('unlocking', () => {
     expect(checkPlacement(state, 'house_aristocrats', 10, 10, false)).toBeNull()
   })
 
-  it('builds aristocrat houses as 4x4 in the aristocrat tier', () => {
-    expect(getBuilding('house_aristocrats').size).toEqual([4, 4])
+  it('builds aristocrat houses as 2x2 in the aristocrat tier', () => {
+    expect(getBuilding('house_aristocrats').size).toEqual([2, 2])
     let state = { ...grassField(40, 40, rich), highestTier: 3 }
     state = placeBuilding(state, 'house_pioneers', 2, 2, false)
     state = patchHouse(state, 1, { tier: 'merchants', residents: 1900 })
