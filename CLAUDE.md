@@ -35,6 +35,11 @@ Das Projekt ist privat und nicht kommerziell.
   Versionsnummer und Migrationen.
 - Kein Backend, kein Login, keine Werbung, keine Tracker. Alles läuft offline.
 
+## Grafiken
+- Master-PNG liegen in art/ (siehe docs/grafiken.md). Das Spiel lädt die kleinen WebP-Dateien aus public/sprites.
+- Neu erzeugen: scripts/assets/README.md. Nach Änderungen an art/ immer `node scripts/assets/optimize.mjs` ausführen.
+- Fehlt ein Sprite, zeichnet der Renderer die alten Farbformen als Ersatz.
+
 ## Befehle
 - npm run dev       Entwicklungsserver
 - npm run build     Produktions-Build (muss fehlerfrei durchlaufen)

@@ -4,6 +4,7 @@ import { checkPlacement, checkRoad, footprint } from '../sim/build'
 import type { IslandState, PlacedBuilding } from '../sim/state'
 import type { ToolSnapshot } from '../game/buildController'
 import { tileToWorld } from './iso'
+import { drawPlacedSprite, placeSprite } from './spriteDraw'
 import { boxHeight, drawBox, rectPath, type TileRect } from './shapes'
 import { diamondPath } from './terrainStyle'
 
@@ -53,9 +54,14 @@ export class OverlayRenderer {
     ctx.beginPath()
     rectPath(ctx, rect)
     ctx.fill()
-    ctx.globalAlpha = 0.75
-    drawBox(ctx, rect, boxHeight(rect, def.category), def.color)
-    ctx.globalAlpha = 1
+    const placed = placeSprite({ type: typeId, x: origin.x, y: origin.y, rotated, house: undefined })
+    if (placed) {
+      drawPlacedSprite(ctx, placed, 0.75)
+    } else {
+      ctx.globalAlpha = 0.75
+      drawBox(ctx, rect, boxHeight(rect, def.category), def.color)
+      ctx.globalAlpha = 1
+    }
     ctx.strokeStyle = valid ? '#2fd45a' : '#ff4040'
     ctx.lineWidth = 2
     ctx.beginPath()

@@ -1,10 +1,11 @@
 import { config, getBuilding, trade } from '../data'
 import { cumulativeNeeds, getTier } from '../sim/tiers'
 import type { BuildController } from '../game/buildController'
-import { STATUS_COLORS } from '../render/buildingRenderer'
 import { upkeepOf } from '../sim/production'
 import type { IslandState } from '../sim/state'
 import { formatCost, needLabel, resourceName, statusText } from './messages'
+import { Icon } from './Icon'
+import { STATUS_ICONS } from './statusIcons'
 
 /** Info panel of the selected building: state of a producer, buffers, upkeep and the off switch. */
 export function BuildingPanel({
@@ -36,7 +37,7 @@ export function BuildingPanel({
       {production && (
         <>
           <div className="panel-status">
-            <span className="status-dot" style={{ background: STATUS_COLORS[production.status.kind] }} />
+            <Icon name={STATUS_ICONS[production.status.kind]} size={26} />
             {statusText(production.status)}
           </div>
           <div className="panel-line">Auslastung: {production.utilization} % (letzter Zyklus)</div>

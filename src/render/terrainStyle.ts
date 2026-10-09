@@ -1,5 +1,7 @@
 import { Terrain } from '../world/terrain'
 import { HALF_H, HALF_W } from './iso'
+import { sprites } from './sprites'
+import { terrainKey } from './spriteKeys'
 
 /** Placeholder colours until real sprites exist. */
 export const SEA_COLOR = '#1d4e6b'
@@ -23,8 +25,24 @@ export function diamondPath(ctx: CanvasRenderingContext2D, topX: number, topY: n
   ctx.closePath()
 }
 
+/** Sprites are cut slightly inside the diamond, so they are drawn a little bigger to overlap their neighbours. */
+const SPRITE_GROW = 0.7
+
 /** Paints one land tile with its top corner at (topX, topY). Water is left to the background. */
-export function paintTile(ctx: CanvasRenderingContext2D, terrain: number, topX: number, topY: number): void {
+export function paintTile(
+  ctx: CanvasRenderingContext2D,
+  terrain: number,
+  topX: number,
+  topY: number,
+  tileX = 0,
+  tileY = 0,
+): void {
+  const key = terrainKey(terrain, tileX, tileY)
+  const image = key ? sprites.get(key) : undefined
+  if (image) {
+    ctx.drawImage(image, topX - HALF_W - SPRITE_GROW, topY - SPRITE_GROW / 2, 2 * HALF_W + 2 * SPRITE_GROW, 2 * HALF_H + SPRITE_GROW)
+    return
+  }
   const color = TILE_COLORS[terrain]
   if (!color) return
   diamondPath(ctx, topX, topY, OVERLAP)

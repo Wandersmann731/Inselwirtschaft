@@ -79,7 +79,7 @@ export class TerrainCache {
       for (let i = i0; i < i1; i++) {
         const terrain = map.tiles[j * map.width + i]
         if (terrain === Terrain.Water) continue
-        paintTile(ctx, terrain, (i - j) * HALF_W - origin.x, (i + j) * HALF_H - origin.y)
+        paintTile(ctx, terrain, (i - j) * HALF_W - origin.x, (i + j) * HALF_H - origin.y, i, j)
       }
     }
     return canvas

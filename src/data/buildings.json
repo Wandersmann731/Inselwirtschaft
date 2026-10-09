@@ -330,7 +330,8 @@
     ],
     "output": { "good": "food", "amount": 1 },
     "cycleTicks": 20,
-    "needsRoad": true
+    "needsRoad": true,
+    "smoke": true
   },
   {
     "id": "stonemason",
@@ -365,7 +366,8 @@
     ],
     "output": { "good": "iron", "amount": 1 },
     "cycleTicks": 40,
-    "needsRoad": true
+    "needsRoad": true,
+    "smoke": true
   },
   {
     "id": "toolmaker",
@@ -383,7 +385,8 @@
     ],
     "output": { "good": "tools", "amount": 1 },
     "cycleTicks": 40,
-    "needsRoad": true
+    "needsRoad": true,
+    "smoke": true
   },
   {
     "id": "salt_mine",
@@ -434,7 +437,8 @@
     ],
     "output": { "good": "alcohol", "amount": 1 },
     "cycleTicks": 30,
-    "needsRoad": true
+    "needsRoad": true,
+    "smoke": true
   },
   {
     "id": "hops_farm",
@@ -623,7 +627,8 @@
     ],
     "output": { "good": "lamp_oil", "amount": 1 },
     "cycleTicks": 30,
-    "needsRoad": true
+    "needsRoad": true,
+    "smoke": true
   },
   {
     "id": "vineyard",

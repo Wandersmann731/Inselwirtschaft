@@ -211,7 +211,7 @@ with (out_dir / "grafiken.csv").open("w", newline="", encoding="utf-8") as f:
 total = sum(len(g) for g in groups)
 md = []
 md.append("# Grafikliste für Inselwirtschaft\n")
-md.append(f"Alle Grafiken, die das Spiel für Phase 7 braucht: **{total} Dateien**. **Stand:** Alle Dateien sind bereits mit dem ImageGen-Werkzeug erzeugt und liegen fertig zugeschnitten in `public/art/` (erstellt mit `scripts/assets`, siehe dort die `README.md`). Der Einbau ins Spiel (Sprite-Atlas statt Platzhalterformen) ist Teil von Phase 7. Die Tabellen entstehen aus den Spieldaten (`scripts/make-asset-list.py`), die Datei `docs/grafiken.csv` enthält dieselbe Liste mit fertigen Prompts je Zeile.\n")
+md.append(f"Alle Grafiken, die das Spiel für Phase 7 braucht: **{total} Dateien**. **Stand:** Alle Dateien sind bereits mit dem ImageGen-Werkzeug erzeugt und liegen fertig zugeschnitten in `art/` (erstellt mit `scripts/assets`, siehe dort die `README.md`). Der Einbau ins Spiel (Sprite-Atlas statt Platzhalterformen) ist Teil von Phase 7. Die Tabellen entstehen aus den Spieldaten (`scripts/make-asset-list.py`), die Datei `docs/grafiken.csv` enthält dieselbe Liste mit fertigen Prompts je Zeile.\n")
 md.append("## 1. Wichtig vorab\n")
 md.append("""- **Keine Anno-Bezüge:** In keinem Prompt Namen, Bilder oder Stile von Anno nennen oder hochladen. Alles muss eigenes Design sein.
 - **Perspektive:** Das Spiel nutzt eine isometrische Karte mit Rautenkacheln im Verhältnis 2:1. Alle Gebäude, Gelände und Straßen müssen genau in diese Raute passen. Das ist für KI-Bildgeneratoren schwer. Deshalb zuerst ein Stilbild festlegen (siehe Abschnitt 4) und danach die Raute als Vorlage mitgeben.
@@ -297,7 +297,7 @@ Die Spalte `prompt_komplett` in `docs/grafiken.csv` enthält je Zeile den fertig
 Lege die Dateien in diese Ordner (Namen genau wie in der Tabelle):
 
 ```
-public/art/
+art/
   terrain/   water_1..4, beach_1..3, grass_1..4, forest_1..4, mountain_1..4
   roads/     road_none, road_n, road_e, ... road_nesw (16 Dateien)
   buildings/ alle Gebäude, die Ruine und die Marktstände

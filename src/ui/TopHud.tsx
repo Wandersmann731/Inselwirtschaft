@@ -1,6 +1,7 @@
 import { config, tiers } from '../data'
 import type { GameSpeed } from '../sim/state'
 import { formatSigned, formatWhole } from './messages'
+import { Icon } from './Icon'
 
 interface TopHudProps {
   islandName: string
@@ -34,16 +35,22 @@ export function TopHud({
     <div className="top-hud">
       <div className="hud-stats">
         <div className="hud-row">
-        <span className={coins < 0 ? 'hud-stat negative' : 'hud-stat'}>Münzen: {formatWhole(coins)}</span>
-        <span className={balanceClass}>Bilanz: {balance === null ? '–' : `${formatSigned(balance)} / Zyklus`}</span>
+        <span className={coins < 0 ? 'hud-stat negative' : 'hud-stat'}>
+          <Icon name="ui/coin" size={20} title="Münzen" /> {formatWhole(coins)}
+        </span>
+        <span className={balanceClass}><Icon name={balance !== null && balance < 0 ? 'ui/balance_down' : 'ui/balance_up'} size={20} title="Bilanz" />{' '}
+          {balance === null ? '–' : `${formatSigned(balance)} / Zyklus`}
+        </span>
         <span className="hud-stat">Tick: {tick.toLocaleString('de-DE')}</span>
         <span className="hud-stat hud-island">{islandName}</span>
         </div>
         <div className="hud-row">
-        <span className="hud-stat">Einwohner: {formatWhole(total)}</span>
+        <span className="hud-stat">
+          <Icon name="ui/population" size={20} title="Einwohner" /> {formatWhole(total)}
+        </span>
         {tiers.slice(0, highestTier + 1).map((tier) => (
           <span key={tier.id} className="hud-stat hud-tier">
-            {tier.name} {formatWhole(residentsByTier[tier.id] ?? 0)}
+            <Icon name={`tiers/${tier.id}`} size={18} title={tier.name} /> {formatWhole(residentsByTier[tier.id] ?? 0)}
           </span>
         ))}
         </div>

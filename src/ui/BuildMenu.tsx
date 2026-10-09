@@ -4,13 +4,14 @@ import type { BuildingCategory } from '../data'
 import type { BuildController } from '../game/buildController'
 import type { IslandState } from '../sim/state'
 import { buildingBlocker } from '../sim/build'
-import { blockerLabel, formatCost } from './messages'
+import { blockerLabel } from './messages'
+import { Cost, Icon } from './Icon'
 
-const CATEGORIES: { id: BuildingCategory; label: string }[] = [
-  { id: 'housing', label: 'Wohnen' },
-  { id: 'public', label: 'Öffentlich' },
-  { id: 'production', label: 'Produktion' },
-  { id: 'infrastructure', label: 'Infrastruktur' },
+const CATEGORIES: { id: BuildingCategory; label: string; icon: string }[] = [
+  { id: 'housing', label: 'Wohnen', icon: 'ui/cat_housing' },
+  { id: 'public', label: 'Öffentlich', icon: 'ui/cat_public' },
+  { id: 'production', label: 'Produktion', icon: 'ui/cat_production' },
+  { id: 'infrastructure', label: 'Infrastruktur', icon: 'ui/cat_infrastructure' },
 ]
 
 const tierName = (id: string): string => tiers.find((tier) => tier.id === id)?.name ?? id
@@ -47,34 +48,41 @@ export function BuildMenu({ tool, state, onOpenStats, onOpenWorld, onOpenTrade }
                 {def.kind === 'road' ? 'ziehen' : `${def.size[0]}×${def.size[1]}`}
                 {unavailable && blocker ? ` · ${blockerLabel(blocker, tierName(def.unlockTier))}` : def.unlockTier !== 'pioneers' ? ` · ab ${tierName(def.unlockTier)}` : ''}
               </span>
-              <span className="build-item-cost">{formatCost(def.cost)}</span>
+              <span className="build-item-cost">
+                <Cost cost={def.cost} size={16} />
+              </span>
             </button>
             )
           })}
         </div>
       )}
       <div className="build-categories">
-        {CATEGORIES.map(({ id, label }) => (
+        {CATEGORIES.map(({ id, label, icon }) => (
           <button
             key={id}
             type="button"
             className={id === open ? 'category-button active' : 'category-button'}
             onClick={() => setOpen(id === open ? null : id)}
           >
-            {label}
+            <Icon name={icon} size={26} />
+            <span>{label}</span>
           </button>
         ))}
         <button type="button" className="category-button demolish" onClick={() => tool.startDemolish()}>
-          Abriss
+          <Icon name="ui/cat_demolish" size={26} />
+          <span>Abriss</span>
         </button>
         <button type="button" className="category-button" onClick={onOpenStats}>
-          Statistik
+          <Icon name="ui/cat_statistics" size={26} />
+          <span>Statistik</span>
         </button>
         <button type="button" className="category-button" onClick={onOpenWorld}>
-          Weltkarte
+          <Icon name="ui/cat_worldmap" size={26} />
+          <span>Weltkarte</span>
         </button>
         <button type="button" className="category-button" onClick={onOpenTrade}>
-          Handel
+          <Icon name="ui/cat_trade" size={26} />
+          <span>Handel</span>
         </button>
       </div>
     </div>

@@ -3,6 +3,7 @@ import type { GameLoop } from '../game/gameLoop'
 import { setTradeLimit, traderBuyPrice, traderSellPrice, traderSells } from '../sim/trade'
 import type { IslandState } from '../sim/state'
 import { formatWhole } from './messages'
+import { Icon } from './Icon'
 
 const STEP = 10
 
@@ -46,7 +47,7 @@ export function KontorPanel({ loop, island, onClose }: { loop: GameLoop; island:
                 return (
                   <tr key={good.id}>
                     <td>
-                      {good.name}
+                      <Icon name={`goods/${good.id}`} size={22} /> {good.name}
                       <span className="kontor-price">
                         {traderSells(good.id) ? ` kauft ${Math.round(traderSellPrice(good.id))}` : ''} · verkauft{' '}
                         {Math.round(traderBuyPrice(good.id))}

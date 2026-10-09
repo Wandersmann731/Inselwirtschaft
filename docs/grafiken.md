@@ -1,6 +1,6 @@
 # Grafikliste für Inselwirtschaft
 
-Alle Grafiken, die das Spiel für Phase 7 braucht: **175 Dateien**. **Stand:** Alle Dateien sind bereits mit dem ImageGen-Werkzeug erzeugt und liegen fertig zugeschnitten in `public/art/` (erstellt mit `scripts/assets`, siehe dort die `README.md`). Der Einbau ins Spiel (Sprite-Atlas statt Platzhalterformen) ist Teil von Phase 7. Die Tabellen entstehen aus den Spieldaten (`scripts/make-asset-list.py`), die Datei `docs/grafiken.csv` enthält dieselbe Liste mit fertigen Prompts je Zeile.
+Alle Grafiken, die das Spiel für Phase 7 braucht: **175 Dateien**. **Stand:** Alle Dateien sind bereits mit dem ImageGen-Werkzeug erzeugt und liegen fertig zugeschnitten in `art/` (erstellt mit `scripts/assets`, siehe dort die `README.md`). Der Einbau ins Spiel (Sprite-Atlas statt Platzhalterformen) ist Teil von Phase 7. Die Tabellen entstehen aus den Spieldaten (`scripts/make-asset-list.py`), die Datei `docs/grafiken.csv` enthält dieselbe Liste mit fertigen Prompts je Zeile.
 
 ## 1. Wichtig vorab
 
@@ -316,7 +316,7 @@ text, letters, logo, watermark, frame, border, multiple objects, people in the f
 Lege die Dateien in diese Ordner (Namen genau wie in der Tabelle):
 
 ```
-public/art/
+art/
   terrain/   water_1..4, beach_1..3, grass_1..4, forest_1..4, mountain_1..4
   roads/     road_none, road_n, road_e, ... road_nesw (16 Dateien)
   buildings/ alle Gebäude, die Ruine und die Marktstände

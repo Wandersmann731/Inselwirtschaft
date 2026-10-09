@@ -4,6 +4,7 @@ import type { GameState, IslandState } from '../sim/state'
 import { residentsOfTier } from '../sim/tiers'
 import { findShortages } from '../sim/warnings'
 import { depositName, fertilityName, formatSigned, formatWhole } from './messages'
+import { Icon } from './Icon'
 
 const oneDecimal = (value: number): string => value.toFixed(1).replace('.', ',')
 
@@ -81,7 +82,9 @@ export function StatsPanel({ state, island, onClose }: { state: GameState; islan
             <tbody>
               {rows.map((good) => (
                 <tr key={good.id} className={warned.has(good.id) ? 'warned' : undefined}>
-                  <td>{good.name}</td>
+                  <td>
+                    <Icon name={`goods/${good.id}`} size={22} /> {good.name}
+                  </td>
                   <td>{formatWhole(island.stock[good.id] ?? 0)}</td>
                   <td>{oneDecimal(last?.produced[good.id] ?? 0)}</td>
                   <td>{oneDecimal(last?.consumed[good.id] ?? 0)}</td>

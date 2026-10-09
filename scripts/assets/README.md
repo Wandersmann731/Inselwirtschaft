@@ -35,4 +35,4 @@ Weitere Optionen: `--parallel 5`, `--provider flux-2-pro` (je nach Anbieter und 
 - **Feldgebäude** (Farmen, Plantagen, Weide, Weinberg): Vorlage ist flache Grundfläche mit einem kleinen Kasten für das Gebäude im hinteren
   Eck, damit sie wie ein bestelltes Feld aussehen und nicht wie ein Modell auf einer Erdplatte.
 - **Symbole, Schiffe, Effekte**: frei erzeugt auf Magenta, freigestellt, auf die Größe eingepasst.
-- Rohbilder bleiben in `art-raw/` (nicht im Git). Fertige PNG liegen in `public/art/`.
+- Rohbilder bleiben in `art-raw/` (nicht im Git). Fertige PNG liegen in `art/` (Master). Für das Spiel gibt `node scripts/assets/optimize.mjs` daraus kleine WebP-Dateien in `public/sprites/` und die App-Icons in `public/icons/` aus.
