@@ -47,3 +47,26 @@ export interface ClimateDef {
   name: string
   fertilities: string[]
 }
+
+export interface WorldConfig {
+  tileWidth: number
+  tileHeight: number
+  chunkSize: number
+  maxCachedChunks: number
+  minZoom: number
+  maxZoom: number
+  input: { tapSlopPx: number; tapMaxMs: number; wheelZoomSpeed: number }
+  island: {
+    minSize: number
+    maxSize: number
+    noiseCells: number[]
+    noiseWeights: number[]
+    noiseShare: number
+    falloffPower: number
+    seaLevel: number
+    mountainFraction: number
+    forestCell: number
+    forestThreshold: number
+    beachWidth: number
+  }
+}

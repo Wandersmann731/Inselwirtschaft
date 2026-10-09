@@ -1,15 +1,13 @@
 import { config } from '../data'
+import { generateIsland } from '../world/islandGenerator'
+import type { GameMap } from '../world/terrain'
+
+export type { GameMap }
 
 /** Bump when the GameState shape changes and add a migration in migrations.ts. */
-export const CURRENT_SAVE_VERSION = 1
+export const CURRENT_SAVE_VERSION = 2
 
 export type GameSpeed = number
-
-export interface GameMap {
-  width: number
-  height: number
-  tiles: number[]
-}
 
 export interface GameState {
   version: number
@@ -29,6 +27,6 @@ export function createInitialState(seed: number = config.startSeed): GameState {
     tick: 0,
     speed: config.defaultSpeed,
     coins: config.startCoins,
-    map: { width: 0, height: 0, tiles: [] },
+    map: generateIsland(seed),
   }
 }

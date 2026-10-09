@@ -1,3 +1,4 @@
+import { generateIsland } from '../world/islandGenerator'
 import { CURRENT_SAVE_VERSION, type GameState } from './state'
 
 type RawState = Record<string, unknown>
@@ -5,7 +6,10 @@ type RawState = Record<string, unknown>
 export type Migration = (data: RawState) => RawState
 
 /** Key = version the migration upgrades from. */
-export const MIGRATIONS: Record<number, Migration> = {}
+export const MIGRATIONS: Record<number, Migration> = {
+  // v1 had an empty map. v2 generates the island from the saved seed.
+  1: (data) => ({ ...data, map: generateIsland(Number(data.seed)) }),
+}
 
 /** Brings a raw saved object up to the current version or throws if that is impossible. */
 export function migrateState(
