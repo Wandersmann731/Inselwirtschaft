@@ -1,11 +1,14 @@
 import { config, tiers } from '../data'
 import type { GameSpeed } from '../sim/state'
-import { formatSigned, formatWhole } from './messages'
+import { MATERIALS } from '../game/needsOverview'
+import { formatSigned, formatWhole, resourceName } from './messages'
 import { toggleFullscreen, useFullscreen } from './fullscreen'
 import { Icon } from './Icon'
 
 interface TopHudProps {
   islandName: string
+  /** Store of the island on screen: the building materials are shown. */
+  stock: Record<string, number>
   tick: number
   coins: number
   /** Income minus upkeep of the last settled cycle, null before the first one. */
@@ -20,6 +23,9 @@ interface TopHudProps {
   onOpenBalance: () => void
 }
 
+/** Below this many tons a building material is shown in red: building will soon stop. */
+const LOW_MATERIAL = 10
+
 function speedLabel(speed: GameSpeed): string {
   return speed === 0 ? 'Pause' : `${speed}x`
 }
@@ -33,6 +39,7 @@ export function TopHud({
   speed,
   onSpeedChange,
   islandName,
+  stock,
   onOpenMenu,
   debug,
   onOpenBalance,
@@ -50,8 +57,12 @@ export function TopHud({
         <span className={balanceClass}><Icon name={balance !== null && balance < 0 ? 'ui/balance_down' : 'ui/balance_up'} size={20} title="Bilanz" />{' '}
           {balance === null ? '–' : `${formatSigned(balance)} / Zyklus`}
         </span>
-        <span className="hud-stat">Tick: {tick.toLocaleString('de-DE')}</span>
-        <span className="hud-stat hud-island">{islandName}</span>
+        {MATERIALS.map((good) => (
+          <span key={good} className={(stock[good] ?? 0) < LOW_MATERIAL ? 'hud-stat hud-material low' : 'hud-stat hud-material'}>
+            <Icon name={`goods/${good}`} size={20} title={resourceName(good)} /> {formatWhole(stock[good] ?? 0)}
+          </span>
+        ))}
+        {debug && <span className="hud-stat">Tick: {tick.toLocaleString('de-DE')}</span>}
         </div>
         <div className="hud-row">
         <span className="hud-stat">
@@ -62,6 +73,7 @@ export function TopHud({
             <Icon name={`tiers/${tier.id}`} size={18} title={tier.name} /> {formatWhole(residentsByTier[tier.id] ?? 0)}
           </span>
         ))}
+        <span className="hud-stat hud-island">{islandName}</span>
         </div>
       </div>
       <div className="hud-speeds">
