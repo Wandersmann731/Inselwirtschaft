@@ -1,0 +1,14 @@
+[
+  {
+    "id": "weaver",
+    "name": "Weberei",
+    "size": [2, 2],
+    "cost": { "tools": 2, "wood": 4, "bricks": 0, "marble": 0, "coins": 200 },
+    "upkeep": { "active": 10, "idle": 3 },
+    "unlockTier": "pioneers",
+    "inputs": [{ "good": "wool", "amount": 1, "alternatives": ["cotton"] }],
+    "output": { "good": "cloth", "amount": 1 },
+    "cycleTicks": 30,
+    "needsRoad": true
+  }
+]
