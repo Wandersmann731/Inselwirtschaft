@@ -11,6 +11,7 @@ Das Projekt ist privat und nicht kommerziell.
 - 5 Stufen: Pioniere (8 Bewohner), Siedler (15), Bürger (28), Kaufleute (42),
   Aristokraten (30). Alle Wohnhäuser sind 2x2, ebenso alle Startgebäude (Betriebe, Markthaus, Kontor). Aufstieg nur bei 100 % Erfüllung und vorhandenem Baumaterial.
   Salz ersetzt bestimmte fehlende Waren. Aristokraten werden bei Mangel zu Ruinen.
+- Jedes neue Spiel beginnt mit einem Kontor an der Küste der Heimatinsel und einem Schiff im Hafen (src/sim/newGame.ts).
 - Öffentliche Gebäude und Marktstände wirken in einem Radius ab dem Gebäuderand.
 - Mehrstufige Produktionsketten, mehrere Inseln mit Klimazonen und Fruchtbarkeiten,
   Handel per Schiff, Kontor und automatischer Handelsroute.

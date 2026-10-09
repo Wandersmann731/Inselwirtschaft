@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { audio } from '../audio/engine'
 import { config } from '../data'
 import { AUTOSAVE_SLOT, loadState } from '../save/saveGame'
-import { createInitialState, type GameState } from '../sim/state'
+import { createNewGame } from '../sim/newGame'
+import type { GameState } from '../sim/state'
 import { Icon } from './Icon'
 import { formatWhole } from './messages'
 import { SettingsPanel } from './SettingsPanel'
@@ -51,7 +52,7 @@ export function MainMenu({ onStart }: MainMenuProps) {
 
   const startNew = (): void => {
     const parsed = Math.floor(Number(seed))
-    onStart(createInitialState(Number.isFinite(parsed) && parsed > 0 ? parsed : config.startSeed, coins))
+    onStart(createNewGame(Number.isFinite(parsed) && parsed > 0 ? parsed : config.startSeed, coins))
   }
 
   return (
