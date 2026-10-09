@@ -68,17 +68,19 @@ describe('generateIsland', () => {
   it('puts a beach between water and grass or forest', () => {
     for (const seed of SEEDS) {
       const { width, height, tiles } = generateIsland(seed)
+      let violations = 0
       for (let y = 1; y < height - 1; y++) {
         for (let x = 1; x < width - 1; x++) {
           const t = tiles[y * width + x]
           if (t !== Terrain.Grass && t !== Terrain.Forest) continue
           for (let dy = -1; dy <= 1; dy++) {
             for (let dx = -1; dx <= 1; dx++) {
-              expect(tiles[(y + dy) * width + x + dx]).not.toBe(Terrain.Water)
+              if (tiles[(y + dy) * width + x + dx] === Terrain.Water) violations++
             }
           }
         }
       }
+      expect(violations, `seed ${seed}`).toBe(0)
     }
   })
 })
