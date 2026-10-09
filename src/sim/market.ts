@@ -2,7 +2,7 @@ import { getBuilding, priceOf } from '../data'
 import type { TierNeed } from '../data'
 import { buildingRect, inRadius, type Rect } from './coverage'
 import { addTo, cloneLedger } from './ledger'
-import type { CycleLedger, GameState, PlacedBuilding } from './state'
+import type { CycleLedger, IslandState, PlacedBuilding } from './state'
 import { cumulativeNeeds } from './tiers'
 
 const EPSILON = 1e-9
@@ -28,7 +28,7 @@ function rangeCovers(provider: Provider, house: Rect): boolean {
  * their price is paid into the treasury. Also records how well each need of each house is met.
  * Runs once per economy cycle.
  */
-export function runMarket(state: GameState): GameState {
+export function runMarket(state: IslandState): IslandState {
   const providers: Provider[] = state.buildings
     .filter((building) => building.active)
     .flatMap((building) => {

@@ -4,7 +4,7 @@ import { Terrain } from '../world/terrain'
 import { addTo, cloneLedger } from './ledger'
 import { createProduction } from './productionState'
 import { createHouse, isTierUnlocked } from './tiers'
-import type { GameState, PlacedBuilding } from './state'
+import type { IslandState, PlacedBuilding } from './state'
 
 export type PlacementErrorCode =
   | 'outOfMap'
@@ -30,7 +30,7 @@ export function footprint(def: BuildingDef, rotated: boolean): { w: number; h: n
 }
 
 /** Returns the first good (or 'coins') the state cannot pay for, or null if everything is covered. */
-export function missingResource(state: GameState, cost: BuildingCost): string | null {
+export function missingResource(state: IslandState, cost: BuildingCost): string | null {
   if (state.coins < cost.coins) return 'coins'
   for (const good of goods) {
     const needed = cost[good.id as keyof BuildingCost] ?? 0
@@ -39,14 +39,14 @@ export function missingResource(state: GameState, cost: BuildingCost): string | 
   return null
 }
 
-function terrainAt(state: GameState, x: number, y: number): number | null {
+function terrainAt(state: IslandState, x: number, y: number): number | null {
   const { width, height, tiles } = state.map
   if (x < 0 || y < 0 || x >= width || y >= height) return null
   return tiles[y * width + x]
 }
 
 /** Why a single tile cannot hold a building or road of this placement rule, or null if it can. */
-function tileError(state: GameState, def: BuildingDef, x: number, y: number): PlacementError | null {
+function tileError(state: IslandState, def: BuildingDef, x: number, y: number): PlacementError | null {
   const terrain = terrainAt(state, x, y)
   if (terrain === null) return { code: 'outOfMap' }
   if (terrain === Terrain.Water) return { code: 'water' }
@@ -60,7 +60,7 @@ function tileError(state: GameState, def: BuildingDef, x: number, y: number): Pl
   return null
 }
 
-function touchesWater(state: GameState, x: number, y: number, w: number, h: number): boolean {
+function touchesWater(state: IslandState, x: number, y: number, w: number, h: number): boolean {
   for (let dy = -1; dy <= h; dy++) {
     for (let dx = -1; dx <= w; dx++) {
       const inside = dx >= 0 && dy >= 0 && dx < w && dy < h
@@ -74,7 +74,7 @@ function touchesWater(state: GameState, x: number, y: number, w: number, h: numb
 
 /** Checks the terrain, occupancy and cost rules for placing a building. Null means it can be built. */
 export function checkPlacement(
-  state: GameState,
+  state: IslandState,
   typeId: string,
   x: number,
   y: number,
@@ -96,7 +96,7 @@ export function checkPlacement(
   return null
 }
 
-function pay(state: GameState, cost: BuildingCost): Pick<GameState, 'coins' | 'stock' | 'economy'> {
+function pay(state: IslandState, cost: BuildingCost): Pick<IslandState, 'coins' | 'stock' | 'economy'> {
   const stock = { ...state.stock }
   const ledger = cloneLedger(state.economy.current)
   for (const good of goods) {
@@ -111,12 +111,12 @@ function pay(state: GameState, cost: BuildingCost): Pick<GameState, 'coins' | 's
 
 /** Builds a non-road building and pays for it. Returns the same state if the placement is invalid. */
 export function placeBuilding(
-  state: GameState,
+  state: IslandState,
   typeId: string,
   x: number,
   y: number,
   rotated: boolean,
-): GameState {
+): IslandState {
   const def = getBuilding(typeId)
   if (def.kind === 'road' || checkPlacement(state, typeId, x, y, rotated)) return state
   const { w, h } = footprint(def, rotated)
@@ -143,7 +143,7 @@ const roadDef = (): BuildingDef => {
 }
 
 /** Checks one road tile: terrain, occupancy and cost. Null means a road can be laid there. */
-export function checkRoad(state: GameState, x: number, y: number): PlacementError | null {
+export function checkRoad(state: IslandState, x: number, y: number): PlacementError | null {
   const def = roadDef()
   if (state.coins < 0) return { code: 'debt' }
   const error = tileError(state, def, x, y)
@@ -153,7 +153,7 @@ export function checkRoad(state: GameState, x: number, y: number): PlacementErro
 }
 
 /** Lays roads on all given tiles that allow it, in order, until the money runs out. */
-export function placeRoads(state: GameState, tiles: { x: number; y: number }[]): GameState {
+export function placeRoads(state: IslandState, tiles: { x: number; y: number }[]): IslandState {
   const def = roadDef()
   let next = state
   let roads: number[] | null = null
@@ -166,7 +166,7 @@ export function placeRoads(state: GameState, tiles: { x: number; y: number }[]):
   return next
 }
 
-function refund(state: GameState, cost: BuildingCost): Pick<GameState, 'coins' | 'stock'> {
+function refund(state: IslandState, cost: BuildingCost): Pick<IslandState, 'coins' | 'stock'> {
   const stock = { ...state.stock }
   for (const good of goods) {
     const paid = cost[good.id as keyof BuildingCost] ?? 0
@@ -176,7 +176,7 @@ function refund(state: GameState, cost: BuildingCost): Pick<GameState, 'coins' |
 }
 
 /** Removes the building or road on a tile and pays back part of its cost. No-op on empty tiles. */
-export function demolishAt(state: GameState, x: number, y: number): GameState {
+export function demolishAt(state: IslandState, x: number, y: number): IslandState {
   if (terrainAt(state, x, y) === null) return state
   const index = y * state.map.width + x
   const buildingId = state.occupancy[index]
@@ -199,6 +199,6 @@ export function demolishAt(state: GameState, x: number, y: number): GameState {
 }
 
 /** Demolishes everything on the given tiles. */
-export function demolishTiles(state: GameState, tiles: { x: number; y: number }[]): GameState {
+export function demolishTiles(state: IslandState, tiles: { x: number; y: number }[]): IslandState {
   return tiles.reduce((current, { x, y }) => demolishAt(current, x, y), state)
 }

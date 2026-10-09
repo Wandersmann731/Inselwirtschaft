@@ -2,7 +2,7 @@ import { config } from '../data'
 import type { BuildingCost } from '../data'
 import { goods } from '../data'
 import { addTo, cloneLedger } from './ledger'
-import type { CycleLedger, GameState, HouseState, PlacedBuilding } from './state'
+import type { CycleLedger, IslandState, HouseState, PlacedBuilding } from './state'
 import { getTier, nextTier, previousTier, tierIndex } from './tiers'
 
 const FULL = 100 - 1e-6
@@ -20,7 +20,7 @@ function affordable(stock: Record<string, number>, cost: BuildingCost): boolean 
  * Moves residents in and out, lets houses rise or fall a tier and collapses aristocrat houses.
  * Runs once per economy cycle, after the market has updated the needs.
  */
-export function runPopulation(state: GameState): GameState {
+export function runPopulation(state: IslandState): IslandState {
   const stock = { ...state.stock }
   const ledger = cloneLedger(state.economy.current)
   let highestTier = state.highestTier

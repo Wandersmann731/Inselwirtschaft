@@ -3,6 +3,7 @@ import type { GameSpeed } from '../sim/state'
 import { formatSigned, formatWhole } from './messages'
 
 interface TopHudProps {
+  islandName: string
   tick: number
   coins: number
   /** Income minus upkeep of the last settled cycle, null before the first one. */
@@ -11,7 +12,6 @@ interface TopHudProps {
   highestTier: number
   speed: GameSpeed
   onSpeedChange: (speed: GameSpeed) => void
-  onOpenStats: () => void
 }
 
 function speedLabel(speed: GameSpeed): string {
@@ -26,7 +26,7 @@ export function TopHud({
   highestTier,
   speed,
   onSpeedChange,
-  onOpenStats,
+  islandName,
 }: TopHudProps) {
   const total = Object.values(residentsByTier).reduce((sum, value) => sum + value, 0)
   const balanceClass = balance === null ? 'hud-stat' : balance >= 0 ? 'hud-stat positive' : 'hud-stat negative'
@@ -37,6 +37,7 @@ export function TopHud({
         <span className={coins < 0 ? 'hud-stat negative' : 'hud-stat'}>Münzen: {formatWhole(coins)}</span>
         <span className={balanceClass}>Bilanz: {balance === null ? '–' : `${formatSigned(balance)} / Zyklus`}</span>
         <span className="hud-stat">Tick: {tick.toLocaleString('de-DE')}</span>
+        <span className="hud-stat hud-island">{islandName}</span>
         </div>
         <div className="hud-row">
         <span className="hud-stat">Einwohner: {formatWhole(total)}</span>
@@ -47,9 +48,6 @@ export function TopHud({
         ))}
         </div>
       </div>
-      <button type="button" className="speed-button" onClick={onOpenStats}>
-        Statistik
-      </button>
       <div className="hud-speeds">
         {config.speeds.map((value) => (
           <button

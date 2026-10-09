@@ -1,12 +1,12 @@
 import { config } from '../data'
-import { emptyLedger } from './ledger'
-import { generateIsland } from '../world/islandGenerator'
+import { generateWorld } from '../world/worldGenerator'
+import type { IslandRole } from '../data'
 import type { GameMap } from '../world/terrain'
 
 export type { GameMap }
 
 /** Bump when the GameState shape changes and add a migration in migrations.ts. */
-export const CURRENT_SAVE_VERSION = 7
+export const CURRENT_SAVE_VERSION = 8
 
 export type GameSpeed = number
 
@@ -89,6 +89,47 @@ export interface PlacedBuilding {
   house?: HouseState
 }
 
+/** Everything that belongs to one island. Each island has its own store (its Kontor) and its own books. */
+export interface Island {
+  id: number
+  name: string
+  climate: string
+  /** What can be grown here, from the climate zone. */
+  fertilities: string[]
+  /** Minerals in the mountains. */
+  deposits: string[]
+  /** The home island and colonies founded by the player. */
+  owned: boolean
+  role: IslandRole
+  map: GameMap
+  buildings: PlacedBuilding[]
+  nextBuildingId: number
+  /** Per tile: id of the building covering it, 0 for none. Same indexing as map.tiles. */
+  occupancy: number[]
+  /** Per tile: 1 if a road lies there. */
+  roads: number[]
+  /** Goods in the island store, by good id. */
+  stock: Record<string, number>
+  economy: Economy
+}
+
+/** Where an island lies on the world map. Sizes are in world map cells. */
+export interface IslandPlacement {
+  id: number
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+export interface WorldChart {
+  width: number
+  height: number
+  /** Per cell: 0 for sea, otherwise island id + 1. Ships can only sail on sea cells. */
+  cells: number[]
+  placements: IslandPlacement[]
+}
+
 export interface GameState {
   version: number
   seed: number
@@ -96,22 +137,20 @@ export interface GameState {
   tick: number
   speed: GameSpeed
   coins: number
-  /** Goods in store, by good id. Later this moves to a store per island. */
-  stock: Record<string, number>
-  map: GameMap
-  buildings: PlacedBuilding[]
-  nextBuildingId: number
   /** Index in tiers.json of the highest civilisation tier ever reached. Unlocks buildings. */
   highestTier: number
-  economy: Economy
-  /** Per tile: id of the building covering it, 0 for none. Same indexing as map.tiles. */
-  occupancy: number[]
-  /** Per tile: 1 if a road lies there. */
-  roads: number[]
+  islands: Island[]
+  world: WorldChart
 }
 
-export function createInitialState(seed: number = config.startSeed): GameState {
-  const map = generateIsland(seed)
+/**
+ * The game as seen from one island: the global state with the fields of that island on top.
+ * All rules that work on a single island (build, produce, trade with residents) take this.
+ */
+export type IslandState = GameState & Island
+
+/** Game with the given islands. The first island is the home island. */
+export function createStateWith(seed: number, islands: Island[], world: WorldChart): GameState {
   return {
     version: CURRENT_SAVE_VERSION,
     seed,
@@ -119,13 +158,13 @@ export function createInitialState(seed: number = config.startSeed): GameState {
     tick: 0,
     speed: config.defaultSpeed,
     coins: config.startCoins,
-    stock: { ...config.startStock },
-    map,
-    buildings: [],
-    nextBuildingId: 1,
     highestTier: 0,
-    economy: { current: emptyLedger(), last: null },
-    occupancy: new Array(map.tiles.length).fill(0),
-    roads: new Array(map.tiles.length).fill(0),
+    islands,
+    world,
   }
+}
+
+export function createInitialState(seed: number = config.startSeed): GameState {
+  const { islands, world } = generateWorld(seed)
+  return createStateWith(seed, islands, world)
 }

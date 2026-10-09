@@ -3,26 +3,25 @@ import { config, getBuilding } from '../src/data'
 import { placeBuilding, placeRoads } from '../src/sim/build'
 import { processProduction, setBuildingActive, upkeepOf } from '../src/sim/production'
 import { createRng } from '../src/sim/rng'
-import type { GameState } from '../src/sim/state'
-import { tick } from '../src/sim/tick'
-import { grassField } from './helpers'
+import type { IslandState } from '../src/sim/state'
+import { grassField, tickFlat as tick } from './helpers'
 
 const rich = { coins: 1_000_000, stock: { tools: 500, wood: 500, bricks: 500, marble: 50 } }
 
-function run(state: GameState, ticks: number): GameState {
+function run(state: IslandState, ticks: number): IslandState {
   let next = state
   for (let i = 0; i < ticks; i++) next = tick(next, createRng(next.rngState))
   return next
 }
 
-function roadRow(state: GameState, y: number, fromX: number, toX: number): GameState {
+function roadRow(state: IslandState, y: number, fromX: number, toX: number): IslandState {
   const tiles = []
   for (let x = fromX; x <= toX; x++) tiles.push({ x, y })
   return placeRoads(state, tiles)
 }
 
 /** Market house at (2,2) 3x3, producer to its right, a road between them along y = 3. */
-function connected(producer: string, stockOverride: Record<string, number> = {}): GameState {
+function connected(producer: string, stockOverride: Record<string, number> = {}): IslandState {
   let state = grassField(40, 12, rich)
   state = placeBuilding(state, 'market_house', 2, 2, false)
   state = placeBuilding(state, producer, 8, 2, false)
@@ -30,8 +29,8 @@ function connected(producer: string, stockOverride: Record<string, number> = {})
   return { ...state, stock: { ...state.stock, ...stockOverride } }
 }
 
-const forester = (state: GameState) => state.buildings.find((b) => b.type === 'forester')!
-const find = (state: GameState, type: string) => state.buildings.find((b) => b.type === type)!
+const forester = (state: IslandState) => state.buildings.find((b) => b.type === 'forester')!
+const find = (state: IslandState, type: string) => state.buildings.find((b) => b.type === type)!
 
 describe('producer without inputs (forester)', () => {
   it('delivers wood to the island store after its cycle and the road delay', () => {
@@ -52,13 +51,13 @@ describe('producer without inputs (forester)', () => {
 
   it('delivers later over a longer road', () => {
     const base = grassField(40, 12, rich)
-    const noWood = (state: GameState): GameState => ({ ...state, stock: { ...state.stock, wood: 0 } })
+    const noWood = (state: IslandState): IslandState => ({ ...state, stock: { ...state.stock, wood: 0 } })
     const near = noWood(
       roadRow(placeBuilding(placeBuilding(base, 'market_house', 2, 2, false), 'forester', 8, 2, false), 3, 4, 7),
     )
     const farBase = placeBuilding(placeBuilding(base, 'market_house', 2, 2, false), 'forester', 20, 2, false)
     const far = noWood(roadRow(farBase, 3, 4, 19))
-    const arrival = (state: GameState): number => {
+    const arrival = (state: IslandState): number => {
       let s = state
       for (let i = 1; i <= 200; i++) {
         s = tick(s, createRng(s.rngState))

@@ -1,6 +1,7 @@
 import { getBuilding, tiers } from '../data'
 import type { TierDef, TierNeed } from '../data'
-import type { GameState, HouseState } from './state'
+import { islandsOf } from './islands'
+import type { GameState, HouseState, IslandState } from './state'
 
 export function tierIndex(tierId: string): number {
   const index = tiers.findIndex((tier) => tier.id === tierId)
@@ -32,24 +33,29 @@ export function createHouse(tierId: string): HouseState {
 }
 
 /** Residents of the realm living in houses of one tier. */
-export function residentsOfTier(state: GameState, tierId: string): number {
-  return state.buildings.reduce(
-    (sum, building) => (building.house && !building.house.ruin && building.house.tier === tierId ? sum + building.house.residents : sum),
-    0,
-  )
+export function residentsOfTier(state: GameState | IslandState, tierId: string): number {
+  return islandsOf(state)
+    .flatMap((island) => island.buildings)
+    .reduce(
+      (sum, building) =>
+        building.house && !building.house.ruin && building.house.tier === tierId ? sum + building.house.residents : sum,
+      0,
+    )
 }
 
-export function totalResidents(state: GameState): number {
-  return state.buildings.reduce((sum, building) => sum + (building.house?.residents ?? 0), 0)
+export function totalResidents(state: GameState | IslandState): number {
+  return islandsOf(state)
+    .flatMap((island) => island.buildings)
+    .reduce((sum, building) => sum + (building.house?.residents ?? 0), 0)
 }
 
 /** True if buildings of this tier may be built: the tier was reached once (or the resident threshold is met). */
-export function isTierUnlocked(state: GameState, tierId: string): boolean {
+export function isTierUnlocked(state: GameState | IslandState, tierId: string): boolean {
   const tier = getTier(tierId)
   if (tier.unlock) return residentsOfTier(state, tier.unlock.tier) >= tier.unlock.residents
   return tierIndex(tierId) <= state.highestTier
 }
 
-export function isBuildingUnlocked(state: GameState, buildingId: string): boolean {
+export function isBuildingUnlocked(state: GameState | IslandState, buildingId: string): boolean {
   return isTierUnlocked(state, getBuilding(buildingId).unlockTier)
 }

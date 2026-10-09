@@ -1,6 +1,6 @@
 import { getBuilding } from '../data'
 import { footprint } from './build'
-import type { GameState, PlacedBuilding } from './state'
+import type { IslandState, PlacedBuilding } from './state'
 
 export interface Rect {
   x: number
@@ -49,7 +49,7 @@ export function tilesInRadius(
 }
 
 /** Houses with at least one tile inside the radius of a supplying building. */
-export function suppliedHouses(state: GameState, rect: Rect, radius: number): PlacedBuilding[] {
+export function suppliedHouses(state: IslandState, rect: Rect, radius: number): PlacedBuilding[] {
   return state.buildings.filter((building) => {
     if (getBuilding(building.type).category !== 'housing') return false
     const house = buildingRect(building)

@@ -1,7 +1,7 @@
 import { getBuilding } from '../data'
 import { buildingRect, suppliedHouses, tilesInRadius } from '../sim/coverage'
 import { checkPlacement, checkRoad, footprint } from '../sim/build'
-import type { GameState, PlacedBuilding } from '../sim/state'
+import type { IslandState, PlacedBuilding } from '../sim/state'
 import type { ToolSnapshot } from '../game/buildController'
 import { tileToWorld } from './iso'
 import { boxHeight, drawBox, rectPath, type TileRect } from './shapes'
@@ -23,13 +23,13 @@ interface CoverageCache {
 export class OverlayRenderer {
   private coverage: CoverageCache | null = null
 
-  draw(ctx: CanvasRenderingContext2D, state: GameState, tool: ToolSnapshot): void {
+  draw(ctx: CanvasRenderingContext2D, state: IslandState, tool: ToolSnapshot): void {
     if (tool.mode === 'place' && tool.typeId && tool.origin) this.drawGhost(ctx, state, tool)
     else if (tool.stroke.length > 0) this.drawStroke(ctx, state, tool)
     else if (tool.mode === 'none' && tool.selectedBuildingId !== null) this.drawSelectedBuilding(ctx, state, tool)
   }
 
-  private drawSelectedBuilding(ctx: CanvasRenderingContext2D, state: GameState, tool: ToolSnapshot): void {
+  private drawSelectedBuilding(ctx: CanvasRenderingContext2D, state: IslandState, tool: ToolSnapshot): void {
     const building = state.buildings.find((b) => b.id === tool.selectedBuildingId)
     if (!building) return
     ctx.strokeStyle = '#ffd23f'
@@ -39,7 +39,7 @@ export class OverlayRenderer {
     ctx.stroke()
   }
 
-  private drawGhost(ctx: CanvasRenderingContext2D, state: GameState, tool: ToolSnapshot): void {
+  private drawGhost(ctx: CanvasRenderingContext2D, state: IslandState, tool: ToolSnapshot): void {
     const { typeId, origin, rotated } = tool
     if (!typeId || !origin) return
     const def = getBuilding(typeId)
@@ -65,7 +65,7 @@ export class OverlayRenderer {
 
   private drawCoverage(
     ctx: CanvasRenderingContext2D,
-    state: GameState,
+    state: IslandState,
     typeId: string,
     rect: TileRect,
     radius: number,
@@ -99,7 +99,7 @@ export class OverlayRenderer {
     }
   }
 
-  private drawStroke(ctx: CanvasRenderingContext2D, state: GameState, tool: ToolSnapshot): void {
+  private drawStroke(ctx: CanvasRenderingContext2D, state: IslandState, tool: ToolSnapshot): void {
     const demolish = tool.mode === 'demolish'
     const { width } = state.map
     for (const tile of tool.stroke) {

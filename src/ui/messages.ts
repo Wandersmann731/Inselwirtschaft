@@ -2,7 +2,7 @@ import { buildings, goods } from '../data'
 import type { TierNeed } from '../data'
 import type { BuildingCost } from '../data'
 import type { PlacementError } from '../sim/build'
-import type { GameState, ProductionStatus } from '../sim/state'
+import type { IslandState, ProductionStatus } from '../sim/state'
 import { config } from '../data'
 
 const RESOURCE_NAMES: Record<string, string> = {
@@ -88,7 +88,7 @@ export function shortageText(good: string, cycles: number): string {
 }
 
 /** The building materials in store, e.g. "Münzen 9.800 · Werkzeug 50 · Holz 97". */
-export function formatStock(state: GameState): string {
+export function formatStock(state: IslandState): string {
   const materials = goods
     .filter((good) => good.id in config.startStock)
     .map((good) => `${good.name} ${formatWhole(state.stock[good.id] ?? 0)}`)

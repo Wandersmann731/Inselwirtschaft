@@ -445,3 +445,35 @@ body,
   text-align: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
+
+.world-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.world-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(900px, 96vw);
+  height: 92vh;
+  padding: 8px 12px 12px;
+  border-radius: 10px;
+  background: #14222e;
+}
+
+.world-canvas {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  border-radius: 6px;
+  touch-action: manipulation;
+}
+
+.hud-island {
+  color: #ffd23f;
+}

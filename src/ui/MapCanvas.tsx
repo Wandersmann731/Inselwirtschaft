@@ -2,12 +2,12 @@ import { useEffect, useRef } from 'react'
 import type { BuildController } from '../game/buildController'
 import { MapInput } from '../input/touch'
 import { MapRenderer } from '../render/mapRenderer'
-import type { GameState } from '../sim/state'
+import type { IslandState } from '../sim/state'
 
 const DEBUG = new URLSearchParams(window.location.search).has('debug')
 
 interface MapCanvasProps {
-  getState: () => GameState
+  getState: () => IslandState
   tool: BuildController
 }
 

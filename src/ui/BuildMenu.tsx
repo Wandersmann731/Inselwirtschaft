@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { buildings, tiers } from '../data'
 import type { BuildingCategory } from '../data'
 import type { BuildController } from '../game/buildController'
-import type { GameState } from '../sim/state'
+import type { IslandState } from '../sim/state'
 import { isBuildingUnlocked } from '../sim/tiers'
 import { formatCost } from './messages'
 
@@ -15,7 +15,14 @@ const CATEGORIES: { id: BuildingCategory; label: string }[] = [
 
 const tierName = (id: string): string => tiers.find((tier) => tier.id === id)?.name ?? id
 
-export function BuildMenu({ tool, state }: { tool: BuildController; state: GameState }) {
+interface BuildMenuProps {
+  tool: BuildController
+  state: IslandState
+  onOpenStats: () => void
+  onOpenWorld: () => void
+}
+
+export function BuildMenu({ tool, state, onOpenStats, onOpenWorld }: BuildMenuProps) {
   const [open, setOpen] = useState<BuildingCategory | null>(null)
   const items = buildings.filter((def) => def.category === open)
 
@@ -54,6 +61,12 @@ export function BuildMenu({ tool, state }: { tool: BuildController; state: GameS
         ))}
         <button type="button" className="category-button demolish" onClick={() => tool.startDemolish()}>
           Abriss
+        </button>
+        <button type="button" className="category-button" onClick={onOpenStats}>
+          Statistik
+        </button>
+        <button type="button" className="category-button" onClick={onOpenWorld}>
+          Weltkarte
         </button>
       </div>
     </div>

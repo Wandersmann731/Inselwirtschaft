@@ -2,7 +2,7 @@ import { config, getBuilding } from '../data'
 import type { BuildingDef } from '../data'
 import { addTo, cloneLedger } from './ledger'
 import { getLinks, type Link } from './logistics'
-import type { CycleLedger, GameState, PlacedBuilding, ProductionState, ProductionStatus } from './state'
+import type { CycleLedger, IslandState, PlacedBuilding, ProductionState, ProductionStatus } from './state'
 
 type Stock = Record<string, number>
 
@@ -14,7 +14,7 @@ function options(input: { good: string; alternatives?: string[] }): string[] {
 }
 
 /** Runs one tick of production, delivery and ordering for all producing buildings. */
-export function processProduction(state: GameState): GameState {
+export function processProduction(state: IslandState): IslandState {
   if (!state.buildings.some((building) => building.production)) return state
   const links = getLinks(state)
   const stock: Stock = { ...state.stock }
@@ -129,7 +129,7 @@ function produce(def: BuildingDef, p: ProductionState, ledger: CycleLedger): Pro
 }
 
 /** Shuts a building down or starts it again. Inactive buildings cost less upkeep. */
-export function setBuildingActive(state: GameState, buildingId: number, active: boolean): GameState {
+export function setBuildingActive(state: IslandState, buildingId: number, active: boolean): IslandState {
   const building = state.buildings.find((b) => b.id === buildingId)
   if (!building || building.active === active) return state
   return {

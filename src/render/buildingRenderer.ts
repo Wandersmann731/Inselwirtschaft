@@ -1,6 +1,6 @@
 import { getBuilding } from '../data'
 import { buildingRect } from '../sim/coverage'
-import type { GameState, HouseState, ProductionStatusKind } from '../sim/state'
+import type { IslandState, HouseState, ProductionStatusKind } from '../sim/state'
 import { getTier, tierIndex } from '../sim/tiers'
 import { config } from '../data'
 import { diamondPath } from './terrainStyle'
@@ -16,7 +16,7 @@ export interface TileRange {
 
 const ROAD_COLOR = getBuilding('road').color
 
-export function drawRoads(ctx: CanvasRenderingContext2D, state: GameState, range: TileRange): void {
+export function drawRoads(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange): void {
   const { width } = state.map
   ctx.fillStyle = ROAD_COLOR
   ctx.strokeStyle = 'rgba(0, 0, 0, 0.25)'
@@ -33,7 +33,7 @@ export function drawRoads(ctx: CanvasRenderingContext2D, state: GameState, range
 }
 
 /** Draws all buildings that overlap the visible tile range, back to front. */
-export function drawBuildings(ctx: CanvasRenderingContext2D, state: GameState, range: TileRange): void {
+export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange): void {
   const visible = state.buildings
     .map((building) => ({ building, rect: buildingRect(building) }))
     .filter(
