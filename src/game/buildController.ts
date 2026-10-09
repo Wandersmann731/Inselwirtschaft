@@ -1,5 +1,6 @@
 import { getBuilding } from '../data'
 import { footprint, demolishTiles, placeBuilding, placeRoads } from '../sim/build'
+import { buildSettlement, planSettlement } from '../sim/settlementPlanner'
 import { setBuildingActive } from '../sim/production'
 import { buildShip } from '../sim/ships'
 import type { GameLoop } from './gameLoop'
@@ -20,6 +21,10 @@ export interface ToolSnapshot {
   origin: Tile | null
   /** Tiles touched by the current drag (modes 'road' and 'demolish'). */
   stroke: Tile[]
+  /** Placing houses: drag an area and let the game lay out a village in it. */
+  areaMode: boolean
+  /** The dragged area (both corners) and the houses planned in it. */
+  area: { a: Tile; b: Tile; origins: Tile[]; outOfMoney: boolean } | null
   /** Road mode: draw by hand instead of planning a route between two points. */
   freehand: boolean
   /** Road mode: the planned route. */
@@ -35,6 +40,8 @@ const IDLE: ToolSnapshot = {
   rotated: false,
   origin: null,
   stroke: [],
+  areaMode: false,
+  area: null,
   freehand: false,
   route: EMPTY_ROUTE,
   selectedBuildingId: null,
@@ -62,7 +69,8 @@ export class BuildController {
 
   /** True while single-finger drags should draw instead of pan the map. */
   get drawing(): boolean {
-    return this.snapshot.mode === 'demolish' || (this.snapshot.mode === 'road' && this.snapshot.freehand)
+    const { mode, freehand, areaMode } = this.snapshot
+    return mode === 'demolish' || (mode === 'road' && freehand) || (mode === 'place' && areaMode)
   }
 
   /** True while a finger on the route picks up handles instead of panning the map. */
@@ -109,6 +117,13 @@ export class BuildController {
     this.loop.dispatchIsland((state) => setBuildingActive(state, id, active))
   }
 
+  /** Switches between placing single houses and dragging an area. Only for houses. */
+  setAreaMode(on: boolean): void {
+    const { mode, typeId } = this.snapshot
+    if (mode !== 'place' || !typeId || !getBuilding(typeId).houseTier) return
+    this.set({ ...this.snapshot, areaMode: on, area: null, center: null, origin: null })
+  }
+
   rotate(): void {
     if (this.snapshot.mode !== 'place') return
     this.set({ ...this.snapshot, rotated: !this.snapshot.rotated }, true)
@@ -116,17 +131,25 @@ export class BuildController {
 
   /** Moves the ghost building so that it is centred on the tapped tile. */
   setCenter(tile: Tile): void {
-    if (this.snapshot.mode !== 'place') return
+    if (this.snapshot.mode !== 'place' || this.snapshot.areaMode) return
     this.set({ ...this.snapshot, center: tile }, true)
   }
 
   /** Builds the ghost building. Does nothing if the placement is invalid or unaffordable. */
   confirm(): void {
-    const { mode, typeId, origin, rotated } = this.snapshot
-    if (mode !== 'place' || !typeId || !origin) return
+    const { mode, typeId, origin, rotated, area } = this.snapshot
+    if (mode !== 'place' || !typeId) return
+    if (area) {
+      if (area.origins.length === 0) return
+      this.loop.dispatchIsland((state) => buildSettlement(state, typeId, area.origins))
+      this.set({ ...this.snapshot, area: null })
+      return
+    }
+    if (!origin) return
     this.loop.dispatchIsland((state) => placeBuilding(state, typeId, origin.x, origin.y, rotated))
-    // Stay in placing mode so several buildings of one kind can follow each other.
-    this.set({ ...this.snapshot, center: null, origin: null })
+    // Production buildings are built one at a time: back to the overview. Houses and the like can follow each other.
+    if (getBuilding(typeId).category === 'production') this.cancel()
+    else this.set({ ...this.snapshot, center: null, origin: null })
   }
 
   setFreehand(on: boolean): void {
@@ -171,7 +194,14 @@ export class BuildController {
     const plan = this.snapshot.route.plan
     if (this.snapshot.mode !== 'road' || !plan) return
     this.loop.dispatchIsland((state) => placeRoads(state, plan.newTiles))
-    this.setRoute(EMPTY_ROUTE)
+    this.cancel() // the road is built: back to the overview
+  }
+
+  private setArea(a: Tile, b: Tile): void {
+    const typeId = this.snapshot.typeId
+    if (!typeId) return
+    const plan = planSettlement(this.loop.getIslandState(), typeId, a, b)
+    this.set({ ...this.snapshot, area: { a, b, origins: plan.origins, outOfMoney: plan.outOfMoney } })
   }
 
   private setRoute(route: RouteDraft): void {
@@ -181,11 +211,19 @@ export class BuildController {
 
   strokeStart(tile: Tile): void {
     if (!this.drawing) return
+    if (this.snapshot.mode === 'place') {
+      this.setArea(tile, tile)
+      return
+    }
     this.set({ ...this.snapshot, stroke: [tile] })
   }
 
   strokeMove(tile: Tile): void {
-    const { stroke } = this.snapshot
+    const { stroke, area, mode } = this.snapshot
+    if (mode === 'place') {
+      if (area && (area.b.x !== tile.x || area.b.y !== tile.y)) this.setArea(area.a, tile)
+      return
+    }
     if (!this.drawing || stroke.length === 0) return
     const last = stroke[stroke.length - 1]
     if (last.x === tile.x && last.y === tile.y) return
@@ -198,9 +236,14 @@ export class BuildController {
   /** Applies the dragged tiles: roads are laid or buildings and roads removed. */
   strokeEnd(): void {
     const { mode, stroke } = this.snapshot
+    if (mode === 'place') return // the area stays until it is built or dragged again
     if (stroke.length === 0) return
-    if (mode === 'road') this.loop.dispatchIsland((state) => placeRoads(state, stroke))
-    else if (mode === 'demolish') this.loop.dispatchIsland((state) => demolishTiles(state, stroke))
+    if (mode === 'road') {
+      this.loop.dispatchIsland((state) => placeRoads(state, stroke))
+      this.cancel() // the road is built: back to the overview
+      return
+    }
+    if (mode === 'demolish') this.loop.dispatchIsland((state) => demolishTiles(state, stroke))
     this.set({ ...this.snapshot, stroke: [] })
   }
 

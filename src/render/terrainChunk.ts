@@ -1,7 +1,10 @@
 import { decorForTile, isTall, type DecorItem } from '../world/decor'
 import { surroundRing } from '../world/surroundings'
 import { drawDecor } from './decorDraw'
-import { groundPixel, type GroundTextures } from '../world/ground'
+import { groundPixel, terrainAt, type GroundTextures } from '../world/ground'
+import { fbm } from '../world/noise2d'
+import { yardAt } from '../world/settlement'
+import { world } from '../data'
 import { Terrain, type GameMap } from '../world/terrain'
 import { sprites } from './sprites'
 
@@ -22,6 +25,8 @@ export interface ChunkContext {
   climate: string
   occupancy: number[]
   roads: number[]
+  /** Village yard strength per tile (see settlement.ts), or null while there are no houses. */
+  yard: Float32Array | null
   textures: GroundTextures
 }
 
@@ -80,10 +85,30 @@ export function decorOf(ctx: ChunkContext, tiles: number[]): { item: DecorItem; 
     for (const item of decorForTile(decorCtx, tx, ty)) {
       // tall objects next to a building are drawn together with the building (see frontDecor.ts)
       if (ring[index] && isTall(item.kind)) continue
+      // tufts and flowers do not grow in the worn yard between houses
+      if (ctx.yard && ctx.yard[index] > world.settlement.decorHideAbove && !isTall(item.kind)) continue
       result.push({ item, wx: (item.x - item.y) * HALF_W, wy: (item.x + item.y) * HALF_H })
     }
   }
   return result
+}
+
+/** Mixes the earth colour of the village yard into a ground pixel on grass and forest. */
+function wearYard(ctx: ChunkContext, wx: number, wy: number, out: Uint8ClampedArray, offset: number): void {
+  if (out[offset + 3] === 0) return
+  const { map } = ctx
+  const u = (wy / HALF_H + wx / HALF_W) / 2
+  const v = (wy / HALF_H - wx / HALF_W) / 2
+  const strength = yardAt(ctx.yard!, map.width, map.height, u, v)
+  if (strength <= 0.02) return
+  const terrain = terrainAt(map, u, v)
+  if (terrain !== Terrain.Grass && terrain !== Terrain.Forest) return
+  // patchy, not even: the earth shows through the grass in blotches
+  const patch = 0.6 + 0.8 * fbm(u * 2.3, v * 2.3, ctx.seed + 55, 2)
+  const mix = Math.min(1, strength * world.settlement.strength * patch)
+  const { color } = world.settlement
+  const shade = 0.92 + 0.16 * fbm(u * 7, v * 7, ctx.seed + 56, 2)
+  for (let k = 0; k < 3; k++) out[offset + k] = out[offset + k] * (1 - mix) + color[k] * shade * mix
 }
 
 /**
@@ -104,7 +129,9 @@ export function renderChunk(rx: number, ry: number, tiles: number[], ctx: ChunkC
   const image = groundCtx.createImageData(CHUNK_W, CHUNK_H)
   for (let y = 0; y < CHUNK_H; y++) {
     for (let x = 0; x < CHUNK_W; x++) {
-      groundPixel(map, ctx.textures, ctx.seed, x0 + x + 0.5, y0 + y + 0.5, image.data, (y * CHUNK_W + x) * 4)
+      const offset = (y * CHUNK_W + x) * 4
+      groundPixel(map, ctx.textures, ctx.seed, x0 + x + 0.5, y0 + y + 0.5, image.data, offset)
+      if (ctx.yard) wearYard(ctx, x0 + x + 0.5, y0 + y + 0.5, image.data, offset)
     }
   }
   groundCtx.putImageData(image, 0, 0)

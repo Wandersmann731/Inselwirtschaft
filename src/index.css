@@ -267,6 +267,11 @@ body,
   gap: 8px;
 }
 
+.action-button.active {
+  border-color: var(--accent);
+  background: #3d5a72;
+}
+
 .action-button.confirm {
   background: #2e7d46;
 }

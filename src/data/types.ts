@@ -176,6 +176,29 @@ export interface WorldConfig {
   minZoom: number
   maxZoom: number
   input: { tapSlopPx: number; tapMaxMs: number; wheelZoomSpeed: number }
+  /** Worn earth around houses, so a group of houses looks like a grown village and not like single plots. */
+  settlement: {
+    color: [number, number, number]
+    /** How strongly the earth colour replaces the ground at its strongest. */
+    strength: number
+    /** Reach in tiles around a house tile. */
+    radius: number
+    /** Strength at distance 0, 1, 2 ... tiles from a house tile. */
+    falloff: number[]
+    /** Tufts and flowers are left out where the yard is stronger than this. */
+    decorHideAbove: number
+  }
+  /** How the area tool lays out houses so they look grown, not set out on a grid. */
+  settlementPlanner: {
+    /** Chance of a one tile gap after a house. */
+    gapChance: number
+    /** Chance that a house is pushed one tile back, so the row front is ragged. */
+    jitterChance: number
+    /** Rows of houses between two lanes (a free row). */
+    rowsPerLane: number
+    /** Most houses one drag may place. */
+    maxHouses: number
+  }
   roadPlanner: {
     /** Path cost of a free tile that needs a new road. */
     newTileCost: number

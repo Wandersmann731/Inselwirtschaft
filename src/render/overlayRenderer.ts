@@ -27,10 +27,43 @@ export class OverlayRenderer {
   private coverage: CoverageCache | null = null
 
   draw(ctx: CanvasRenderingContext2D, state: IslandState, tool: ToolSnapshot): void {
-    if (tool.mode === 'place' && tool.typeId && tool.origin) this.drawGhost(ctx, state, tool)
+    if (tool.mode === 'place' && tool.area) this.drawArea(ctx, tool)
+    else if (tool.mode === 'place' && tool.typeId && tool.origin) this.drawGhost(ctx, state, tool)
     else if (tool.mode === 'road' && !tool.freehand) this.drawRoute(ctx, tool, state)
     else if (tool.stroke.length > 0) this.drawStroke(ctx, state, tool)
     else if (tool.mode === 'none' && tool.selectedBuildingId !== null) this.drawSelectedBuilding(ctx, state, tool)
+  }
+
+  /** The dragged area and the houses the game plans in it. */
+  private drawArea(ctx: CanvasRenderingContext2D, tool: ToolSnapshot): void {
+    const { area, typeId } = tool
+    if (!area || !typeId) return
+    const def = getBuilding(typeId)
+    const rect: TileRect = {
+      x: Math.min(area.a.x, area.b.x),
+      y: Math.min(area.a.y, area.b.y),
+      w: Math.abs(area.a.x - area.b.x) + 1,
+      h: Math.abs(area.a.y - area.b.y) + 1,
+    }
+    ctx.fillStyle = 'rgba(255, 210, 63, 0.18)'
+    ctx.beginPath()
+    rectPath(ctx, rect)
+    ctx.fill()
+    ctx.strokeStyle = '#ffd23f'
+    ctx.lineWidth = 2
+    ctx.stroke()
+    // back to front, so near houses cover far ones
+    const houses = [...area.origins].sort((p, q) => p.x + p.y - (q.x + q.y))
+    for (const origin of houses) {
+      const footprintRect: TileRect = { x: origin.x, y: origin.y, w: def.size[0], h: def.size[1] }
+      ctx.fillStyle = VALID
+      ctx.beginPath()
+      rectPath(ctx, footprintRect)
+      ctx.fill()
+      const placed = placeSprite({ type: typeId, x: origin.x, y: origin.y, rotated: false, house: undefined }, ghostKey(typeId))
+      if (placed) drawPlacedSprite(ctx, placed, 0.75)
+      else drawBox(ctx, footprintRect, boxHeight(footprintRect, def.category), def.color)
+    }
   }
 
   private drawSelectedBuilding(ctx: CanvasRenderingContext2D, state: IslandState, tool: ToolSnapshot): void {

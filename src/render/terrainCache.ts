@@ -17,6 +17,7 @@ export interface ChunkRequest {
   climate: string
   occupancy: number[]
   roads: number[]
+  yard: Float32Array | null
   textures: GroundTextures
 }
 

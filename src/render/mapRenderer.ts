@@ -13,6 +13,7 @@ import {
   type Viewport,
 } from './camera'
 import { mapBounds, tileToWorld, worldToTile, type Bounds, type Point } from './iso'
+import { yardField } from '../world/settlement'
 import { drawBuildings, drawRoads, type TileRange } from './buildingRenderer'
 import { OverlayRenderer } from './overlayRenderer'
 import { getSettings } from '../save/settings'
@@ -235,7 +236,7 @@ export class MapRenderer {
     }
 
     const request = textures
-      ? { map, seed: state.id, climate: state.climate, occupancy: state.occupancy, roads: state.roads, textures }
+      ? { map, seed: state.id, climate: state.climate, occupancy: state.occupancy, roads: state.roads, yard: this.yardOf(state), textures }
       : null
     if (request) {
       for (const { rx, ry } of wanted) this.cache.request(rx, ry, request)
@@ -252,6 +253,16 @@ export class MapRenderer {
       if (!entry?.ready) this.drawFlatTiles(map, rx, ry)
     }
   }
+
+  /** Village yard of the houses on the island, made again when buildings come or go. */
+  private yardOf(state: IslandState): Float32Array | null {
+    if (this.yard?.occupancy !== state.occupancy) {
+      const ids = new Set(state.buildings.filter((b) => b.house).map((b) => b.id))
+      this.yard = { occupancy: state.occupancy, field: ids.size > 0 ? yardField(state.map, state.occupancy, ids) : null }
+    }
+    return this.yard.field
+  }
+  private yard: { occupancy: number[]; field: Float32Array | null } | null = null
 
   /** Coloured diamonds for the tiles of one rectangle, until its real picture exists. */
   private drawFlatTiles(map: GameMap, rx: number, ry: number): void {

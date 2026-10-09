@@ -6,6 +6,9 @@ import { getSettings } from '../save/settings'
 import type { IslandState } from '../sim/state'
 
 
+/** Two taps this close in time build the building under the ghost. */
+const DOUBLE_TAP_MS = 450
+
 interface MapCanvasProps {
   getState: () => IslandState
   tool: BuildController
@@ -19,6 +22,7 @@ export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
+    let lastTap: { tile: { x: number; y: number }; time: number } | null = null
     const renderer = new MapRenderer(canvas, getState, tool.getSnapshot, () => getSettings().debug)
     renderer.start()
     onRenderer?.(renderer)
@@ -29,7 +33,17 @@ export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
         const { mode, freehand } = tool.getSnapshot()
         if (mode === 'place') {
           const tile = renderer.tileAt(x, y)
-          if (tile) tool.setCenter(tile)
+          if (!tile) return
+          // a second tap on the same spot builds
+          const last = lastTap
+          lastTap = { tile, time: performance.now() }
+          if (last && lastTap.time - last.time < DOUBLE_TAP_MS && Math.abs(last.tile.x - tile.x) <= 1 && Math.abs(last.tile.y - tile.y) <= 1) {
+            tool.setCenter(tile)
+            tool.confirm()
+            lastTap = null
+          } else {
+            tool.setCenter(tile)
+          }
         } else if (mode === 'road' && !freehand) {
           const tile = renderer.tileAt(x, y)
           if (tile) tool.routeTap(tile)
