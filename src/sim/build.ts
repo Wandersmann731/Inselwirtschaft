@@ -1,6 +1,7 @@
 import { config, getBuilding, goods } from '../data'
 import type { BuildingCost, BuildingDef } from '../data'
 import { Terrain } from '../world/terrain'
+import { addTo, cloneLedger } from './ledger'
 import { createProduction } from './productionState'
 import { createHouse, isTierUnlocked } from './tiers'
 import type { GameState, PlacedBuilding } from './state'
@@ -14,6 +15,7 @@ export type PlacementErrorCode =
   | 'notCoast'
   | 'funds'
   | 'locked'
+  | 'debt'
 
 export interface PlacementError {
   code: PlacementErrorCode
@@ -79,6 +81,7 @@ export function checkPlacement(
   rotated: boolean,
 ): PlacementError | null {
   const def = getBuilding(typeId)
+  if (state.coins < 0) return { code: 'debt' }
   if (!isTierUnlocked(state, def.unlockTier)) return { code: 'locked' }
   const { w, h } = footprint(def, rotated)
   for (let ty = y; ty < y + h; ty++) {
@@ -93,13 +96,17 @@ export function checkPlacement(
   return null
 }
 
-function pay(state: GameState, cost: BuildingCost): Pick<GameState, 'coins' | 'stock'> {
+function pay(state: GameState, cost: BuildingCost): Pick<GameState, 'coins' | 'stock' | 'economy'> {
   const stock = { ...state.stock }
+  const ledger = cloneLedger(state.economy.current)
   for (const good of goods) {
     const needed = cost[good.id as keyof BuildingCost] ?? 0
-    if (needed > 0) stock[good.id] = (stock[good.id] ?? 0) - needed
+    if (needed > 0) {
+      stock[good.id] = (stock[good.id] ?? 0) - needed
+      addTo(ledger.consumed, good.id, needed)
+    }
   }
-  return { coins: state.coins - cost.coins, stock }
+  return { coins: state.coins - cost.coins, stock, economy: { ...state.economy, current: ledger } }
 }
 
 /** Builds a non-road building and pays for it. Returns the same state if the placement is invalid. */
@@ -138,6 +145,7 @@ const roadDef = (): BuildingDef => {
 /** Checks one road tile: terrain, occupancy and cost. Null means a road can be laid there. */
 export function checkRoad(state: GameState, x: number, y: number): PlacementError | null {
   const def = roadDef()
+  if (state.coins < 0) return { code: 'debt' }
   const error = tileError(state, def, x, y)
   if (error) return error
   const missing = missingResource(state, def.cost)

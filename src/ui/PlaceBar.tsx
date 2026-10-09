@@ -3,7 +3,7 @@ import type { BuildController, ToolSnapshot } from '../game/buildController'
 import { checkPlacement, footprint } from '../sim/build'
 import { suppliedHouses } from '../sim/coverage'
 import type { GameState } from '../sim/state'
-import { formatCost, placementMessage } from './messages'
+import { formatCost, formatStock, placementMessage } from './messages'
 
 interface PlaceBarProps {
   tool: BuildController
@@ -38,7 +38,9 @@ export function PlaceBar({ tool, snapshot, state }: PlaceBarProps) {
     <div className="place-bar">
       <div className="place-info">
         <strong>{def.name}</strong>
-        <span className="place-cost">{formatCost(def.cost)}</span>
+        <span className="place-cost">
+          {formatCost(def.cost)} · Vorrat: {formatStock(state)}
+        </span>
         <span className={hintClass}>{hint}</span>
       </div>
       <div className="place-actions">

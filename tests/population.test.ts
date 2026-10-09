@@ -214,11 +214,10 @@ describe('economy cycle in the tick', () => {
     state = placeBuilding(state, 'chapel', 20, 10, false)
     state = { ...state, stock: { ...state.stock, food: 1000, cloth: 1000 } }
     state = { ...state, highestTier: 0 }
-    const coinsBefore = state.coins
     for (let i = 0; i < config.economyCycleTicks * 6; i++) state = tick(state, createRng(state.rngState))
     expect(house(state).tier).toBe('settlers')
     expect(state.highestTier).toBe(1)
-    expect(state.coins).toBeGreaterThan(coinsBefore)
+    expect(state.economy.last!.income).toBeGreaterThan(0)
   })
 
   it('earns money from the residents', () => {

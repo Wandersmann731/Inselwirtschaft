@@ -1,5 +1,6 @@
 import { config, getBuilding } from '../data'
 import { generateIsland } from '../world/islandGenerator'
+import { emptyLedger } from './ledger'
 import { createProduction } from './productionState'
 import { createHouse } from './tiers'
 import { CURRENT_SAVE_VERSION, createInitialState, type GameState } from './state'
@@ -46,6 +47,16 @@ export const MIGRATIONS: Record<number, Migration> = {
     const fresh = createInitialState(Number(data.seed))
     return { ...fresh, tick: data.tick, speed: data.speed, coins: data.coins, stock: data.stock, rngState: data.rngState }
   },
+  // v7 adds the economy ledger and the utilisation of producers.
+  6: (data) => ({
+    ...data,
+    economy: { current: emptyLedger(), last: null },
+    buildings: (data.buildings as { production?: object }[]).map((building) =>
+      building.production
+        ? { ...building, production: { busyTicks: 0, utilization: 0, ...building.production } }
+        : building,
+    ),
+  }),
 }
 
 /** Brings a raw saved object up to the current version or throws if that is impossible. */
