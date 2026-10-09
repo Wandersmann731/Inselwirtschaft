@@ -92,3 +92,133 @@ body,
     display: flex;
   }
 }
+
+.hud-stats {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  overflow-x: auto;
+  font-size: 15px;
+}
+
+.build-menu,
+.place-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 6px max(12px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom))
+    max(12px, env(safe-area-inset-left));
+  background: var(--hud-bg);
+}
+
+.build-items {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.build-item {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 130px;
+  min-height: var(--button-size);
+  padding: 6px 10px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: #2b4254;
+  color: var(--hud-text);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.build-item-name {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.build-item-size,
+.build-item-cost {
+  color: #b8c7d3;
+  font-size: 12px;
+}
+
+.build-categories {
+  display: flex;
+  gap: 8px;
+}
+
+.category-button,
+.action-button {
+  min-height: var(--button-size);
+  padding: 0 14px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: #2b4254;
+  color: var(--hud-text);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.category-button {
+  flex: 1 1 0;
+}
+
+.category-button.active {
+  border-color: var(--accent);
+  background: #3d5a72;
+}
+
+.category-button.demolish {
+  background: #6b3a2b;
+}
+
+.place-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.place-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 2px;
+  font-size: 15px;
+}
+
+.place-cost {
+  color: #b8c7d3;
+  font-size: 13px;
+}
+
+.place-hint {
+  font-size: 14px;
+}
+
+.place-hint.invalid {
+  color: #ff8a80;
+}
+
+.place-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.action-button.confirm {
+  background: #2e7d46;
+}
+
+.action-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}

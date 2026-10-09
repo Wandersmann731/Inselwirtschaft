@@ -7,6 +7,12 @@ export interface MapInputHandlers {
   onZoom(factor: number, x: number, y: number): void
   /** Short tap or click without movement. */
   onTap(x: number, y: number): void
+  /** Draw mode only: a single finger or the mouse starts, continues and ends a stroke. */
+  onStrokeStart?(x: number, y: number): void
+  onStrokeMove?(x: number, y: number): void
+  onStrokeEnd?(): void
+  /** Draw mode only: a second finger came down, the stroke is dropped. */
+  onStrokeCancel?(): void
 }
 
 interface Pos {
@@ -25,6 +31,9 @@ export class MapInput {
   private moved = false
   /** True once a second finger touched during this gesture, so it can no longer be a tap. */
   private multiTouch = false
+  /** In draw mode one finger draws a stroke instead of panning the map. */
+  private drawMode = false
+  private stroking = false
   private pinchDistance = 0
   private pinchCenter: Pos = { x: 0, y: 0 }
 
@@ -36,6 +45,12 @@ export class MapInput {
     canvas.addEventListener('pointerup', this.onUp)
     canvas.addEventListener('pointercancel', this.onCancel)
     canvas.addEventListener('wheel', this.onWheel, { passive: false })
+  }
+
+  setDrawMode(on: boolean): void {
+    if (on === this.drawMode) return
+    this.cancelStroke()
+    this.drawMode = on
   }
 
   destroy(): void {
@@ -62,7 +77,12 @@ export class MapInput {
       this.tapStartTime = event.timeStamp
       this.moved = false
       this.multiTouch = false
+      if (this.drawMode) {
+        this.stroking = true
+        this.handlers.onStrokeStart?.(pos.x, pos.y)
+      }
     } else if (this.pointers.size === 2) {
+      this.cancelStroke()
       this.multiTouch = true
       this.moved = true
       this.readPinch()
@@ -74,7 +94,9 @@ export class MapInput {
     const pos = this.local(event)
     this.pointers.set(event.pointerId, pos)
 
-    if (this.pointers.size === 1) {
+    if (this.pointers.size === 1 && this.stroking) {
+      this.handlers.onStrokeMove?.(pos.x, pos.y)
+    } else if (this.pointers.size === 1) {
       if (!this.moved && Math.hypot(pos.x - this.tapStart.x, pos.y - this.tapStart.y) > world.input.tapSlopPx) {
         this.moved = true
       }
@@ -97,13 +119,26 @@ export class MapInput {
     const wasSingle = this.pointers.size === 1
     this.pointers.delete(event.pointerId)
     this.releaseCapture(event.pointerId)
-    if (wasSingle && !this.moved && !this.multiTouch && event.timeStamp - this.tapStartTime <= world.input.tapMaxMs) {
+    if (this.stroking) {
+      this.stroking = false
+      this.handlers.onStrokeEnd?.()
+      this.afterPointerRemoved()
+      return
+    }
+    if (wasSingle && !this.drawMode && !this.moved && !this.multiTouch && event.timeStamp - this.tapStartTime <= world.input.tapMaxMs) {
       this.handlers.onTap(this.tapStart.x, this.tapStart.y)
     }
     this.afterPointerRemoved()
   }
 
+  private cancelStroke(): void {
+    if (!this.stroking) return
+    this.stroking = false
+    this.handlers.onStrokeCancel?.()
+  }
+
   private onCancel = (event: PointerEvent): void => {
+    this.cancelStroke()
     this.pointers.delete(event.pointerId)
     this.releaseCapture(event.pointerId)
     this.afterPointerRemoved()

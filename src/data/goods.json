@@ -1,4 +1,26 @@
 [
-  { "id": "wool", "name": "Wolle" },
-  { "id": "cloth", "name": "Stoffe" }
+  {
+    "id": "tools",
+    "name": "Werkzeug"
+  },
+  {
+    "id": "wood",
+    "name": "Holz"
+  },
+  {
+    "id": "bricks",
+    "name": "Ziegel"
+  },
+  {
+    "id": "marble",
+    "name": "Marmor"
+  },
+  {
+    "id": "wool",
+    "name": "Wolle"
+  },
+  {
+    "id": "cloth",
+    "name": "Stoffe"
+  }
 ]

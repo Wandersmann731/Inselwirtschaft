@@ -1,4 +1,5 @@
 import { world } from '../data'
+import type { ToolSnapshot } from '../game/buildController'
 import type { GameState } from '../sim/state'
 import { inMap, TERRAIN_NAMES, type GameMap } from '../world/terrain'
 import {
@@ -12,6 +13,8 @@ import {
   type Viewport,
 } from './camera'
 import { mapBounds, tileToWorld, worldToTile, type Point } from './iso'
+import { drawBuildings, drawRoads, type TileRange } from './buildingRenderer'
+import { OverlayRenderer } from './overlayRenderer'
 import { CHUNK_PX_H, CHUNK_PX_W, TerrainCache, chunkOrigin } from './terrainCache'
 import { SEA_COLOR, diamondPath } from './terrainStyle'
 
@@ -27,10 +30,12 @@ const HIGH_RES_THRESHOLD = 1.25
 export class MapRenderer {
   private canvas: HTMLCanvasElement
   private getState: () => GameState
+  private getTool: () => ToolSnapshot
   private debug: boolean
   private ctx: CanvasRenderingContext2D
   private resizeObserver: ResizeObserver
   private cache = new TerrainCache()
+  private overlay = new OverlayRenderer()
   private rafId = 0
   private dpr = 1
   private viewport: Viewport = { width: 1, height: 1 }
@@ -42,11 +47,17 @@ export class MapRenderer {
   private fpsSince = 0
   private chunksDrawn = 0
 
-  constructor(canvas: HTMLCanvasElement, getState: () => GameState, debug = false) {
+  constructor(
+    canvas: HTMLCanvasElement,
+    getState: () => GameState,
+    getTool: () => ToolSnapshot,
+    debug = false,
+  ) {
     const ctx = canvas.getContext('2d')
     if (!ctx) throw new Error('Canvas 2D is not available')
     this.canvas = canvas
     this.getState = getState
+    this.getTool = getTool
     this.debug = debug
     this.ctx = ctx
     this.resizeObserver = new ResizeObserver(() => this.resize())
@@ -74,14 +85,18 @@ export class MapRenderer {
     this.camera = zoomCameraAt(this.camera, factor, sx, sy, this.viewport, this.bounds(), ZOOM_LIMITS)
   }
 
-  /** Highlights the tile under a screen point, or clears the selection outside the map. */
-  selectAt(sx: number, sy: number): void {
-    const map = this.getState().map
+  /** The map tile under a screen point (CSS pixels relative to the canvas), or null outside the map. */
+  tileAt(sx: number, sy: number): Point | null {
     const w = screenToWorld(this.camera, this.viewport, sx, sy)
     const tile = worldToTile(w.x, w.y)
     const x = Math.floor(tile.x)
     const y = Math.floor(tile.y)
-    this.selected = inMap(map, x, y) ? { x, y } : null
+    return inMap(this.getState().map, x, y) ? { x, y } : null
+  }
+
+  /** Highlights the tile under a screen point, or clears the selection outside the map. */
+  selectAt(sx: number, sy: number): void {
+    this.selected = this.tileAt(sx, sy)
   }
 
   private bounds() {
@@ -132,14 +147,19 @@ export class MapRenderer {
     // World -> device pixel transform.
     const k = dpr * zoom
     ctx.setTransform(k, 0, 0, k, dpr * (viewport.width / 2 - this.camera.x * zoom), dpr * (viewport.height / 2 - this.camera.y * zoom))
-    this.drawTerrain(map)
+    const range = this.visibleTileRange(map)
+    this.drawTerrain(range)
+    const state = this.getState()
+    drawRoads(ctx, state, range)
+    drawBuildings(ctx, state, range)
+    this.overlay.draw(ctx, state, this.getTool())
     this.drawSelection()
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     if (this.debug) this.drawDebug(map)
   }
 
-  private drawTerrain(map: GameMap): void {
+  private visibleTileRange(map: GameMap): TileRange {
     const rect = visibleWorldRect(this.camera, this.viewport)
     const corners = [
       worldToTile(rect.minX, rect.minY),
@@ -147,13 +167,17 @@ export class MapRenderer {
       worldToTile(rect.minX, rect.maxY),
       worldToTile(rect.maxX, rect.maxY),
     ]
-    const size = world.chunkSize
     const clamp = (v: number, max: number) => Math.max(0, Math.min(max, v))
-    const minI = clamp(Math.floor(Math.min(...corners.map((c) => c.x))), map.width - 1)
-    const maxI = clamp(Math.floor(Math.max(...corners.map((c) => c.x))), map.width - 1)
-    const minJ = clamp(Math.floor(Math.min(...corners.map((c) => c.y))), map.height - 1)
-    const maxJ = clamp(Math.floor(Math.max(...corners.map((c) => c.y))), map.height - 1)
+    return {
+      minI: clamp(Math.floor(Math.min(...corners.map((c) => c.x))), map.width - 1),
+      maxI: clamp(Math.floor(Math.max(...corners.map((c) => c.x))), map.width - 1),
+      minJ: clamp(Math.floor(Math.min(...corners.map((c) => c.y))), map.height - 1),
+      maxJ: clamp(Math.floor(Math.max(...corners.map((c) => c.y))), map.height - 1),
+    }
+  }
 
+  private drawTerrain({ minI, maxI, minJ, maxJ }: TileRange): void {
+    const size = world.chunkSize
     this.chunksDrawn = 0
     for (let cy = Math.floor(minJ / size); cy <= Math.floor(maxJ / size); cy++) {
       for (let cx = Math.floor(minI / size); cx <= Math.floor(maxI / size); cx++) {

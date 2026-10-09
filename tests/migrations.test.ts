@@ -53,3 +53,17 @@ describe('migrateState', () => {
     expect(() => migrateState({ version: CURRENT_SAVE_VERSION })).toThrow()
   })
 })
+
+describe('migration from version 2', () => {
+  it('adds stock, buildings and empty road and occupancy layers', () => {
+    const map = generateIsland(5)
+    const v2 = { version: 2, seed: 5, rngState: 5, tick: 7, speed: 1, coins: 8000, map }
+    const migrated = migrateState(v2)
+    expect(migrated.version).toBe(CURRENT_SAVE_VERSION)
+    expect(migrated.coins).toBe(8000)
+    expect(migrated.buildings).toEqual([])
+    expect(migrated.stock).toEqual(createInitialState(5).stock)
+    expect(migrated.occupancy).toHaveLength(map.tiles.length)
+    expect(migrated.roads.every((v) => v === 0)).toBe(true)
+  })
+})

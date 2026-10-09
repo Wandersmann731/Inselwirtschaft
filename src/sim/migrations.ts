@@ -1,3 +1,4 @@
+import { config } from '../data'
 import { generateIsland } from '../world/islandGenerator'
 import { CURRENT_SAVE_VERSION, type GameState } from './state'
 
@@ -9,6 +10,18 @@ export type Migration = (data: RawState) => RawState
 export const MIGRATIONS: Record<number, Migration> = {
   // v1 had an empty map. v2 generates the island from the saved seed.
   1: (data) => ({ ...data, map: generateIsland(Number(data.seed)) }),
+  // v3 adds the goods store, buildings and roads.
+  2: (data) => {
+    const tileCount = (data.map as { tiles: unknown[] }).tiles.length
+    return {
+      ...data,
+      stock: { ...config.startStock },
+      buildings: [],
+      nextBuildingId: 1,
+      occupancy: new Array(tileCount).fill(0),
+      roads: new Array(tileCount).fill(0),
+    }
+  },
 }
 
 /** Brings a raw saved object up to the current version or throws if that is impossible. */
