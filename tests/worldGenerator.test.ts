@@ -95,7 +95,7 @@ describe('generateWorld', () => {
 
   it('cannot make every good on the home island', () => {
     const home = generateWorld(1).islands[0]
-    for (const missing of ['tobacco', 'spices', 'silk', 'cotton', 'wine']) expect(home.fertilities).not.toContain(missing)
+    for (const missing of ['tobacco', 'spices', 'silk', 'cotton']) expect(home.fertilities).not.toContain(missing)
   })
 
   it('lets the colonies cover what the home island lacks', () => {

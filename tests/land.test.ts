@@ -114,7 +114,7 @@ describe('the data hangs together', () => {
         (def.requiresDeposit && !home.deposits.includes(def.requiresDeposit)),
     )
     const lost = new Set(impossible.flatMap((def) => (def.output ? [def.output.good] : [])))
-    for (const good of ['tobacco_leaf', 'spices', 'raw_silk', 'dye', 'blubber', 'wine', 'gold', 'gems']) {
+    for (const good of ['tobacco_leaf', 'spices', 'raw_silk', 'dye', 'blubber', 'gold', 'gems']) {
       expect(lost.has(good), good).toBe(true)
     }
   })

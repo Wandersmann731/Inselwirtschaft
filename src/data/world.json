@@ -29,42 +29,42 @@
       "name": "Heimatinsel",
       "climate": "north",
       "size": [100, 140],
-      "deposits": ["stone", "ore", "salt"]
+      "deposits": ["stone", "ore", "salt", "marble"]
     },
     {
       "role": "colony",
       "name": "Eisrand",
       "climate": "polar",
       "size": [50, 80],
-      "deposits": ["stone"]
+      "deposits": ["stone", "ore"]
     },
     {
       "role": "colony",
       "name": "Frostmark",
       "climate": "tundra",
       "size": [55, 90],
-      "deposits": ["stone", "ore", "gold", "gems"]
+      "deposits": ["stone", "ore", "salt"]
     },
     {
       "role": "colony",
       "name": "Sonnenhain",
       "climate": "steppe",
       "size": [60, 90],
-      "deposits": ["stone", "salt", "marble"]
+      "deposits": ["stone", "ore", "gold", "gems"]
     },
     {
       "role": "colony",
       "name": "Grünwall",
       "climate": "jungle",
       "size": [60, 90],
-      "deposits": ["stone"]
+      "deposits": ["stone", "ore", "gold"]
     },
     {
       "role": "trader",
       "name": "Handelshafen",
       "climate": "prairie",
       "size": [40, 60],
-      "deposits": ["stone"]
+      "deposits": ["stone", "ore"]
     }
   ]
 }

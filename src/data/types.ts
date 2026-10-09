@@ -125,6 +125,8 @@ export interface TierNeed {
   substitutes?: string[]
   /** Public building type that must cover the house instead of a good. */
   building?: string
+  /** A bonus: it raises the tax but is not needed to stay or to rise (jewelry and wine for aristocrats). */
+  optional?: boolean
 }
 
 export interface TierDef {

@@ -130,7 +130,7 @@ describe('aristocrats', () => {
     patchHouse(oneHouse(), 1, { tier: 'aristocrats', residents: 30, needs })
 
   it('turns into a ruin after a short shortage instead of falling back', () => {
-    let state = aristocrat({ jewelry: 0, wine: 100, theater: 100 })
+    let state = aristocrat({ jewelry: 100, wine: 100, theater: 0 })
     state = cycles(state, ruinCycles - 1)
     expect(house(state).ruin).toBe(false)
     state = runPopulation(state)
@@ -139,15 +139,21 @@ describe('aristocrats', () => {
     expect(house(state).residents).toBe(0)
   })
 
+  it('does not care when jewelry and wine are missing, they only raise the tax', () => {
+    const state = cycles(aristocrat({ jewelry: 0, wine: 0, theater: 100 }), 20)
+    expect(house(state).ruin).toBe(false)
+    expect(house(state).residents).toBe(30)
+  })
+
   it('stays alive while everything is delivered', () => {
-    const state = cycles(aristocrat({ jewelry: 100, wine: 100, theater: 100, cathedral: 100 }), 20)
+    const state = cycles(aristocrat({ jewelry: 100, wine: 100, theater: 100 }), 20)
     expect(house(state).ruin).toBe(false)
     expect(house(state).residents).toBe(30)
   })
 
   it('stays a ruin and does not take residents', () => {
-    let state = cycles(aristocrat({ jewelry: 0 }), ruinCycles)
-    state = patchHouse(state, 1, { needs: { jewelry: 100 } })
+    let state = cycles(aristocrat({ theater: 0 }), ruinCycles)
+    state = patchHouse(state, 1, { needs: { theater: 100 } })
     expect(house(cycles(state, 5)).ruin).toBe(true)
     expect(house(cycles(state, 5)).residents).toBe(0)
   })

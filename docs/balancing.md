@@ -26,3 +26,6 @@ Alle Werte stehen in `src/data/*.json`. Sie waren meine Startwerte, die Analyse 
 - Jedes bewohnte Haus zahlt je Zyklus `Einwohner × tax(Stufe) × (base + (1 − base) × Versorgung)`. `tax` steht in `tiers.json` (die Summe aus Rate × Preis aller Waren bis zu dieser Stufe, so bleibt der Ertrag bei voller Versorgung wie vorher), `base` (0,35) in `config.json`. Versorgung = Mittel der erfüllten Warenbedürfnisse.
 - Öffentliche Gebäude (Kapelle, Wirtshaus ...) wirken weiter im Radius.
 - Bot-Playtest: Seeds 1–6 laufen durch, Bürger nach 11–13 Minuten, Bilanz am Ende 480–800 pro Zyklus. Der Bot sucht für große Gebäude jetzt in 18 statt 14 Kacheln einen Platz.
+
+## Abgleich mit dem Original (10.10.2026)
+Kosten, Unterhalt, Marktpreise und Steuersätze folgen jetzt den Originalwerten (siehe `docs/abgleich-anno.md`). Steuer je Einwohner und Zyklus bei voller Versorgung: Pioniere 8,7, Siedler 12,5, Bürger 19,1, Kaufleute 24,6, Aristokraten 31,0 (Schmuck und Wein zählen nur als Bonus). Bot-Playtest: Bürger nach 24 bis 32 Minuten, am Ende 165 bis 260 Einwohner und eine Bilanz von 550 bis 1700 pro Zyklus, alle sechs Läufe bestehen.

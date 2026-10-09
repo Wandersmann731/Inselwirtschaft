@@ -31,7 +31,7 @@ Ein Betrieb mit `cycleTicks` 40 macht 1,5 Waren pro Wirtschaftszyklus (60 Ticks)
 ## Was sich dadurch geändert hat
 - Kartoffeln und Weintrauben als Zwischenwaren sind weg, Kartoffelfarm und Weinberg liefern direkt Alkohol und Wein. Die Kelterei gibt es nicht mehr, die Brennerei ist jetzt die Rumbrennerei (Zuckerrohr).
 - Neue Betriebe: Brauerei, Saline, Fleischerei, Jagdhütte, Marmorsteinbruch, Marmorsteinmetz. Neue Waren: Salzstein, Schlachtvieh, Marmorstein, Farbstoffe (statt Indigo). Neu: Nebenprodukte (Fleischerei und Jagdhütte liefern Tierhäute zusätzlich).
-- Neue Insel-Eigenschaften: Wildbestand (Nord, Tundra, Prärie) und das Vorkommen Marmor (nur Sonnenhain, die Heimatinsel hat keinen Marmor).
+- Neue Insel-Eigenschaften: Wildbestand (Nord, Tundra, Prärie) und das Vorkommen Marmor (nur Nordzone, also die Heimatinsel; siehe `docs/abgleich-anno.md`).
 - Freischaltung der Betriebe nach Stufe: Hopfen ab Siedlern, Zuckerrohr ab Bürgern, Marmor ab Bürgern, Wein ab Kaufleuten (wie die Seite), der Rest wie vorher.
 - Alte Spielstände (Version 9) werden migriert: Kelterei-Gebäude werden entfernt, Waren Kartoffeln und Trauben entfallen, Indigo wird zu Farbstoffen.
 

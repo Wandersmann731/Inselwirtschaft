@@ -3,14 +3,21 @@ import type { BuildingCost } from '../data'
 import { goods } from '../data'
 import { addTo, cloneLedger } from './ledger'
 import type { CycleLedger, IslandState, HouseState, PlacedBuilding } from './state'
-import { getTier, nextTier, previousTier, tierIndex } from './tiers'
+import { cumulativeNeeds, getTier, nextTier, previousTier, tierIndex } from './tiers'
 
 const FULL = 100 - 1e-6
 
-const shortage = (house: HouseState): boolean =>
-  Object.values(house.needs).some((percent) => percent < config.population.shortageBelow)
+/** The needs that count for staying and rising: optional ones (a bonus for the tax) are left out. */
+function required(house: HouseState): number[] {
+  const optional = new Set(cumulativeNeeds(house.tier).filter((need) => need.optional).map((need) => need.id))
+  return Object.entries(house.needs)
+    .filter(([id]) => !optional.has(id))
+    .map(([, percent]) => percent)
+}
 
-const allMet = (house: HouseState): boolean => Object.values(house.needs).every((percent) => percent >= FULL)
+const shortage = (house: HouseState): boolean => required(house).some((percent) => percent < config.population.shortageBelow)
+
+const allMet = (house: HouseState): boolean => required(house).every((percent) => percent >= FULL)
 
 function affordable(stock: Record<string, number>, cost: BuildingCost): boolean {
   return goods.every((good) => (stock[good.id] ?? 0) >= (cost[good.id as keyof BuildingCost] ?? 0))
