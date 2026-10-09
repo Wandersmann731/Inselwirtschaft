@@ -4,8 +4,9 @@ import configJson from './config.json'
 import goodsJson from './goods.json'
 import landJson from './land.json'
 import tiersJson from './tiers.json'
+import tradeJson from './trade.json'
 import worldJson from './world.json'
-import type { BuildingDef, ClimateDef, GameConfig, GoodDef, LandNames, TierDef, WorldConfig } from './types'
+import type { BuildingDef, ClimateDef, GameConfig, GoodDef, LandNames, TierDef, TradeConfig, WorldConfig } from './types'
 
 export type * from './types'
 
@@ -33,3 +34,4 @@ export function priceOf(goodId: string): number {
 }
 
 export const landNames: LandNames = landJson
+export const trade: TradeConfig = tradeJson

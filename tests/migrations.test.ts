@@ -182,3 +182,22 @@ describe('migration from version 7', () => {
     expect(ids.size).toBe(migrated.islands.length)
   })
 })
+
+describe('migration from version 8', () => {
+  it('adds ships, routes and the Kontor settings of every island', () => {
+    const v8 = JSON.parse(JSON.stringify(createInitialState(2))) as Record<string, unknown>
+    v8.version = 8
+    delete v8.ships
+    delete v8.routes
+    delete v8.nextShipId
+    delete v8.nextRouteId
+    for (const island of v8.islands as Record<string, unknown>[]) delete island.trade
+    const migrated = migrateState(v8)
+    expect(migrated.version).toBe(CURRENT_SAVE_VERSION)
+    expect(migrated.ships).toEqual([])
+    expect(migrated.routes).toEqual([])
+    expect(migrated.nextShipId).toBe(1)
+    expect(migrated.nextRouteId).toBe(1)
+    expect(migrated.islands.every((island) => Object.keys(island.trade).length === 0)).toBe(true)
+  })
+})

@@ -85,6 +85,15 @@ export const MIGRATIONS: Record<number, Migration> = {
       world: layoutWorld(islands, layoutRng(Number(data.seed))),
     }
   },
+  // v9 adds ships, routes and the Kontor trade settings of the islands.
+  8: (data) => ({
+    ...data,
+    ships: [],
+    routes: [],
+    nextShipId: 1,
+    nextRouteId: 1,
+    islands: (data.islands as object[]).map((island) => ({ trade: {}, ...island })),
+  }),
 }
 
 /** Brings a raw saved object up to the current version or throws if that is impossible. */

@@ -15,6 +15,7 @@ const ISLAND_KEYS = [
   'roads',
   'stock',
   'economy',
+  'trade',
 ] as const
 
 export function getIsland(state: GameState, islandId: number): Island {
@@ -61,6 +62,6 @@ export function islandsOf(state: GameState | IslandState): Island[] {
 /** Wraps a single island state into a game with only that island. Used by tests. */
 export function liftIsland(flat: IslandState): GameState {
   const island = Object.fromEntries(ISLAND_KEYS.map((key) => [key, flat[key]])) as unknown as Island
-  const { version, seed, rngState, tick, speed, coins, highestTier, world } = flat
-  return { version, seed, rngState, tick, speed, coins, highestTier, world, islands: [island] }
+  const { version, seed, rngState, tick, speed, coins, highestTier, world, ships, routes, nextShipId, nextRouteId } = flat
+  return { version, seed, rngState, tick, speed, coins, highestTier, world, ships, routes, nextShipId, nextRouteId, islands: [island] }
 }

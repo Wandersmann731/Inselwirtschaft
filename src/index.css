@@ -477,3 +477,99 @@ body,
 .hud-island {
   color: #ffd23f;
 }
+
+.kontor-panel,
+.trade-panel {
+  width: min(760px, 96vw);
+  max-height: 92vh;
+}
+
+.kontor-table td,
+.kontor-table th {
+  white-space: nowrap;
+}
+
+.kontor-price {
+  color: #8fa2b0;
+  font-size: 12px;
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.step-button {
+  min-width: 40px;
+  min-height: 40px;
+  border: 0;
+  border-radius: 6px;
+  background: #2b4254;
+  color: var(--hud-text);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.step-value {
+  min-width: 48px;
+  text-align: center;
+}
+
+.tab-row {
+  display: flex;
+  gap: 8px;
+  margin: 6px 0;
+}
+
+.ship-card,
+.stop-box {
+  margin: 8px 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.stop-box {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ship-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ship-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.ship-actions select {
+  min-height: 44px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid #3d5a72;
+  background: #1c2f3d;
+  color: var(--hud-text);
+  font-size: 15px;
+}
+
+.order-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0;
+  font-size: 14px;
+}
+
+.category-button {
+  min-width: 0;
+  padding: 0 6px;
+  font-size: 15px;
+}

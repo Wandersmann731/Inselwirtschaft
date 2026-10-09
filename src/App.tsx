@@ -6,11 +6,13 @@ import { balanceOf } from './sim/economy'
 import { toIslandState } from './sim/islands'
 import { residentsOfTier } from './sim/tiers'
 import { BuildBar } from './ui/BuildBar'
+import { KontorPanel } from './ui/KontorPanel'
 import { MapCanvas } from './ui/MapCanvas'
 import { RotateHint } from './ui/RotateHint'
 import { StatsPanel } from './ui/StatsPanel'
 import { Toasts } from './ui/Toasts'
 import { TopHud } from './ui/TopHud'
+import { TradePanel } from './ui/TradePanel'
 import { WorldMap } from './ui/WorldMap'
 
 export function App({ loop }: { loop: GameLoop }) {
@@ -18,6 +20,8 @@ export function App({ loop }: { loop: GameLoop }) {
   const tool = useMemo(() => new BuildController(loop), [loop])
   const [showStats, setShowStats] = useState(false)
   const [showWorld, setShowWorld] = useState(false)
+  const [showTrade, setShowTrade] = useState(false)
+  const [showKontor, setShowKontor] = useState(false)
   const island = toIslandState(state, activeIsland)
   const residentsByTier = Object.fromEntries(tiers.map((tier) => [tier.id, residentsOfTier(state, tier.id)]))
 
@@ -53,11 +57,15 @@ export function App({ loop }: { loop: GameLoop }) {
           onClose={() => setShowWorld(false)}
         />
       )}
+      {showTrade && <TradePanel loop={loop} state={state} onClose={() => setShowTrade(false)} />}
+      {showKontor && <KontorPanel loop={loop} island={island} onClose={() => setShowKontor(false)} />}
       <BuildBar
         tool={tool}
         island={island}
         onOpenStats={() => setShowStats(true)}
         onOpenWorld={() => setShowWorld(true)}
+        onOpenTrade={() => setShowTrade(true)}
+        onOpenKontor={() => setShowKontor(true)}
       />
       <RotateHint />
     </>

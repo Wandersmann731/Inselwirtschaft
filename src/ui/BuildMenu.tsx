@@ -20,9 +20,10 @@ interface BuildMenuProps {
   state: IslandState
   onOpenStats: () => void
   onOpenWorld: () => void
+  onOpenTrade: () => void
 }
 
-export function BuildMenu({ tool, state, onOpenStats, onOpenWorld }: BuildMenuProps) {
+export function BuildMenu({ tool, state, onOpenStats, onOpenWorld, onOpenTrade }: BuildMenuProps) {
   const [open, setOpen] = useState<BuildingCategory | null>(null)
   const items = buildings.filter((def) => def.category === open)
 
@@ -71,6 +72,9 @@ export function BuildMenu({ tool, state, onOpenStats, onOpenWorld }: BuildMenuPr
         </button>
         <button type="button" className="category-button" onClick={onOpenWorld}>
           Weltkarte
+        </button>
+        <button type="button" className="category-button" onClick={onOpenTrade}>
+          Handel
         </button>
       </div>
     </div>

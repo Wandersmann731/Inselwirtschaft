@@ -25,6 +25,7 @@ export function createIsland(id: number, spec: IslandSpec, map: GameMap): Island
     roads: new Array(map.tiles.length).fill(0),
     stock: spec.role === 'home' ? { ...config.startStock } : {},
     economy: { current: emptyLedger(), last: null },
+    trade: {},
   }
 }
 

@@ -6,7 +6,7 @@ import type { GameMap } from '../world/terrain'
 export type { GameMap }
 
 /** Bump when the GameState shape changes and add a migration in migrations.ts. */
-export const CURRENT_SAVE_VERSION = 8
+export const CURRENT_SAVE_VERSION = 9
 
 export type GameSpeed = number
 
@@ -89,6 +89,14 @@ export interface PlacedBuilding {
   house?: HouseState
 }
 
+/** What the Kontor of an island does with a good when the trader visits. Missing or 0 means off. */
+export interface TradeLimit {
+  /** Buy up to this amount when the store holds less. */
+  buyBelow?: number
+  /** Sell everything above this amount. */
+  sellAbove?: number
+}
+
 /** Everything that belongs to one island. Each island has its own store (its Kontor) and its own books. */
 export interface Island {
   id: number
@@ -111,6 +119,8 @@ export interface Island {
   /** Goods in the island store, by good id. */
   stock: Record<string, number>
   economy: Economy
+  /** Kontor trade settings by good id. */
+  trade: Record<string, TradeLimit>
 }
 
 /** Where an island lies on the world map. Sizes are in world map cells. */
@@ -130,6 +140,50 @@ export interface WorldChart {
   placements: IslandPlacement[]
 }
 
+/** A position on the world map in cells, with decimals while a ship is between two cells. */
+export interface SeaPoint {
+  x: number
+  y: number
+}
+
+export interface Ship {
+  id: number
+  name: string
+  /** Tons of cargo. */
+  capacity: number
+  cargo: Record<string, number>
+  /** The island the ship lies at, null while it sails. */
+  island: number | null
+  x: number
+  y: number
+  /** Waypoints still to sail, in order. */
+  path: SeaPoint[]
+  /** The island the ship sails to, null while docked. */
+  destination: number | null
+  /** The trade route the ship follows, null if it takes orders one by one. */
+  routeId: number | null
+  /** Index of the stop of the route the ship is at or on its way to. */
+  stopIndex: number
+}
+
+/** Load goods from the island store onto the ship or unload them from the ship into the store. */
+export interface RouteOrder {
+  good: string
+  amount: number
+  mode: 'load' | 'unload'
+}
+
+export interface RouteStop {
+  island: number
+  orders: RouteOrder[]
+}
+
+export interface Route {
+  id: number
+  name: string
+  stops: RouteStop[]
+}
+
 export interface GameState {
   version: number
   seed: number
@@ -141,6 +195,10 @@ export interface GameState {
   highestTier: number
   islands: Island[]
   world: WorldChart
+  ships: Ship[]
+  routes: Route[]
+  nextShipId: number
+  nextRouteId: number
 }
 
 /**
@@ -161,6 +219,10 @@ export function createStateWith(seed: number, islands: Island[], world: WorldCha
     highestTier: 0,
     islands,
     world,
+    ships: [],
+    routes: [],
+    nextShipId: 1,
+    nextRouteId: 1,
   }
 }
 
