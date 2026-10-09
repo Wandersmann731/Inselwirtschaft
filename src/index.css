@@ -937,3 +937,86 @@ body,
 .panel-confirm .action-button {
   flex: 1 1 120px;
 }
+
+/* Production menu: the goods each tier needs, as tiles with their supply */
+.need-tile {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 84px;
+  min-height: 84px;
+  padding: 6px 8px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: #2b4254;
+  color: var(--hud-text);
+  cursor: pointer;
+}
+
+.need-tile.ok {
+  border-color: #4cd964;
+}
+
+.need-tile.short {
+  border-color: #ffd23f;
+}
+
+.need-tile.missing {
+  border-color: #ff4d4d;
+}
+
+.need-tile-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.need-tile-state {
+  font-size: 12px;
+  color: #b8c7d3;
+}
+
+.build-group.locked {
+  opacity: 0.55;
+}
+
+.build-group-title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.build-item {
+  position: relative;
+}
+
+.build-count {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  padding: 0 5px;
+  border-radius: 8px;
+  background: #ffd23f;
+  color: #1b1b1b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.chain-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.chain-head-text {
+  font-size: 14px;
+  color: #d6e0e8;
+}
+
+.chain-arrow.word {
+  font-size: 13px;
+  font-style: italic;
+}
