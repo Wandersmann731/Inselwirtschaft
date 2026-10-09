@@ -1,7 +1,7 @@
 import { getBuilding } from '../data'
 import type { BuildingCost } from '../data'
 import type { BuildController, ToolSnapshot } from '../game/buildController'
-import { missingResource } from '../sim/build'
+import { demolishPreview, missingResource } from '../sim/build'
 import type { IslandState } from '../sim/state'
 import { Cost } from './Icon'
 import { resourceName } from './messages'
@@ -19,14 +19,40 @@ function scale(cost: BuildingCost, times: number): BuildingCost {
 /** Bar for demolishing and for road building (planned route or freehand). */
 export function DrawBar({ tool, snapshot, state }: { tool: BuildController; snapshot: ToolSnapshot; state: IslandState }) {
   if (snapshot.mode === 'demolish') {
+    const preview = demolishPreview(state, snapshot.stroke)
+    const marked = preview.buildings.length + preview.roads
+    const parts = [
+      preview.buildings.length > 0 ? `${preview.buildings.length} ${preview.buildings.length === 1 ? 'Gebäude' : 'Gebäude'}` : '',
+      preview.roads > 0 ? `${preview.roads} Straßenstück${preview.roads === 1 ? '' : 'e'}` : '',
+    ].filter(Boolean)
     return (
       <div className="place-bar">
         <div className="place-info">
           <strong>Abriss</strong>
-          <span className="place-cost">50 % der Baukosten zurück</span>
-          <span className="place-hint">Gebäude oder Straße antippen oder darüber ziehen</span>
+          <span className="place-cost">
+            {marked > 0 ? (
+              <>
+                {parts.join(', ')} · zurück: <Cost cost={preview.refund} />
+              </>
+            ) : (
+              '50 % der Baukosten zurück'
+            )}
+          </span>
+          <span className="place-hint">
+            {marked > 0
+              ? 'Weitere antippen oder darüberziehen, dann „Abreißen“. Zwei Finger bewegen die Karte.'
+              : 'Gebäude oder Straßen antippen oder darüberziehen, um sie zu markieren. Zwei Finger bewegen die Karte.'}
+          </span>
         </div>
         <div className="place-actions">
+          {snapshot.stroke.length > 0 && (
+            <button type="button" className="action-button" onClick={() => tool.clearStroke()}>
+              Auswahl leeren
+            </button>
+          )}
+          <button type="button" className="action-button danger" disabled={marked === 0} onClick={() => tool.confirmDemolish()}>
+            Abreißen
+          </button>
           <button type="button" className="action-button" onClick={() => tool.cancel()}>
             Fertig
           </button>

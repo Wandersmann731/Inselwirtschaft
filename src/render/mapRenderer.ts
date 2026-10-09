@@ -116,6 +116,11 @@ export class MapRenderer {
     return inMap(this.getState().map, x, y) ? { x, y } : null
   }
 
+  /** Removes the tile highlight. */
+  clearSelection(): void {
+    this.selected = null
+  }
+
   /** Highlights the tile under a screen point, or clears the selection outside the map. */
   selectAt(sx: number, sy: number): void {
     this.selected = this.tileAt(sx, sy)

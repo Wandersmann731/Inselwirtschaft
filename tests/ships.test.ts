@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { trade } from '../src/data'
+import { config, trade } from '../src/data'
 import { checkPlacement, placeBuilding } from '../src/sim/build'
-import { fromIslandState, getIsland, toIslandState } from '../src/sim/islands'
+import { fromIslandState, getIsland, onIsland, toIslandState } from '../src/sim/islands'
 import { addOrder, addStop, createRoute } from '../src/sim/routes'
 import { createRng } from '../src/sim/rng'
 import { assignRoute, buildShip, cargoTotal, colonyBlocker, foundColony, getShip, loadKit, moveShips, sendShip, unloadAll } from '../src/sim/ships'
@@ -223,9 +223,20 @@ describe('loading and unloading by hand', () => {
     const loaded = loadKit(ready, 1)
     const kit = kontorKit().goods
     for (const [good, amount] of Object.entries(kit)) expect(getShip(loaded, 1).cargo[good]).toBe(amount)
-    const unloaded = unloadAll(loaded, 1)
+    // with room in the store everything goes ashore
+    const roomy = onIsland(loaded, HOME, (flat) => ({ ...flat, stock: { tools: 0, wood: 0 } }))
+    const unloaded = unloadAll(roomy, 1)
     expect(cargoTotal(getShip(unloaded, 1))).toBe(0)
-    expect(getIsland(unloaded, HOME).stock.wood).toBe(getIsland(ready, HOME).stock.wood)
+    expect(getIsland(unloaded, HOME).stock.wood).toBe(kit.wood)
+  })
+
+  it('keeps on board what does not fit into the store', () => {
+    const loaded = loadKit(buildShip(withYard(), HOME), 1)
+    const kit = kontorKit().goods
+    const nearlyFull = onIsland(loaded, HOME, (flat) => ({ ...flat, stock: { ...flat.stock, wood: config.production.stockCapacity - 2 } }))
+    const unloaded = unloadAll(nearlyFull, 1)
+    expect(getIsland(unloaded, HOME).stock.wood).toBe(config.production.stockCapacity)
+    expect(getShip(unloaded, 1).cargo.wood).toBe(kit.wood - 2)
   })
 
   it('cannot unload at a foreign island', () => {

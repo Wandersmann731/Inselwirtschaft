@@ -117,6 +117,12 @@ export class GameLoop {
 
   private update = (): void => {
     const now = performance.now()
+    // While the game is in the background (another app, screen off) time stands still: nothing is lost unseen.
+    if (typeof document !== 'undefined' && document.hidden) {
+      this.lastTime = now
+      this.accumulatorMs = 0
+      return
+    }
     const { state } = this.view
     const due = ticksDue(this.accumulatorMs, now - this.lastTime, state.speed, config.tickMillis, config.maxTicksPerUpdate)
     this.lastTime = now

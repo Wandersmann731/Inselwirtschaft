@@ -1,6 +1,6 @@
 import { getBuilding } from '../data'
 import { buildingRect, suppliedHouses, tilesInRadius } from '../sim/coverage'
-import { checkPlacement, checkRoad, footprint } from '../sim/build'
+import { checkPlacement, checkRoad, demolishPreview, footprint } from '../sim/build'
 import type { IslandState, PlacedBuilding } from '../sim/state'
 import type { ToolSnapshot } from '../game/buildController'
 import { HALF_H, tileToWorld } from './iso'
@@ -193,16 +193,35 @@ export class OverlayRenderer {
   }
 
   private drawStroke(ctx: CanvasRenderingContext2D, state: IslandState, tool: ToolSnapshot): void {
-    const demolish = tool.mode === 'demolish'
-    const { width } = state.map
+    if (tool.mode === 'demolish') {
+      // marked buildings as a whole, marked roads tile by tile
+      const preview = demolishPreview(state, tool.stroke)
+      ctx.fillStyle = 'rgba(255, 120, 40, 0.55)'
+      ctx.strokeStyle = '#ff6a1a'
+      ctx.lineWidth = 2
+      for (const id of preview.buildings) {
+        const building = state.buildings.find((b) => b.id === id)
+        if (!building) continue
+        ctx.beginPath()
+        rectPath(ctx, buildingRect(building))
+        ctx.fill()
+        ctx.stroke()
+      }
+      ctx.beginPath()
+      for (const tile of tool.stroke) {
+        const index = tile.y * state.map.width + tile.x
+        if (state.occupancy[index] !== 0 || state.roads[index] === 0) continue
+        const top = tileToWorld(tile.x, tile.y)
+        addDiamond(ctx, top.x, top.y, 0.5)
+      }
+      ctx.fill()
+      return
+    }
     for (const tile of tool.stroke) {
-      const index = tile.y * width + tile.x
-      const ok = demolish
-        ? state.occupancy[index] !== 0 || state.roads[index] !== 0
-        : checkRoad(state, tile.x, tile.y) === null
+      const ok = checkRoad(state, tile.x, tile.y) === null
       const top = tileToWorld(tile.x, tile.y)
       diamondPath(ctx, top.x, top.y, 0.5)
-      ctx.fillStyle = ok ? (demolish ? 'rgba(255, 170, 40, 0.6)' : VALID) : INVALID
+      ctx.fillStyle = ok ? VALID : INVALID
       ctx.fill()
     }
   }

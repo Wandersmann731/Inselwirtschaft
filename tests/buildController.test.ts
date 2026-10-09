@@ -58,7 +58,7 @@ describe('BuildController', () => {
     expect(tool.getSnapshot().stroke).toHaveLength(0)
   })
 
-  it('demolishes along the drag', () => {
+  it('marks along the drag and demolishes only after confirming', () => {
     const { loop, tool } = setup()
     tool.startRoads()
     tool.setFreehand(true)
@@ -67,9 +67,39 @@ describe('BuildController', () => {
     tool.strokeEnd()
     tool.startDemolish()
     tool.strokeStart({ x: 3, y: 3 })
-    tool.strokeMove({ x: 5, y: 3 })
+    tool.strokeMove({ x: 4, y: 3 })
     tool.strokeEnd()
+    // a second tap adds to the marks
+    tool.strokeStart({ x: 5, y: 3 })
+    tool.strokeEnd()
+    expect(tool.getSnapshot().stroke).toHaveLength(3)
+    expect(loop.getIslandState().roads.filter((v) => v === 1)).toHaveLength(3)
+    tool.confirmDemolish()
     expect(loop.getIslandState().roads.some((v) => v === 1)).toBe(false)
+    expect(tool.getSnapshot().stroke).toHaveLength(0)
+  })
+
+  it('a second finger keeps the demolish marks, clearing drops them', () => {
+    const { tool } = setup()
+    tool.startDemolish()
+    tool.strokeStart({ x: 3, y: 3 })
+    tool.strokeCancel()
+    expect(tool.getSnapshot().stroke).toHaveLength(1)
+    tool.clearStroke()
+    expect(tool.getSnapshot().stroke).toHaveLength(0)
+  })
+
+  it('demolishes a single building from its panel and long press shows a building', () => {
+    const { loop, tool } = setup()
+    tool.startPlacing('house_pioneers')
+    tool.setCenter({ x: 5, y: 5 })
+    tool.confirm()
+    const id = loop.getIslandState().buildings[0].id
+    tool.inspect(id)
+    expect(tool.getSnapshot()).toMatchObject({ mode: 'none', selectedBuildingId: id })
+    tool.demolish(id)
+    expect(loop.getIslandState().buildings).toHaveLength(0)
+    expect(tool.getSnapshot().selectedBuildingId).toBeNull()
   })
 
   it('cancel returns to idle', () => {

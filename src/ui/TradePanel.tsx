@@ -106,7 +106,7 @@ function ShipCard({
         <span>
           {docked
             ? `Im Hafen: ${islandName(ship.island)}`
-            : `Unterwegs nach ${islandName(ship.destination)} (noch ${Math.ceil(remainingCells(ship) / trade.ship.speed)} Ticks)`}
+            : `Unterwegs nach ${islandName(ship.destination)} (noch etwa ${Math.ceil(remainingCells(ship) / trade.ship.speed)} s)`}
         </span>
       </div>
       <div className="stats-note">

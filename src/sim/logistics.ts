@@ -7,19 +7,28 @@ import type { IslandState } from './state'
 export type Link = { kind: 'ok'; delay: number } | { kind: 'noRoad' } | { kind: 'noHub' }
 
 /** One cached result per island, found by its road array. */
-const cache = new WeakMap<number[], { occupancy: number[]; links: Map<number, Link> }>()
+const cache = new WeakMap<number[], { occupancy: number[]; hubs: string; links: Map<number, Link> }>()
+
+/** Which hubs are running: shutting one down changes the links without touching roads or buildings. */
+function hubSignature(state: IslandState): string {
+  return state.buildings
+    .filter((building) => getBuilding(building.type).catchment !== undefined && building.active)
+    .map((building) => building.id)
+    .join(',')
+}
 
 /**
- * Link of every producing building. A producer delivers to a market house or Kontor if it
+ * Link of every producing building. A producer delivers to a running market house or Kontor if it
  * lies in its catchment area (one tile inside is enough) and a road leads from the
  * producer to the hub. The delay is the road length times config.production.ticksPerRoadTile.
  * The result only changes when roads or buildings change, so it is cached on those.
  */
 export function getLinks(state: IslandState): Map<number, Link> {
+  const hubs = hubSignature(state)
   const hit = cache.get(state.roads)
-  if (hit && hit.occupancy === state.occupancy) return hit.links
+  if (hit && hit.occupancy === state.occupancy && hit.hubs === hubs) return hit.links
   const links = computeLinks(state)
-  cache.set(state.roads, { occupancy: state.occupancy, links })
+  cache.set(state.roads, { occupancy: state.occupancy, hubs, links })
   return links
 }
 
@@ -27,7 +36,7 @@ function computeLinks(state: IslandState): Map<number, Link> {
   const { width, height } = state.map
   const hubs = state.buildings
     .map((building) => ({ building, def: getBuilding(building.type) }))
-    .filter(({ def }) => def.catchment !== undefined)
+    .filter(({ building, def }) => def.catchment !== undefined && building.active)
     .map(({ building, def }) => {
       const rect = buildingRect(building)
       const sources = adjacentRoadTiles(state.roads, width, height, rect)

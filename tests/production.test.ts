@@ -223,3 +223,27 @@ describe('chains', () => {
     )
   })
 })
+
+describe('store capacity with several producers', () => {
+  it('never fills the store above its capacity, even with goods of many producers on the way', async () => {
+    const { config } = await import('../src/data')
+    const { placeBuilding, placeRoads } = await import('../src/sim/build')
+    const { createRng } = await import('../src/sim/rng')
+    const { grassField, tickFlat } = await import('./helpers')
+    let state = grassField(60, 12, { coins: 1_000_000, stock: { tools: 900, wood: 900, bricks: 900, marble: 90 }, fertilities: ['forest'] })
+    state = placeBuilding(state, 'market_house', 2, 4, false)
+    for (let i = 0; i < 6; i++) state = placeBuilding(state, 'forester', 6 + i * 3, 1 + (i % 2) * 7, false)
+    const tiles = []
+    for (let x = 2; x < 26; x++) tiles.push({ x, y: 6 })
+    for (let i = 0; i < 6; i++) tiles.push({ x: 6 + i * 3, y: i % 2 === 0 ? 3 : 7 }, { x: 6 + i * 3, y: i % 2 === 0 ? 4 : 7 }, { x: 6 + i * 3, y: 5 })
+    state = placeRoads(state, tiles)
+    state = { ...state, stock: { ...state.stock, wood: config.production.stockCapacity - 3 } }
+    let highest = 0
+    for (let i = 0; i < 400; i++) {
+      state = tickFlat(state, createRng(i))
+      highest = Math.max(highest, state.stock.wood ?? 0)
+    }
+    expect(highest).toBeLessThanOrEqual(config.production.stockCapacity)
+    expect(highest).toBe(config.production.stockCapacity)
+  })
+})

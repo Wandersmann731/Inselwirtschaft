@@ -199,7 +199,7 @@ function refund(state: IslandState, cost: BuildingCost): Pick<IslandState, 'coin
 
 /** Removes the building or road on a tile and pays back part of its cost. No-op on empty tiles. */
 export function demolishAt(state: IslandState, x: number, y: number): IslandState {
-  if (terrainAt(state, x, y) === null) return state
+  if (!state.owned || terrainAt(state, x, y) === null) return state
   const index = y * state.map.width + x
   const buildingId = state.occupancy[index]
   if (buildingId !== 0) {
@@ -223,4 +223,36 @@ export function demolishAt(state: IslandState, x: number, y: number): IslandStat
 /** Demolishes everything on the given tiles. */
 export function demolishTiles(state: IslandState, tiles: { x: number; y: number }[]): IslandState {
   return tiles.reduce((current, { x, y }) => demolishAt(current, x, y), state)
+}
+
+/** What demolishing the given tiles would remove and pay back, without doing it. */
+export function demolishPreview(state: IslandState, tiles: { x: number; y: number }[]): { buildings: number[]; roads: number; refund: BuildingCost } {
+  const ids = new Set<number>()
+  let roads = 0
+  const refunded: BuildingCost = { tools: 0, wood: 0, bricks: 0, marble: 0, coins: 0 }
+  const add = (cost: BuildingCost): void => {
+    for (const key of Object.keys(refunded) as (keyof BuildingCost)[]) refunded[key] += Math.floor((cost[key] ?? 0) * config.refundRate)
+  }
+  for (const { x, y } of tiles) {
+    if (terrainAt(state, x, y) === null) continue
+    const index = y * state.map.width + x
+    const id = state.occupancy[index]
+    if (id !== 0) {
+      if (ids.has(id)) continue
+      const building = state.buildings.find((b) => b.id === id)
+      if (!building) continue
+      ids.add(id)
+      add(getBuilding(building.type).cost)
+    } else if (state.roads[index] !== 0) {
+      roads++
+      add(roadDef().cost)
+    }
+  }
+  return { buildings: [...ids], roads, refund: refunded }
+}
+
+/** Removes one building and pays back part of its cost. */
+export function demolishBuilding(state: IslandState, buildingId: number): IslandState {
+  const building = state.buildings.find((b) => b.id === buildingId)
+  return building ? demolishAt(state, building.x, building.y) : state
 }

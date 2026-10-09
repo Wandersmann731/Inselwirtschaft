@@ -1,13 +1,12 @@
 import { useEffect, useRef } from 'react'
 import type { BuildController } from '../game/buildController'
+import { world } from '../data'
+import { haptic } from '../game/haptic'
 import { MapInput } from '../input/touch'
 import { MapRenderer } from '../render/mapRenderer'
 import { getSettings } from '../save/settings'
 import type { IslandState } from '../sim/state'
 
-
-/** Two taps this close in time build the building under the ghost. */
-const DOUBLE_TAP_MS = 450
 
 interface MapCanvasProps {
   getState: () => IslandState
@@ -37,7 +36,7 @@ export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
           // a second tap on the same spot builds
           const last = lastTap
           lastTap = { tile, time: performance.now() }
-          if (last && lastTap.time - last.time < DOUBLE_TAP_MS && Math.abs(last.tile.x - tile.x) <= 1 && Math.abs(last.tile.y - tile.y) <= 1) {
+          if (last && lastTap.time - last.time < world.input.doubleTapMs && Math.abs(last.tile.x - tile.x) <= 1 && Math.abs(last.tile.y - tile.y) <= 1) {
             tool.setCenter(tile)
             tool.confirm()
             lastTap = null
@@ -48,12 +47,22 @@ export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
           const tile = renderer.tileAt(x, y)
           if (tile) tool.routeTap(tile)
         } else {
-          renderer.selectAt(x, y)
           const tile = renderer.tileAt(x, y)
           const state = getState()
           const id = tile ? state.occupancy[tile.y * state.map.width + tile.x] : 0
+          if (id) renderer.selectAt(x, y)
+          else renderer.clearSelection()
           tool.selectBuilding(id || null)
         }
+      },
+      onLongPress: (x, y) => {
+        const tile = renderer.tileAt(x, y)
+        const state = getState()
+        const id = tile ? state.occupancy[tile.y * state.map.width + tile.x] : 0
+        if (!id) return
+        haptic(25)
+        renderer.selectAt(x, y)
+        tool.inspect(id)
       },
       onGrab: (x, y) => {
         const tile = renderer.tileAt(x, y)
@@ -73,7 +82,12 @@ export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
       onStrokeCancel: () => (tool.grabbing ? tool.routeRelease() : tool.strokeCancel()),
     })
     input.setMode(tool.inputMode)
-    const unsubscribe = tool.subscribe(() => input.setMode(tool.inputMode))
+    const unsubscribe = tool.subscribe(() => {
+      input.setMode(tool.inputMode)
+      // the tapped tile is only marked while its building panel is open
+      const { mode, selectedBuildingId } = tool.getSnapshot()
+      if (mode !== 'none' || selectedBuildingId === null) renderer.clearSelection()
+    })
     return () => {
       onRenderer?.(null)
       unsubscribe()

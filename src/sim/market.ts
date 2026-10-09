@@ -2,7 +2,7 @@ import { config, getBuilding } from '../data'
 import type { TierNeed } from '../data'
 import { buildingRect, inRadius, type Rect } from './coverage'
 import { addTo, cloneLedger } from './ledger'
-import type { CycleLedger, IslandState, PlacedBuilding } from './state'
+import type { CycleLedger, HouseState, IslandState, PlacedBuilding } from './state'
 import { cumulativeNeeds, getTier } from './tiers'
 
 const EPSILON = 1e-9
@@ -50,27 +50,30 @@ export function runMarket(state: IslandState): IslandState {
     const supplied = hubs.some((hub) => rangeCovers(hub, rect))
     const near = services.filter((service) => rangeCovers(service, rect))
     const needs: Record<string, number> = {}
-    let goodsSum = 0
-    let goodsCount = 0
-
     for (const need of cumulativeNeeds(house.tier)) {
-      if (need.building) {
-        needs[need.id] = near.some((service) => service.type === need.building) ? 100 : 0
-        continue
-      }
-      const percent = fetchNeed(need, house.residents, supplied, stock, ledger)
-      needs[need.id] = percent
-      goodsSum += percent
-      goodsCount++
+      needs[need.id] = need.building
+        ? near.some((service) => service.type === need.building) ? 100 : 0
+        : fetchNeed(need, house.residents, supplied, stock, ledger)
     }
-    const supply = goodsCount > 0 ? goodsSum / goodsCount / 100 : 1
-    const tax = house.residents * getTier(house.tier).tax * (config.tax.base + (1 - config.tax.base) * supply)
+    const next = { ...house, needs }
+    const tax = taxOf(next)
     coins += tax
     ledger.income += tax
-    return { ...building, house: { ...house, needs } }
+    return { ...building, house: next }
   })
 
   return { ...state, coins, stock, buildings, economy: { ...state.economy, current: ledger } }
+}
+
+/**
+ * Land tax of a house per economy cycle: residents × tax of the tier × (base share + the rest scaled by how many of
+ * its goods needs are met). Ruins pay nothing.
+ */
+export function taxOf(house: HouseState): number {
+  if (house.ruin) return 0
+  const goodsNeeds = cumulativeNeeds(house.tier).filter((need) => need.good)
+  const supply = goodsNeeds.length > 0 ? goodsNeeds.reduce((sum, need) => sum + (house.needs[need.id] ?? 0), 0) / goodsNeeds.length / 100 : 1
+  return house.residents * getTier(house.tier).tax * (config.tax.base + (1 - config.tax.base) * supply)
 }
 
 /** Takes what the residents need of one good from the store, trying the good first, then alternatives and substitutes. */
