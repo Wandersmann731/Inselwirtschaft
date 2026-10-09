@@ -2,9 +2,10 @@ import buildingsJson from './buildings.json'
 import climatesJson from './climates.json'
 import configJson from './config.json'
 import goodsJson from './goods.json'
+import landJson from './land.json'
 import tiersJson from './tiers.json'
 import worldJson from './world.json'
-import type { BuildingDef, ClimateDef, GameConfig, GoodDef, TierDef, WorldConfig } from './types'
+import type { BuildingDef, ClimateDef, GameConfig, GoodDef, LandNames, TierDef, WorldConfig } from './types'
 
 export type * from './types'
 
@@ -30,3 +31,5 @@ const goodMap = new Map(goods.map((good) => [good.id, good]))
 export function priceOf(goodId: string): number {
   return goodMap.get(goodId)?.price ?? 0
 }
+
+export const landNames: LandNames = landJson

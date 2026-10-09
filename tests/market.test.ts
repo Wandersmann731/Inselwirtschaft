@@ -114,4 +114,23 @@ describe('market', () => {
     expect(homes[0].house!.needs.food).toBe(100)
     expect(homes[1].house!.needs.food).toBeCloseTo(25)
   })
+
+  it('sells tobacco and spices, lamp oil, silk and jewelry at their stands', () => {
+    let state = grassField(50, 30, { ...rich, coins: 1000 })
+    state = placeBuilding(state, 'house_pioneers', 10, 10, false)
+    state = placeBuilding(state, 'tobacco_spice_stand', 14, 10, false)
+    state = placeBuilding(state, 'lamp_oil_stand', 14, 11, false)
+    state = placeBuilding(state, 'jewelry_stand', 14, 12, false)
+    state = placeBuilding(state, 'cloth_stand', 14, 13, false)
+    state = patchHouse(state, 1, { residents: 10, tier: 'aristocrats' })
+    state = { ...state, stock: { tobacco: 5, spices: 5, lamp_oil: 5, silk: 5, jewelry: 5, wine: 5, salt: 0 } }
+    const next = runMarket(state)
+    const needs = house(next).needs
+    expect(needs.tobacco).toBe(100)
+    expect(needs.spices).toBe(100)
+    expect(needs.lamp_oil).toBe(100)
+    expect(needs.silk).toBe(100)
+    expect(needs.jewelry).toBe(100)
+    expect(needs.wine).toBe(0) // no stand for wine here
+  })
 })

@@ -1,4 +1,4 @@
-import { config } from '../src/data'
+import { config, landNames } from '../src/data'
 import { liftIsland, toIslandState } from '../src/sim/islands'
 import { emptyLedger } from '../src/sim/ledger'
 import type { Rng } from '../src/sim/rng'
@@ -23,8 +23,8 @@ export function stateFromRows(rows: string[], overrides: Partial<IslandState> = 
     id: 0,
     name: 'Testinsel',
     climate: 'north',
-    fertilities: [],
-    deposits: [],
+    fertilities: landNames.fertilities.map((entry) => entry.id),
+    deposits: landNames.deposits.map((entry) => entry.id),
     owned: true,
     role: 'home',
     map: { width, height: rows.length, tiles },

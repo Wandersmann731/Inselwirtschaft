@@ -1,0 +1,26 @@
+{
+  "fertilities": [
+    { "id": "forest", "name": "Wald" },
+    { "id": "cattle", "name": "Weideland für Rinder" },
+    { "id": "fur", "name": "Pelztiere" },
+    { "id": "sheep", "name": "Schafweiden" },
+    { "id": "grain", "name": "Getreideanbau" },
+    { "id": "potatoes", "name": "Kartoffelanbau" },
+    { "id": "hops", "name": "Hopfenanbau" },
+    { "id": "wine", "name": "Weinanbau" },
+    { "id": "cotton", "name": "Baumwollanbau" },
+    { "id": "tobacco", "name": "Tabakanbau" },
+    { "id": "spices", "name": "Gewürzanbau" },
+    { "id": "sugar", "name": "Zuckerrohranbau" },
+    { "id": "silk", "name": "Seidenanbau" },
+    { "id": "indigo", "name": "Indigoanbau" },
+    { "id": "whales", "name": "Walfang" }
+  ],
+  "deposits": [
+    { "id": "stone", "name": "Naturstein" },
+    { "id": "ore", "name": "Eisenerz" },
+    { "id": "salt", "name": "Salz" },
+    { "id": "gold", "name": "Gold" },
+    { "id": "gems", "name": "Edelsteine" }
+  ]
+}
