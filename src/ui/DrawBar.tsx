@@ -1,6 +1,6 @@
 import { getBuilding } from '../data'
 import type { BuildController, ToolMode } from '../game/buildController'
-import { formatCost } from './messages'
+import { Cost } from './Icon'
 
 export function DrawBar({ tool, mode }: { tool: BuildController; mode: ToolMode }) {
   const demolish = mode === 'demolish'
@@ -8,7 +8,7 @@ export function DrawBar({ tool, mode }: { tool: BuildController; mode: ToolMode 
     <div className="place-bar">
       <div className="place-info">
         <strong>{demolish ? 'Abriss' : 'Straße'}</strong>
-        <span className="place-cost">{demolish ? '50 % der Baukosten zurück' : formatCost(getBuilding('road').cost) + ' pro Kachel'}</span>
+        <span className="place-cost">{demolish ? '50 % der Baukosten zurück' : <><Cost cost={getBuilding('road').cost} /> pro Kachel</>}</span>
         <span className="place-hint">
           {demolish
             ? 'Gebäude oder Straße antippen oder darüber ziehen'

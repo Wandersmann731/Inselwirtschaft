@@ -4,6 +4,7 @@ import { toIslandState } from '../sim/islands'
 import type { GameState } from '../sim/state'
 import { findShortages } from '../sim/warnings'
 import { shortageText } from './messages'
+import { Icon } from './Icon'
 
 interface Toast {
   id: number
@@ -63,7 +64,7 @@ export function Toasts({ state }: { state: GameState }) {
     <div className="toasts" aria-live="polite">
       {toasts.map((toast) => (
         <div key={toast.id} className="toast">
-          {toast.text}
+          <Icon name="ui/warning" size={24} /> {toast.text}
         </div>
       ))}
     </div>

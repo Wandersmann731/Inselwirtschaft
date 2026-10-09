@@ -15,6 +15,8 @@ import {
 import { mapBounds, tileToWorld, worldToTile, type Bounds, type Point } from './iso'
 import { drawBuildings, drawRoads, type TileRange } from './buildingRenderer'
 import { OverlayRenderer } from './overlayRenderer'
+import { sprites } from './sprites'
+import { WaterPattern } from './water'
 import { CHUNK_PX_H, CHUNK_PX_W, TerrainCache, chunkOrigin } from './terrainCache'
 import { SEA_COLOR, diamondPath } from './terrainStyle'
 
@@ -36,6 +38,7 @@ export class MapRenderer {
   private resizeObserver: ResizeObserver
   private cache = new TerrainCache()
   private overlay = new OverlayRenderer()
+  private water: WaterPattern | null = null
   private rafId = 0
   private dpr = 1
   private viewport: Viewport = { width: 1, height: 1 }
@@ -144,6 +147,7 @@ export class MapRenderer {
     ctx.fillStyle = SEA_COLOR
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     if (map.width === 0) return
+    const now = performance.now()
 
     if (map !== this.cameraMap) {
       this.cameraMap = map
@@ -158,15 +162,27 @@ export class MapRenderer {
     const k = dpr * zoom
     ctx.setTransform(k, 0, 0, k, dpr * (viewport.width / 2 - this.camera.x * zoom), dpr * (viewport.height / 2 - this.camera.y * zoom))
     const range = this.visibleTileRange(map)
+    this.drawWater(now)
     this.drawTerrain(range)
     const state = this.getState()
     drawRoads(ctx, state, range)
-    drawBuildings(ctx, state, range)
+    drawBuildings(ctx, state, range, now)
     this.overlay.draw(ctx, state, this.getTool())
     this.drawSelection()
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     if (this.debug) this.drawDebug(map)
+  }
+
+  /** The sea: an animated pattern over the visible part of the world. */
+  private drawWater(now: number): void {
+    if (!sprites.ready) return
+    this.water ??= new WaterPattern(this.ctx)
+    const pattern = this.water.at(now)
+    if (!pattern) return
+    const rect = visibleWorldRect(this.camera, this.viewport)
+    this.ctx.fillStyle = pattern
+    this.ctx.fillRect(rect.minX - 2, rect.minY - 2, rect.maxX - rect.minX + 4, rect.maxY - rect.minY + 4)
   }
 
   private visibleTileRange(map: GameMap): TileRange {

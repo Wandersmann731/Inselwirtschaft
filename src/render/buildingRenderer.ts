@@ -5,7 +5,10 @@ import { getTier, tierIndex } from '../sim/tiers'
 import { config } from '../data'
 import { diamondPath } from './terrainStyle'
 import { boxHeight, drawBox, type TileRect } from './shapes'
-import { tileToWorld } from './iso'
+import { HALF_H, HALF_W, tileToWorld } from './iso'
+import { sprites } from './sprites'
+import { drawPlacedSprite, placeSprite, type SpritePlacement } from './spriteDraw'
+import { roadKey, smokeKey } from './spriteKeys'
 
 export interface TileRange {
   minI: number
@@ -15,9 +18,11 @@ export interface TileRange {
 }
 
 const ROAD_COLOR = getBuilding('road').color
+const SPRITE_GROW = 0.7
 
 export function drawRoads(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange): void {
-  const { width } = state.map
+  const { width, height } = state.map
+  const isRoad = (x: number, y: number): boolean => x >= 0 && y >= 0 && x < width && y < height && state.roads[y * width + x] === 1
   ctx.fillStyle = ROAD_COLOR
   ctx.strokeStyle = 'rgba(0, 0, 0, 0.25)'
   ctx.lineWidth = 1
@@ -25,15 +30,20 @@ export function drawRoads(ctx: CanvasRenderingContext2D, state: IslandState, ran
     for (let x = range.minI; x <= range.maxI; x++) {
       if (!state.roads[y * width + x]) continue
       const top = tileToWorld(x, y)
-      diamondPath(ctx, top.x, top.y, 0.5)
-      ctx.fill()
-      ctx.stroke()
+      const image = sprites.get(roadKey(isRoad(x, y - 1), isRoad(x + 1, y), isRoad(x, y + 1), isRoad(x - 1, y)))
+      if (image) {
+        ctx.drawImage(image, top.x - HALF_W - SPRITE_GROW, top.y - SPRITE_GROW / 2, 2 * HALF_W + 2 * SPRITE_GROW, 2 * HALF_H + SPRITE_GROW)
+      } else {
+        diamondPath(ctx, top.x, top.y, 0.5)
+        ctx.fill()
+        ctx.stroke()
+      }
     }
   }
 }
 
-/** Draws all buildings that overlap the visible tile range, back to front. */
-export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange): void {
+/** Draws all buildings that overlap the visible tile range, back to front. `now` drives the smoke animation. */
+export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange, now = 0): void {
   const visible = state.buildings
     .map((building) => ({ building, rect: buildingRect(building) }))
     .filter(
@@ -47,11 +57,29 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
   for (const { building, rect } of visible) {
     const def = getBuilding(building.type)
     const house = building.house
-    const height = house ? houseHeight(house) : boxHeight(rect, def.category)
-    drawBox(ctx, rect, height, house ? houseColor(house) : def.color)
-    if (building.production) drawStatusDot(ctx, rect, height, STATUS_COLORS[building.production.status.kind])
-    else if (house && !house.ruin && house.residents > 0) drawStatusDot(ctx, rect, height, houseDotColor(house))
+    const placed = placeSprite(building)
+    let dotHeight: number
+    if (placed) {
+      drawPlacedSprite(ctx, placed)
+      dotHeight = placed.rise * 0.8
+      if (def.smoke && building.production?.status.kind === 'producing') drawSmoke(ctx, placed, rect, now)
+    } else {
+      dotHeight = house ? houseHeight(house) : boxHeight(rect, def.category)
+      drawBox(ctx, rect, dotHeight, house ? houseColor(house) : def.color)
+    }
+    if (building.production) drawStatusDot(ctx, rect, dotHeight, STATUS_COLORS[building.production.status.kind])
+    else if (house && !house.ruin && house.residents > 0) drawStatusDot(ctx, rect, dotHeight, houseDotColor(house))
   }
+}
+
+/** A column of smoke above the roof, looping. */
+function drawSmoke(ctx: CanvasRenderingContext2D, placed: SpritePlacement, rect: TileRect, now: number): void {
+  const image = sprites.get(smokeKey(Math.floor(now / 100)))
+  if (!image) return
+  const center = tileToWorld(rect.x + rect.w / 2, rect.y + rect.h / 2)
+  const width = image.width / 2
+  const height = image.height / 2
+  ctx.drawImage(image, center.x - width / 2, placed.y + placed.height * 0.3 - height, width, height)
 }
 
 /** Status colours of producers: green runs, yellow waits for goods, orange is full, red is cut off. */

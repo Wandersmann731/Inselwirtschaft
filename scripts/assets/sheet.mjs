@@ -8,7 +8,7 @@ import { ROOT } from './manifest.mjs'
 const folder = process.argv[2] ?? 'buildings'
 const columns = Number(process.argv[3] ?? 5)
 const cell = Number(process.argv[4] ?? 220)
-const dir = path.join(ROOT, 'public', 'art', folder)
+const dir = path.join(ROOT, 'art', folder)
 const files = fs.readdirSync(dir, { recursive: true }).filter((f) => String(f).endsWith('.png')).sort()
 const rows = Math.ceil(files.length / columns)
 const layers = []

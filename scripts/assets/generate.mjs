@@ -20,7 +20,7 @@ const option = (name, fallback) => {
 }
 
 const RAW = path.join(ROOT, 'art-raw')
-const OUT = path.join(ROOT, 'public', 'art')
+const OUT = path.join(ROOT, 'art')
 const provider = option('provider', 'mai-image-2.6-flash')
 const parallel = Number(option('parallel', '4'))
 const groups = option('group', '')?.split(',').filter(Boolean)

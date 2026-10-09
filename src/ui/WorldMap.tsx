@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { climates } from '../data'
+import { sprites } from '../render/sprites'
 import type { GameState } from '../sim/state'
 
 const SEA = '#1d4e6b'
@@ -54,13 +55,26 @@ export function WorldMap({ state, activeIsland, onSelect, onClose }: WorldMapPro
         ctx.stroke()
         ctx.setLineDash([])
       }
-      ctx.fillStyle = '#ffffff'
-      ctx.strokeStyle = '#000000'
-      ctx.lineWidth = 1.5 * dpr
-      ctx.beginPath()
-      ctx.arc(sx, sy, 5 * dpr, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.stroke()
+      const image = sprites.get('ships/ship_top')
+      if (image) {
+        // The ship picture points up; turn it towards where the ship is going.
+        const next = ship.path[0]
+        const angle = next ? Math.atan2(next.y - ship.y, next.x - ship.x) + Math.PI / 2 : 0
+        const size = 26 * dpr
+        ctx.save()
+        ctx.translate(sx, sy)
+        ctx.rotate(angle)
+        ctx.drawImage(image, -size / 2, -size / 2, size, size)
+        ctx.restore()
+      } else {
+        ctx.fillStyle = '#ffffff'
+        ctx.strokeStyle = '#000000'
+        ctx.lineWidth = 1.5 * dpr
+        ctx.beginPath()
+        ctx.arc(sx, sy, 5 * dpr, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.stroke()
+      }
     }
 
     ctx.font = `${Math.round(13 * dpr)}px system-ui, sans-serif`
