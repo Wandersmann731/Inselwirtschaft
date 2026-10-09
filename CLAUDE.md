@@ -40,6 +40,10 @@ Das Projekt ist privat und nicht kommerziell.
 - Neu erzeugen: scripts/assets/README.md. Nach Änderungen an art/ immer `node scripts/assets/optimize.mjs` ausführen.
 - Fehlt ein Sprite, zeichnet der Renderer die alten Farbformen als Ersatz.
 
+## Ton
+- MP3 liegen in public/audio (sfx, loops, music) mit index.json. Das Spiel spielt nur, was im Index steht (src/audio). Erzeugen: scripts/assets/README.md.
+- Ton startet erst nach dem ersten Tippen (Browserregel).
+
 ## Befehle
 - npm run dev       Entwicklungsserver
 - npm run build     Produktions-Build (muss fehlerfrei durchlaufen)

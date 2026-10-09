@@ -41,6 +41,9 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
+  // Music is too big to save in advance and is streamed with range requests: always from the network.
+  if (url.pathname.startsWith('/audio/music/')) return
+
   // Everything else: from the saved files first.
   event.respondWith(
     caches.match(request).then(

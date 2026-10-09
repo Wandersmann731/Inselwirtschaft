@@ -7,10 +7,23 @@ export interface Settings {
   waterAnimation: boolean
   /** Smoke over chimneys. */
   smoke: boolean
+  /** Volumes from 0 to 1. */
+  volumeEffects: number
+  volumeAmbience: number
+  volumeMusic: number
+  muted: boolean
 }
 
 const KEY = 'inselwirtschaft:settings'
-const DEFAULTS: Settings = { debug: false, waterAnimation: true, smoke: true }
+const DEFAULTS: Settings = {
+  debug: false,
+  waterAnimation: true,
+  smoke: true,
+  volumeEffects: 0.8,
+  volumeAmbience: 0.6,
+  volumeMusic: 0.4,
+  muted: false,
+}
 
 function load(): Settings {
   try {

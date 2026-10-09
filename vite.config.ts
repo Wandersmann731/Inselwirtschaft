@@ -24,7 +24,7 @@ function serviceWorker(): Plugin {
       const file = path.join(outDir, 'sw.js')
       if (!fs.existsSync(file)) return
       const files = listFiles(outDir)
-        .filter((name) => name !== 'sw.js' && !name.endsWith('.map'))
+        .filter((name) => name !== 'sw.js' && !name.endsWith('.map') && !name.startsWith('audio/music/'))
         .map((name) => `/${name}`)
       const code = fs
         .readFileSync(file, 'utf8')
