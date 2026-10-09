@@ -146,7 +146,9 @@ export class BuildController {
       return
     }
     if (!origin) return
+    const before = this.loop.getIslandState().buildings.length
     this.loop.dispatchIsland((state) => placeBuilding(state, typeId, origin.x, origin.y, rotated))
+    if (this.loop.getIslandState().buildings.length === before) return // not possible here: the ghost stays for another try
     // Production buildings are built one at a time: back to the overview. Houses and the like can follow each other.
     if (getBuilding(typeId).category === 'production') this.cancel()
     else this.set({ ...this.snapshot, center: null, origin: null })
