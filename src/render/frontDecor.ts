@@ -1,6 +1,6 @@
 import { decorForTile, isTall, type DecorItem } from '../world/decor'
 import { hash2 } from '../world/noise2d'
-import { buildingRing } from '../world/surroundings'
+import { surroundRing } from '../world/surroundings'
 import type { IslandState } from '../sim/state'
 
 /** Share of the trees, bushes and rocks next to a building that are kept, and how much smaller they are drawn. */
@@ -29,7 +29,7 @@ function allFrontDecor(state: IslandState): FrontItem[] {
   const hit = cache.get(state.occupancy)
   if (hit && hit.roads === state.roads) return hit.items
   const { map } = state
-  const ring = buildingRing(map, state.occupancy)
+  const ring = surroundRing(map, state.occupancy, state.roads)
   const ctx = {
     map,
     seed: state.id,

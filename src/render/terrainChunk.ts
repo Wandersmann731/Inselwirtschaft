@@ -1,5 +1,5 @@
 import { decorForTile, isTall, type DecorItem } from '../world/decor'
-import { buildingRing } from '../world/surroundings'
+import { surroundRing } from '../world/surroundings'
 import { drawDecor } from './decorDraw'
 import { groundPixel, type GroundTextures } from '../world/ground'
 import { Terrain, type GameMap } from '../world/terrain'
@@ -72,7 +72,7 @@ export function decorOf(ctx: ChunkContext, tiles: number[]): { item: DecorItem; 
     climate: ctx.climate,
     blocked: (x: number, y: number) => ctx.occupancy[y * map.width + x] !== 0 || ctx.roads[y * map.width + x] !== 0,
   }
-  const ring = buildingRing(map, ctx.occupancy)
+  const ring = surroundRing(map, ctx.occupancy, ctx.roads)
   const result: { item: DecorItem; wx: number; wy: number }[] = []
   for (const index of tiles) {
     const tx = index % map.width
