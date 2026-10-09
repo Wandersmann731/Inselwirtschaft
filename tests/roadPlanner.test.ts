@@ -81,6 +81,17 @@ describe('route draft', () => {
     expect(draft.plan?.tiles).toHaveLength(6)
   })
 
+  it('a later tap moves the closer end point, so A can be moved as well as B', () => {
+    const state = testIsland()
+    const draft = tapRoute(state, tapRoute(state, EMPTY_ROUTE, { x: 3, y: 3 }), { x: 12, y: 3 })
+    const nearA = tapRoute(state, draft, { x: 3, y: 8 })
+    expect(nearA.start).toEqual({ x: 3, y: 8 })
+    expect(nearA.end).toEqual({ x: 12, y: 3 })
+    const nearB = tapRoute(state, draft, { x: 11, y: 8 })
+    expect(nearB.start).toEqual({ x: 3, y: 3 })
+    expect(nearB.end).toEqual({ x: 11, y: 8 })
+  })
+
   it('ignores a tap on water', () => {
     expect(tapRoute(testIsland(), EMPTY_ROUTE, { x: 0, y: 0 })).toBe(EMPTY_ROUTE)
   })

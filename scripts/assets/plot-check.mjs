@@ -5,6 +5,12 @@ import path from 'node:path'
 import sharp from 'sharp'
 import { ROOT } from './manifest.mjs'
 
+/** Above this share of empty diamond tips a plot counts as a block instead of a flat diamond. */
+export const TIP_LIMIT = 0.25
+
+/** Below this width a plot counts as a cut-off hexagon instead of a full diamond. */
+export const MIN_WIDTH = 0.8
+
 const BODY = [[150, 150, 150], [182, 182, 182], [226, 226, 226]]
 
 /** Share (0..1) of the canvas that is opaque but lies outside the ground diamond and outside the building block. */
@@ -46,7 +52,49 @@ export async function strayShare(file, guideFile) {
   return { stray: stray / (w * h), opaque: opaque / (w * h) }
 }
 
-if (process.argv[1].endsWith('plot-check.mjs')) {
+/**
+ * Share (0..1) of the canvas that is opaque in the upper left and right corners beside the ground diamond. A flat diamond
+ * leaves them empty; a ground drawn as a block with vertical sides (a "hexagon") fills them.
+ */
+export async function hexShare(file) {
+  const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+  const { width: w, height: h } = info
+  const cx = w / 2
+  const cy = h - w / 2 + w / 4
+  let wedge = 0
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (data[(y * w + x) * 4 + 3] < 128) continue
+      const outside = Math.abs(x - cx) / (w / 2) + Math.abs(y - cy) / (w / 4) > 1.08
+      if (outside && y < cy && Math.abs(x - cx) > w * 0.3) wedge++
+    }
+  }
+  return wedge / (w * h)
+}
+
+/**
+ * How much of the canvas width the ground reaches at the height of the diamond's side corners (0..1). A full diamond
+ * reaches almost all of it; a ground drawn too small, with its corners cut off (a "hexagon"), reaches clearly less.
+ */
+export async function middleWidth(file) {
+  const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+  const { width: w, height: h } = info
+  const cy = Math.round(h - w / 4)
+  let best = 0
+  for (let y = cy - Math.round(w * 0.04); y <= cy + Math.round(w * 0.04); y++) {
+    let left = -1
+    let right = -1
+    for (let x = 0; x < w; x++) {
+      if (data[(y * w + x) * 4 + 3] <= 20) continue
+      if (left < 0) left = x
+      right = x
+    }
+    if (left >= 0) best = Math.max(best, (right - left) / w)
+  }
+  return best
+}
+
+if (process.argv[1]?.endsWith('plot-check.mjs')) {
   const plots = JSON.parse(fs.readFileSync(path.join(ROOT, 'art-raw', 'plot-ids.json'), 'utf8'))
   const rows = []
   for (const id of plots) {
@@ -54,9 +102,13 @@ if (process.argv[1].endsWith('plot-check.mjs')) {
     const file = path.join(ROOT, 'art', 'buildings', `${id}.png`)
     if (!fs.existsSync(file)) continue
     const { stray } = await strayShare(file, path.join(ROOT, 'docs', 'vorlagen', 'buildings', `${base}_guide.png`))
-    rows.push([id, stray])
+    rows.push([id, stray, await middleWidth(file)])
   }
   rows.sort((a, b) => b[1] - a[1])
-  console.log(rows.filter((r) => r[1] > 0.02).length, 'of', rows.length, 'above 2 %')
-  console.log(rows.slice(0, 40).map(([id, v]) => `${id} ${(v * 100).toFixed(1)}%`).join('\n'))
+  console.log(rows.filter((r) => r[1] > 0.02).length, 'of', rows.length, 'above 2 % stray ground')
+  console.log(rows.slice(0, 15).map(([id, v]) => `${id} ${(v * 100).toFixed(1)}%`).join('\n'))
+  rows.sort((a, b) => a[2] - b[2])
+  const narrow = rows.filter((r) => r[2] < MIN_WIDTH)
+  console.log(narrow.length, 'of', rows.length, `narrower than ${MIN_WIDTH * 100} % of the canvas (hexagon)`)
+  console.log(rows.slice(0, 25).map(([id, , v]) => `${id} ${(v * 100).toFixed(0)}%`).join('\n'))
 }

@@ -46,7 +46,7 @@ export function DrawBar({ tool, snapshot, state }: { tool: BuildController; snap
   else if (!route.start) hint = 'Startpunkt antippen (Gebäude oder freie Kachel).'
   else if (!route.end) hint = 'Zielpunkt antippen. Das Spiel schlägt die beste Route vor.'
   else if (count === 0) hint = 'Diese Strecke ist schon gebaut. Ziel neu antippen oder die Route ziehen.'
-  else hint = 'Route ziehen, um sie zu verbiegen. Ziel antippen verschiebt B. Dann „Bauen“.'
+  else hint = 'Route ziehen, um sie zu verbiegen. Antippen verschiebt den näheren Punkt (A oder B). Dann „Bauen“.'
 
   return (
     <div className="place-bar">

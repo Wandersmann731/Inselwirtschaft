@@ -80,7 +80,7 @@ function jobFor(row) {
     if (base.startsWith('house_') || PLOTS.has(base)) {
       job.prompt =
         `Turn the grey diamond on the magenta background into the small flat plot of land of a house, and the grey box into ${desc}. ` +
-        'The plot is flat and ends exactly at the edges of the diamond: no raised slab, no thickness, no earth cross-section, no side walls, no plinth and no outline around the diamond. ' +
+        'The plot is flat and ends exactly at the edges of the diamond: no raised slab, no thickness, no earth cross-section, no side walls, no plinth and no outline around the diamond. The ground covers the whole diamond out to all four corners, including the far left and far right corner: the shape of the ground is a rhombus, never a hexagon and never cut off at the corners. ' +
         'The house stands in the middle of the plot and is clearly smaller than the plot, so that neighbouring houses never touch: the house itself must not reach the corners of the diamond. ' +
         `${STYLE} Keep the flat magenta background (#FF00FF) completely empty and use no magenta or pink colour. No text, no people. Draw no smoke.` +
         (WORKSHOPS.has(base)

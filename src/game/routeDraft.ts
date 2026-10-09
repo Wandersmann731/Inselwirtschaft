@@ -26,12 +26,19 @@ function withPlan(state: IslandState, draft: RouteDraft): RouteDraft {
   return { ...draft, plan: planRoute(state, draft.start, draft.end, draft.via) }
 }
 
-/** A tap sets the start first, then the end. Later taps move the end; waypoints stay. */
+/** A tap sets the start first, then the end. Later taps move whichever end point is closer; waypoints stay. */
 export function tapRoute(state: IslandState, draft: RouteDraft, tile: Tile): RouteDraft {
   if (anchorTiles(state, tile).length === 0) return draft
   if (!draft.start) return { ...draft, start: tile }
-  if (same(draft.start, tile)) return draft
-  const next = withPlan(state, { ...draft, end: tile })
+  if (!draft.end) {
+    if (same(draft.start, tile)) return draft
+    const next = withPlan(state, { ...draft, end: tile })
+    return next.plan?.reachable ? next : draft
+  }
+  const distance = (p: Tile): number => Math.hypot(p.x - tile.x, p.y - tile.y)
+  const moveStart = distance(draft.start) < distance(draft.end)
+  if (same(moveStart ? draft.end : draft.start, tile)) return draft
+  const next = withPlan(state, moveStart ? { ...draft, start: tile } : { ...draft, end: tile })
   return next.plan?.reachable ? next : draft
 }
 
