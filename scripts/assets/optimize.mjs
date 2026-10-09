@@ -34,6 +34,8 @@ for (const file of files) {
   list.push(file.replace(/\.png$/, '.webp'))
 }
 fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(list))
+const padsFile = path.join(SRC, 'pads.json')
+if (fs.existsSync(padsFile)) fs.copyFileSync(padsFile, path.join(OUT, 'pads.json'))
 // favicon from the app icon
 await sharp(path.join(SRC, 'app', 'icon-192.png')).resize(64, 64).png().toFile(path.join(ICONS, 'favicon.png'))
 await sharp(path.join(SRC, 'app', 'icon-512.png')).resize(180, 180).png().toFile(path.join(ICONS, 'apple-touch-icon.png'))

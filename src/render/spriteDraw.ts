@@ -34,11 +34,15 @@ export function placeSprite(
   const def = getBuilding(building.type)
   const rect = buildingRect(building)
   const top = tileToWorld(rect.x, rect.y)
+  const pads = sprites.pads(key)
   const width = image.width * SPRITE_SCALE
   const height = image.height * SPRITE_SCALE
   const [w0, h0] = def.size
-  const rise = height - (w0 + h0) * HALF_H
-  return { image, x: top.x - rect.h * HALF_W, y: top.y - rise, width, height, mirrored: building.rotated && w0 !== h0, rise }
+  const mirrored = building.rotated && w0 !== h0
+  // The footprint box lies inside the picture: `pads` is what the picture has beyond it.
+  const rise = height - (pads.t + pads.b) * SPRITE_SCALE - (w0 + h0) * HALF_H
+  const padLeft = (mirrored ? pads.r : pads.l) * SPRITE_SCALE
+  return { image, x: top.x - rect.h * HALF_W - padLeft, y: top.y - rise - pads.t * SPRITE_SCALE, width, height, mirrored, rise }
 }
 
 export function drawPlacedSprite(ctx: CanvasRenderingContext2D, placed: SpritePlacement, alpha = 1): void {

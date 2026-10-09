@@ -6,6 +6,7 @@
   "minZoom": 0.5,
   "maxZoom": 2,
   "input": { "tapSlopPx": 10, "tapMaxMs": 500, "wheelZoomSpeed": 0.0015 },
+  "roadPlanner": { "newTileCost": 1, "roadTileCost": 0.15, "forestExtraCost": 0.6, "turnPenalty": 0.45, "grabRadius": 1 },
   "island": {
     "minSize": 100,
     "maxSize": 140,

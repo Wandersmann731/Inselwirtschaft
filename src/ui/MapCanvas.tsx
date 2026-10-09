@@ -26,9 +26,13 @@ export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
       onPan: (dx, dy) => renderer.panBy(dx, dy),
       onZoom: (factor, x, y) => renderer.zoomAt(factor, x, y),
       onTap: (x, y) => {
-        if (tool.getSnapshot().mode === 'place') {
+        const { mode, freehand } = tool.getSnapshot()
+        if (mode === 'place') {
           const tile = renderer.tileAt(x, y)
           if (tile) tool.setCenter(tile)
+        } else if (mode === 'road' && !freehand) {
+          const tile = renderer.tileAt(x, y)
+          if (tile) tool.routeTap(tile)
         } else {
           renderer.selectAt(x, y)
           const tile = renderer.tileAt(x, y)
@@ -37,19 +41,25 @@ export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
           tool.selectBuilding(id || null)
         }
       },
+      onGrab: (x, y) => {
+        const tile = renderer.tileAt(x, y)
+        return tile ? tool.routeGrab(tile) : false
+      },
       onStrokeStart: (x, y) => {
         const tile = renderer.tileAt(x, y)
         if (tile) tool.strokeStart(tile)
       },
       onStrokeMove: (x, y) => {
         const tile = renderer.tileAt(x, y)
-        if (tile) tool.strokeMove(tile)
+        if (!tile) return
+        if (tool.grabbing) tool.routeMove(tile)
+        else tool.strokeMove(tile)
       },
-      onStrokeEnd: () => tool.strokeEnd(),
-      onStrokeCancel: () => tool.strokeCancel(),
+      onStrokeEnd: () => (tool.grabbing ? tool.routeRelease() : tool.strokeEnd()),
+      onStrokeCancel: () => (tool.grabbing ? tool.routeRelease() : tool.strokeCancel()),
     })
-    input.setDrawMode(tool.drawing)
-    const unsubscribe = tool.subscribe(() => input.setDrawMode(tool.drawing))
+    input.setMode(tool.inputMode)
+    const unsubscribe = tool.subscribe(() => input.setMode(tool.inputMode))
     return () => {
       onRenderer?.(null)
       unsubscribe()

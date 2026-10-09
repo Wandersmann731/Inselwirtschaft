@@ -6,7 +6,16 @@ export function spriteUrl(key: string): string {
   return `${BASE}${key}.webp`
 }
 
+/** Extra border of a building picture beyond its footprint box, in picture pixels (see scripts/assets). */
+export interface Pads {
+  l: number
+  r: number
+  t: number
+  b: number
+}
+
 class SpriteStore {
+  private padData: Record<string, Pads> = {}
   private images = new Map<string, HTMLImageElement>()
   /** True once loading finished (also if some sprites are missing: drawing then falls back to colour shapes). */
   ready = false
@@ -20,6 +29,11 @@ class SpriteStore {
     } catch {
       this.ready = true
       return
+    }
+    try {
+      this.padData = (await (await fetch(`${BASE}pads.json`)).json()) as Record<string, Pads>
+    } catch {
+      this.padData = {}
     }
     const loading = keys.map(
       (key) =>
@@ -35,6 +49,11 @@ class SpriteStore {
     )
     await Promise.race([Promise.all(loading), new Promise((resolve) => setTimeout(resolve, timeoutMs))])
     this.ready = true
+  }
+
+  /** Border of a picture beyond the footprint box. Pictures without an entry have none. */
+  pads(key: string): Pads {
+    return this.padData[key.replace(/^buildings\//, '')] ?? { l: 0, r: 0, t: 0, b: 0 }
   }
 
   get(key: string): HTMLImageElement | undefined {

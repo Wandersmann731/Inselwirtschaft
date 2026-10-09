@@ -78,7 +78,7 @@ RUIN_VARIANTS = 4
 FIELD_VARIANTS = 4  # extra pictures for often built field buildings and workshops (variant 1 is the plain id)
 WORKSHOP_IDS = ["brewery", "saltworks", "butcher", "hunting_lodge", "marble_mason", "weaver", "bakery", "mill", "stonemason", "smelter", "toolmaker", "distillery", "tannery", "tobacco_factory", "dyer", "oil_boiler", "goldsmith", "market_house"]
 PLOT_IDS = ["forester", "fishery", "quarry", "ore_mine", "salt_mine", "gold_mine", "gem_mine", "marble_quarry"] + WORKSHOP_IDS  # workshops that stand on a small plot like a house
-VARIANT_BUILDINGS = list(FARM_IDS) + PLOT_IDS
+VARIANT_BUILDINGS = list(FARM_IDS) + ["forester", "fishery"]
 
 # Per tier: the kind of house and lists the variants pick from. Every variant mixes one entry of each list
 # (stepping through the lists with different strides), so no two of the 16 look alike.

@@ -3,7 +3,7 @@ import { buildingRect, suppliedHouses, tilesInRadius } from '../sim/coverage'
 import { checkPlacement, checkRoad, footprint } from '../sim/build'
 import type { IslandState, PlacedBuilding } from '../sim/state'
 import type { ToolSnapshot } from '../game/buildController'
-import { tileToWorld } from './iso'
+import { HALF_H, tileToWorld } from './iso'
 import { drawPlacedSprite, placeSprite } from './spriteDraw'
 import { ghostKey } from './spriteKeys'
 import { boxHeight, drawBox, rectPath, type TileRect } from './shapes'
@@ -12,6 +12,7 @@ import { diamondPath } from './terrainStyle'
 const VALID = 'rgba(80, 220, 110, 0.5)'
 const INVALID = 'rgba(235, 70, 70, 0.55)'
 const COVERAGE = 'rgba(90, 200, 255, 0.3)'
+const EXISTING = 'rgba(90, 170, 255, 0.45)'
 const SUPPLIED = 'rgba(120, 255, 160, 0.45)'
 
 interface CoverageCache {
@@ -27,6 +28,7 @@ export class OverlayRenderer {
 
   draw(ctx: CanvasRenderingContext2D, state: IslandState, tool: ToolSnapshot): void {
     if (tool.mode === 'place' && tool.typeId && tool.origin) this.drawGhost(ctx, state, tool)
+    else if (tool.mode === 'road' && !tool.freehand) this.drawRoute(ctx, tool, state)
     else if (tool.stroke.length > 0) this.drawStroke(ctx, state, tool)
     else if (tool.mode === 'none' && tool.selectedBuildingId !== null) this.drawSelectedBuilding(ctx, state, tool)
   }
@@ -103,6 +105,42 @@ export class OverlayRenderer {
       rectPath(ctx, buildingRect(house))
       ctx.fill()
       ctx.stroke()
+    }
+  }
+
+  /** The planned road: new tiles green, tiles that already have a road blue, and the handles to pull on. */
+  private drawRoute(ctx: CanvasRenderingContext2D, tool: ToolSnapshot, _state: IslandState): void {
+    const { start, end, via, plan } = tool.route
+    if (plan) {
+      const fresh = new Set(plan.newTiles.map((t) => `${t.x},${t.y}`))
+      for (const tile of plan.tiles) {
+        const top = tileToWorld(tile.x, tile.y)
+        diamondPath(ctx, top.x, top.y, 0.5)
+        ctx.fillStyle = fresh.has(`${tile.x},${tile.y}`) ? VALID : EXISTING
+        ctx.fill()
+      }
+    }
+    for (const point of via) this.drawHandle(ctx, point, '', '#ffffff', 9)
+    if (start) this.drawHandle(ctx, start, 'A', '#3d8bff', 15)
+    if (end) this.drawHandle(ctx, end, 'B', '#ff8a2a', 15)
+  }
+
+  private drawHandle(ctx: CanvasRenderingContext2D, tile: { x: number; y: number }, label: string, color: string, radius: number): void {
+    const top = tileToWorld(tile.x, tile.y)
+    const y = top.y + HALF_H
+    ctx.beginPath()
+    ctx.arc(top.x, y, radius, 0, Math.PI * 2)
+    ctx.fillStyle = color
+    ctx.fill()
+    ctx.lineWidth = 3
+    ctx.strokeStyle = '#1b1b1b'
+    ctx.stroke()
+    if (label) {
+      ctx.fillStyle = '#ffffff'
+      ctx.font = 'bold 16px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(label, top.x, y + 1)
     }
   }
 

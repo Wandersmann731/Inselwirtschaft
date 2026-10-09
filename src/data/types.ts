@@ -166,6 +166,18 @@ export interface WorldConfig {
   minZoom: number
   maxZoom: number
   input: { tapSlopPx: number; tapMaxMs: number; wheelZoomSpeed: number }
+  roadPlanner: {
+    /** Path cost of a free tile that needs a new road. */
+    newTileCost: number
+    /** Path cost of a tile that already has a road (reusing it is free of charge). */
+    roadTileCost: number
+    /** Extra cost of clearing a forest tile. */
+    forestExtraCost: number
+    /** Extra cost per turn, so routes prefer long straight lines. */
+    turnPenalty: number
+    /** How close (in tiles) a touch has to be to the route or a handle to grab it. */
+    grabRadius: number
+  }
   sea: {
     /** Island tiles per cell of the world map. */
     cellTiles: number
