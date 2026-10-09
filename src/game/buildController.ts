@@ -1,5 +1,6 @@
 import { getBuilding } from '../data'
 import { footprint, demolishTiles, placeBuilding, placeRoads } from '../sim/build'
+import { setBuildingActive } from '../sim/production'
 import type { GameLoop } from './gameLoop'
 import { strokeLine, type Tile } from './stroke'
 
@@ -17,9 +18,19 @@ export interface ToolSnapshot {
   origin: Tile | null
   /** Tiles touched by the current drag (modes 'road' and 'demolish'). */
   stroke: Tile[]
+  /** Building whose info panel is open (mode 'none'). */
+  selectedBuildingId: number | null
 }
 
-const IDLE: ToolSnapshot = { mode: 'none', typeId: null, center: null, rotated: false, origin: null, stroke: [] }
+const IDLE: ToolSnapshot = {
+  mode: 'none',
+  typeId: null,
+  center: null,
+  rotated: false,
+  origin: null,
+  stroke: [],
+  selectedBuildingId: null,
+}
 
 /**
  * Holds the current build tool (placing a building, drawing roads, demolishing) and turns
@@ -60,6 +71,17 @@ export class BuildController {
 
   cancel(): void {
     this.set(IDLE)
+  }
+
+  /** Opens or closes the info panel of a building. Only works while no build tool is active. */
+  selectBuilding(id: number | null): void {
+    if (this.snapshot.mode !== 'none' || this.snapshot.selectedBuildingId === id) return
+    this.set({ ...this.snapshot, selectedBuildingId: id })
+  }
+
+  /** Switches a building on or off (shut down). */
+  setActive(id: number, active: boolean): void {
+    this.loop.dispatch((state) => setBuildingActive(state, id, active))
   }
 
   rotate(): void {

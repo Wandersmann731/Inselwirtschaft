@@ -1,6 +1,7 @@
 import { goods } from '../data'
 import type { BuildingCost } from '../data'
 import type { PlacementError } from '../sim/build'
+import type { ProductionStatus } from '../sim/state'
 
 const RESOURCE_NAMES: Record<string, string> = {
   coins: 'Münzen',
@@ -38,4 +39,22 @@ export function formatCost(cost: BuildingCost): string {
     .filter((id) => (cost[id as keyof BuildingCost] ?? 0) > 0)
     .map((id) => `${resourceName(id)} ${cost[id as keyof BuildingCost]}`)
     .join(' · ')
+}
+
+/** German text for the state of a producing building. */
+export function statusText(status: ProductionStatus): string {
+  switch (status.kind) {
+    case 'producing':
+      return 'Produziert'
+    case 'waiting':
+      return `Wartet auf ${resourceName(status.good ?? '')}`
+    case 'outputFull':
+      return 'Lager voll'
+    case 'noRoad':
+      return 'Keine Straße'
+    case 'noHub':
+      return 'Kein Markthaus oder Kontor in Reichweite'
+    case 'inactive':
+      return 'Stillgelegt'
+  }
 }

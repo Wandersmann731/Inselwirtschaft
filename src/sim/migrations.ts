@@ -1,5 +1,6 @@
-import { config } from '../data'
+import { config, getBuilding } from '../data'
 import { generateIsland } from '../world/islandGenerator'
+import { createProduction } from './productionState'
 import { CURRENT_SAVE_VERSION, type GameState } from './state'
 
 type RawState = Record<string, unknown>
@@ -22,6 +23,13 @@ export const MIGRATIONS: Record<number, Migration> = {
       roads: new Array(tileCount).fill(0),
     }
   },
+  // v4 gives producing buildings their production state.
+  3: (data) => ({
+    ...data,
+    buildings: (data.buildings as { type: string }[]).map((building) =>
+      getBuilding(building.type).output ? { ...building, production: createProduction() } : building,
+    ),
+  }),
 }
 
 /** Brings a raw saved object up to the current version or throws if that is impossible. */

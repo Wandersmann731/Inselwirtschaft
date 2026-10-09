@@ -11,6 +11,16 @@ export interface GameConfig {
   startStock: Record<string, number>
   /** Share of the building cost paid back on demolition. */
   refundRate: number
+  production: {
+    /** Input buffer of a producer, in multiples of what one cycle needs. */
+    inputBufferCycles: number
+    /** Output buffer of a producer, in goods. */
+    outputBufferAmount: number
+    /** Delivery time per road tile between producer and market house or Kontor. */
+    ticksPerRoadTile: number
+    /** Most of one good the island store accepts from producers. */
+    stockCapacity: number
+  }
 }
 
 export interface GoodDef {
@@ -50,6 +60,8 @@ export interface BuildingDef {
   color: string
   /** Supply radius in tiles, measured from the building edge. */
   radius?: number
+  /** Market houses and Kontore: producers within this many tiles of the edge deliver to them. */
+  catchment?: number
   /** Roads are stored in the road layer instead of as buildings. */
   kind?: 'road'
   inputs?: BuildingInput[]

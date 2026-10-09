@@ -16,11 +16,39 @@
     "name": "Marmor"
   },
   {
+    "id": "stone",
+    "name": "Naturstein"
+  },
+  {
+    "id": "ore",
+    "name": "Eisenerz"
+  },
+  {
+    "id": "iron",
+    "name": "Eisen"
+  },
+  {
     "id": "wool",
     "name": "Wolle"
   },
   {
+    "id": "cotton",
+    "name": "Baumwolle"
+  },
+  {
     "id": "cloth",
     "name": "Stoffe"
+  },
+  {
+    "id": "grain",
+    "name": "Getreide"
+  },
+  {
+    "id": "flour",
+    "name": "Mehl"
+  },
+  {
+    "id": "food",
+    "name": "Nahrung"
   }
 ]

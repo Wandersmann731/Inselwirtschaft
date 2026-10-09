@@ -76,4 +76,30 @@ describe('BuildController', () => {
     expect(tool.getSnapshot().mode).toBe('none')
     expect(tool.drawing).toBe(false)
   })
+
+  it('selects a building only while no tool is active', () => {
+    const { tool } = setup()
+    tool.selectBuilding(3)
+    expect(tool.getSnapshot().selectedBuildingId).toBe(3)
+    tool.startRoads()
+    expect(tool.getSnapshot().selectedBuildingId).toBeNull()
+    tool.selectBuilding(4)
+    expect(tool.getSnapshot().selectedBuildingId).toBeNull()
+    tool.cancel()
+    tool.selectBuilding(4)
+    tool.selectBuilding(null)
+    expect(tool.getSnapshot().selectedBuildingId).toBeNull()
+  })
+
+  it('shuts a building down and starts it again', () => {
+    const { loop, tool } = setup()
+    tool.startPlacing('forester')
+    tool.setCenter({ x: 5, y: 5 })
+    tool.confirm()
+    const id = loop.getState().buildings[0].id
+    tool.setActive(id, false)
+    expect(loop.getState().buildings[0].active).toBe(false)
+    tool.setActive(id, true)
+    expect(loop.getState().buildings[0].active).toBe(true)
+  })
 })

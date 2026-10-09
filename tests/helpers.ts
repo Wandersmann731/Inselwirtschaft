@@ -44,3 +44,11 @@ export function testIsland(overrides: Partial<GameState> = {}): GameState {
     overrides,
   )
 }
+
+/** A flat grass map of the given size, handy for logistics tests. */
+export function grassField(width: number, height: number, overrides: Partial<GameState> = {}): GameState {
+  return stateFromRows(
+    Array.from({ length: height }, () => ','.repeat(width)),
+    overrides,
+  )
+}

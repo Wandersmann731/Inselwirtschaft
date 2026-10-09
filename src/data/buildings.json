@@ -206,7 +206,12 @@
     "unlockTier": "pioneers",
     "placement": "land",
     "color": "#2f6b2f",
-    "needsRoad": true
+    "needsRoad": true,
+    "output": {
+      "good": "wood",
+      "amount": 1
+    },
+    "cycleTicks": 30
   },
   {
     "id": "quarry",
@@ -227,7 +232,12 @@
     "unlockTier": "pioneers",
     "placement": "mountain",
     "color": "#7f7f8c",
-    "needsRoad": true
+    "needsRoad": true,
+    "output": {
+      "good": "stone",
+      "amount": 1
+    },
+    "cycleTicks": 30
   },
   {
     "id": "ore_mine",
@@ -248,7 +258,12 @@
     "unlockTier": "settlers",
     "placement": "mountain",
     "color": "#4a4a55",
-    "needsRoad": true
+    "needsRoad": true,
+    "output": {
+      "good": "ore",
+      "amount": 1
+    },
+    "cycleTicks": 40
   },
   {
     "id": "weaver",
@@ -281,6 +296,278 @@
       "amount": 1
     },
     "cycleTicks": 30,
+    "needsRoad": true
+  },
+  {
+    "id": "sheep_farm",
+    "name": "Schaffarm",
+    "category": "production",
+    "size": [3, 3],
+    "cost": {
+      "tools": 1,
+      "wood": 4,
+      "bricks": 0,
+      "marble": 0,
+      "coins": 200
+    },
+    "upkeep": {
+      "active": 15,
+      "idle": 4
+    },
+    "unlockTier": "pioneers",
+    "placement": "land",
+    "color": "#d8d4c4",
+    "output": {
+      "good": "wool",
+      "amount": 1
+    },
+    "cycleTicks": 40,
+    "needsRoad": true
+  },
+  {
+    "id": "cotton_plantation",
+    "name": "Baumwollplantage",
+    "category": "production",
+    "size": [3, 3],
+    "cost": {
+      "tools": 1,
+      "wood": 4,
+      "bricks": 0,
+      "marble": 0,
+      "coins": 300
+    },
+    "upkeep": {
+      "active": 20,
+      "idle": 5
+    },
+    "unlockTier": "pioneers",
+    "placement": "land",
+    "color": "#efe9f5",
+    "output": {
+      "good": "cotton",
+      "amount": 1
+    },
+    "cycleTicks": 40,
+    "needsRoad": true
+  },
+  {
+    "id": "fishery",
+    "name": "Fischerei",
+    "category": "production",
+    "size": [2, 2],
+    "cost": {
+      "tools": 1,
+      "wood": 3,
+      "bricks": 0,
+      "marble": 0,
+      "coins": 150
+    },
+    "upkeep": {
+      "active": 8,
+      "idle": 2
+    },
+    "unlockTier": "pioneers",
+    "placement": "coast",
+    "color": "#3f8fb5",
+    "output": {
+      "good": "food",
+      "amount": 1
+    },
+    "cycleTicks": 30,
+    "needsRoad": true
+  },
+  {
+    "id": "grain_farm",
+    "name": "Getreidefarm",
+    "category": "production",
+    "size": [3, 3],
+    "cost": {
+      "tools": 1,
+      "wood": 4,
+      "bricks": 0,
+      "marble": 0,
+      "coins": 200
+    },
+    "upkeep": {
+      "active": 15,
+      "idle": 4
+    },
+    "unlockTier": "pioneers",
+    "placement": "land",
+    "color": "#d9c24a",
+    "output": {
+      "good": "grain",
+      "amount": 1
+    },
+    "cycleTicks": 40,
+    "needsRoad": true
+  },
+  {
+    "id": "mill",
+    "name": "Mühle",
+    "category": "production",
+    "size": [2, 2],
+    "cost": {
+      "tools": 2,
+      "wood": 5,
+      "bricks": 0,
+      "marble": 0,
+      "coins": 300
+    },
+    "upkeep": {
+      "active": 15,
+      "idle": 4
+    },
+    "unlockTier": "pioneers",
+    "placement": "land",
+    "color": "#b8956a",
+    "inputs": [
+      {
+        "good": "grain",
+        "amount": 1
+      }
+    ],
+    "output": {
+      "good": "flour",
+      "amount": 1
+    },
+    "cycleTicks": 20,
+    "needsRoad": true
+  },
+  {
+    "id": "bakery",
+    "name": "Bäckerei",
+    "category": "production",
+    "size": [2, 2],
+    "cost": {
+      "tools": 2,
+      "wood": 4,
+      "bricks": 0,
+      "marble": 0,
+      "coins": 300
+    },
+    "upkeep": {
+      "active": 20,
+      "idle": 5
+    },
+    "unlockTier": "pioneers",
+    "placement": "land",
+    "color": "#d98c5f",
+    "inputs": [
+      {
+        "good": "flour",
+        "amount": 1
+      }
+    ],
+    "output": {
+      "good": "food",
+      "amount": 1
+    },
+    "cycleTicks": 20,
+    "needsRoad": true
+  },
+  {
+    "id": "stonemason",
+    "name": "Steinmetz",
+    "category": "production",
+    "size": [2, 2],
+    "cost": {
+      "tools": 2,
+      "wood": 4,
+      "bricks": 0,
+      "marble": 0,
+      "coins": 300
+    },
+    "upkeep": {
+      "active": 20,
+      "idle": 5
+    },
+    "unlockTier": "pioneers",
+    "placement": "land",
+    "color": "#9a8f86",
+    "inputs": [
+      {
+        "good": "stone",
+        "amount": 1
+      }
+    ],
+    "output": {
+      "good": "bricks",
+      "amount": 1
+    },
+    "cycleTicks": 30,
+    "needsRoad": true
+  },
+  {
+    "id": "smelter",
+    "name": "Erzschmelze",
+    "category": "production",
+    "size": [3, 3],
+    "cost": {
+      "tools": 3,
+      "wood": 6,
+      "bricks": 5,
+      "marble": 0,
+      "coins": 600
+    },
+    "upkeep": {
+      "active": 40,
+      "idle": 10
+    },
+    "unlockTier": "pioneers",
+    "placement": "land",
+    "color": "#8a3b2a",
+    "inputs": [
+      {
+        "good": "ore",
+        "amount": 1
+      },
+      {
+        "good": "wood",
+        "amount": 1
+      }
+    ],
+    "output": {
+      "good": "iron",
+      "amount": 1
+    },
+    "cycleTicks": 40,
+    "needsRoad": true
+  },
+  {
+    "id": "toolmaker",
+    "name": "Werkzeugmacher",
+    "category": "production",
+    "size": [2, 2],
+    "cost": {
+      "tools": 2,
+      "wood": 5,
+      "bricks": 0,
+      "marble": 0,
+      "coins": 400
+    },
+    "upkeep": {
+      "active": 30,
+      "idle": 8
+    },
+    "unlockTier": "pioneers",
+    "placement": "land",
+    "color": "#5a6b7a",
+    "inputs": [
+      {
+        "good": "iron",
+        "amount": 1
+      },
+      {
+        "good": "wood",
+        "amount": 1
+      }
+    ],
+    "output": {
+      "good": "tools",
+      "amount": 1
+    },
+    "cycleTicks": 40,
     "needsRoad": true
   },
   {
@@ -322,6 +609,28 @@
     },
     "unlockTier": "pioneers",
     "placement": "coast",
-    "color": "#4f7cac"
+    "color": "#4f7cac",
+    "catchment": 25
+  },
+  {
+    "id": "market_house",
+    "name": "Markthaus",
+    "category": "infrastructure",
+    "size": [3, 3],
+    "cost": {
+      "tools": 2,
+      "wood": 5,
+      "bricks": 0,
+      "marble": 0,
+      "coins": 250
+    },
+    "upkeep": {
+      "active": 15,
+      "idle": 4
+    },
+    "unlockTier": "pioneers",
+    "placement": "land",
+    "color": "#c0504d",
+    "catchment": 20
   }
 ]

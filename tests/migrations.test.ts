@@ -67,3 +67,20 @@ describe('migration from version 2', () => {
     expect(migrated.roads.every((v) => v === 0)).toBe(true)
   })
 })
+
+describe('migration from version 3', () => {
+  it('gives producing buildings a production state and leaves others alone', () => {
+    const map = generateIsland(5)
+    const building = (id: number, type: string) => ({ id, type, x: id, y: id, rotated: false, active: true })
+    const v3 = {
+      ...createInitialState(5),
+      version: 3,
+      buildings: [building(1, 'forester'), building(2, 'house_pioneers')],
+      nextBuildingId: 3,
+    }
+    const migrated = migrateState({ ...v3, map })
+    expect(migrated.version).toBe(CURRENT_SAVE_VERSION)
+    expect(migrated.buildings[0].production).toBeDefined()
+    expect(migrated.buildings[1].production).toBeUndefined()
+  })
+})
