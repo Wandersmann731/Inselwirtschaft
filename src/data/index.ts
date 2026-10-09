@@ -14,3 +14,12 @@ export const buildings: BuildingDef[] = buildingsJson as BuildingDef[]
 export const tiers: TierDef[] = tiersJson as TierDef[]
 export const climates: ClimateDef[] = climatesJson
 export const world: WorldConfig = worldJson
+
+const buildingMap = new Map(buildings.map((def) => [def.id, def]))
+
+/** Looks up a building definition. Throws for unknown ids so data errors fail loudly. */
+export function getBuilding(id: string): BuildingDef {
+  const def = buildingMap.get(id)
+  if (!def) throw new Error(`Unknown building type: ${id}`)
+  return def
+}

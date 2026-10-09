@@ -8,6 +8,9 @@ export interface GameConfig {
   maxTicksPerUpdate: number
   economyCycleTicks: number
   autosaveSeconds: number
+  startStock: Record<string, number>
+  /** Share of the building cost paid back on demolition. */
+  refundRate: number
 }
 
 export interface GoodDef {
@@ -21,17 +24,38 @@ export interface BuildingInput {
   alternatives?: string[]
 }
 
+export type BuildingCategory = 'housing' | 'public' | 'production' | 'infrastructure'
+
+/** Where a building may stand: any buildable land, only on mountain tiles, or at the shore. */
+export type PlacementRule = 'land' | 'mountain' | 'coast'
+
+export interface BuildingCost {
+  tools: number
+  wood: number
+  bricks: number
+  marble: number
+  coins: number
+}
+
 export interface BuildingDef {
   id: string
   name: string
+  category: BuildingCategory
   size: [number, number]
-  cost: { tools: number; wood: number; bricks: number; marble: number; coins: number }
+  cost: BuildingCost
   upkeep: { active: number; idle: number }
   unlockTier: string
-  inputs: BuildingInput[]
-  output: { good: string; amount: number }
-  cycleTicks: number
-  needsRoad: boolean
+  placement: PlacementRule
+  /** Placeholder colour until real sprites exist. */
+  color: string
+  /** Supply radius in tiles, measured from the building edge. */
+  radius?: number
+  /** Roads are stored in the road layer instead of as buildings. */
+  kind?: 'road'
+  inputs?: BuildingInput[]
+  output?: { good: string; amount: number }
+  cycleTicks?: number
+  needsRoad?: boolean
 }
 
 export interface TierDef {

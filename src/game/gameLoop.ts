@@ -47,6 +47,14 @@ export class GameLoop {
     this.emit()
   }
 
+  /** Applies a player command (a pure state transformation), e.g. building something. */
+  dispatch(command: (state: GameState) => GameState): void {
+    const next = command(this.state)
+    if (next === this.state) return
+    this.state = next
+    this.emit()
+  }
+
   /** Replaces the whole state, e.g. after loading a save. */
   replaceState(state: GameState): void {
     this.state = state
