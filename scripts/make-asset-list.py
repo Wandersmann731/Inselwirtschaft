@@ -191,7 +191,34 @@ APP = [
     ("logo", "App", "app/logo.png", "1024x256", "-", "title logo reading Inselwirtschaft in a bold carved wooden sign style with a small anchor, transparent background, the only picture that may contain text"),
 ]
 
-groups = [rows, terrain_rows, roads, goods_rows, tier_rows, ui_rows, other, effects, APP]
+# natural terrain: objects that are scattered over the ground and the textures of the ground itself
+DECOR = [
+    ("tree", 4, (128, 160), "single round-crowned broadleaf tree with a short trunk and dense green leaves, a different crown shape and shade of green each time"),
+    ("pine", 3, (96, 176), "single tall conifer (spruce) tree with layered dark green branches, a different shape each time"),
+    ("palm", 2, (128, 176), "single tropical palm tree with a slightly curved trunk and a fan of green fronds"),
+    ("bush", 3, (96, 72), "single small green bush with a few berries or small flowers"),
+    ("rock", 3, (96, 72), "single grey boulder with a few small stones around it"),
+    ("tuft", 3, (48, 40), "small tuft of tall green grass blades"),
+    ("flowers", 2, (64, 48), "small patch of wildflowers in red, yellow and white with green leaves"),
+    ("pebbles", 2, (64, 40), "few smooth beach pebbles and one shell"),
+    ("peak_small", 3, (192, 160), "single small rocky grey mountain peak with jagged ridges and a few boulders at its base"),
+    ("peak_medium", 3, (288, 240), "single medium rocky grey mountain peak with jagged ridges, sunlit left side and shadowed right side, boulders at its base"),
+    ("peak_large", 3, (416, 352), "single large rocky grey-brown mountain with several rocky summits and steep cliffs, sunlit left side and shadowed right side, boulders at its base"),
+    ("peak_snow", 2, (416, 384), "single large grey mountain with a snow-covered summit and steep rocky cliffs, sunlit left side and shadowed right side, boulders at its base"),
+]
+decor_rows = []
+for name, count, (dw, dh), desc in DECOR:
+    for i in range(1, count + 1):
+        decor_rows.append((f"decor_{name}_{i}", "Gelände-Dekor", f"decor/{name}_{i}.png", f"{dw}x{dh}", "-", f"{desc}, variant {i} of {count}"))
+GROUND = [
+    ("grass", "seamless top-down ground texture of lush green grass with soft lighter and darker patches and tiny blades, low contrast, no flowers, no objects, no large features"),
+    ("forest", "seamless top-down ground texture of a dark green forest floor with moss, fallen leaves and soil, low contrast, no trees, no large features"),
+    ("sand", "seamless top-down ground texture of pale beach sand with fine ripples, low contrast, no stones, no large features"),
+    ("rock", "seamless top-down ground texture of grey-brown rocky ground with small stones and fine cracks, low contrast, no large features"),
+]
+ground_rows = [(f"ground_{name}", "Bodentexturen", f"ground/{name}.png", "512x512", "-", desc) for name, desc in GROUND]
+
+groups = [rows, terrain_rows, roads, goods_rows, tier_rows, ui_rows, other, effects, APP, decor_rows, ground_rows]
 
 # --- CSV ------------------------------------------------------------------------------------------
 out_dir = ROOT / "docs"
@@ -201,7 +228,15 @@ with (out_dir / "grafiken.csv").open("w", newline="", encoding="utf-8") as f:
     for group in groups:
         for rid, g, fn, size, foot, desc in group:
             kind = "icon" if fn.startswith("icons/") else "building"
-            if fn.startswith("app/") and rid in ("icon_512", "icon_maskable_512", "icon_192", "splash", "logo"):
+            if fn.startswith("decor/"):
+                kind = "decor"
+            if fn.startswith("ground/"):
+                kind = "ground"
+            if kind == "decor":
+                prompt = f"{desc}, isolated game sprite in isometric 3/4 view looking down at 30 degrees, centred, clean dark-brown outline, hand-painted cel-shaded, soft saturated colours, light from the top left, no ground, no cast shadow, plain flat magenta background (#FF00FF), no text, no watermark"
+            elif kind == "ground":
+                prompt = f"{desc}, hand-painted, fills the whole square image edge to edge, orthographic view straight from above, no text, no border"
+            elif fn.startswith("app/") and rid in ("icon_512", "icon_maskable_512", "icon_192", "splash", "logo"):
                 prompt = f"{desc}, polished game key art, hand-painted cel-shaded style"
             else:
                 prompt = full_prompt(desc, kind)
@@ -251,6 +286,8 @@ for group in groups:
     for item in group:
         by_group.setdefault(item[1], []).append(item)
 notes = {
+    "Gelände-Dekor": "Einzelne Objekte (Bäume, Felsen, Berggipfel, Gras), die das Spiel zufällig über den Boden verteilt. So entstehen große, natürliche Flächen ohne Wiederholungsmuster. Der Fußpunkt des Objekts liegt unten in der Bildmitte. Jedes Objekt steht einzeln auf magenta Hintergrund, ohne Boden und ohne Schatten.",
+    "Bodentexturen": "Nahtlose Draufsicht-Texturen für den Boden zwischen den Objekten. Sie müssen kontrastarm sein, damit man keine Wiederholung sieht.",
     "Gelände": "Jede Kachel ist eine **nahtlose Raute** (128 x 64 px), außerhalb der Raute transparent. Die Varianten sollen sich nur im Detail unterscheiden, damit das Muster nicht auffällt. Wasser besteht aus 8 Bildern einer nahtlosen Wellen-Schleife. Wald: Bäume bleiben innerhalb der Raute.",
     "Straßen": "16 Kacheln für alle Verbindungen. Die Namen zeigen die Richtungen, in die die Straße weitergeht: n = oben rechts, e = unten rechts, s = unten links, w = oben links (auf dem Bildschirm). Die Arme enden genau in der Mitte der Rautenkante, damit sie an Nachbarkacheln anschließen.",
     "Wohnhäuser": "Alle Wohnhäuser stehen auf 2x2 Kacheln. Die fünf Stufen sollen sich klar in Größe und Pracht unterscheiden, so dass man sie am Handy auf einen Blick erkennt. Dazu kommt die Ruine.",
@@ -261,7 +298,7 @@ notes = {
     "Effekte": "Rauch gehört zu Gebäuden mit Schornstein (Bäckerei, Erzschmelze, Brennerei, Trankocherei, Werkzeugmacher). Das Gerüst wird beim Bauen gezeigt.",
     "App": "Für die Installation als App auf dem Startbildschirm und den Startbildschirm des Spiels.",
 }
-order_groups = ["Gelände", "Straßen", "Wohnhäuser", "Marktstände", "Öffentliche Gebäude", "Produktionsbetriebe", "Infrastruktur", "Warensymbole", "Stufensymbole", "Oberfläche", "Schiffe", "Effekte", "App"]
+order_groups = ["Gelände-Dekor", "Bodentexturen", "Gelände", "Straßen", "Wohnhäuser", "Marktstände", "Öffentliche Gebäude", "Produktionsbetriebe", "Infrastruktur", "Warensymbole", "Stufensymbole", "Oberfläche", "Schiffe", "Effekte", "App"]
 for name in order_groups:
     table(name, by_group[name], notes.get(name))
 

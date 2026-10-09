@@ -80,8 +80,8 @@ export interface BuildingDef {
   radius?: number
   /** Market houses and Kontore: producers within this many tiles of the edge deliver to them. */
   catchment?: number
-  /** Shows a column of smoke while the building produces. */
-  smoke?: boolean
+  /** Shows a column of smoke while the building produces. Where the chimney opens, as a share of the picture: [from left, from top]. */
+  smoke?: [number, number]
   /** The island must have this fertility (from its climate zone). */
   requiresFertility?: string
   /** The island must have this mineral deposit; the building stands on the mountains. */

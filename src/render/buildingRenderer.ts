@@ -62,7 +62,7 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
     if (placed) {
       drawPlacedSprite(ctx, placed)
       dotHeight = placed.rise * 0.8
-      if (def.smoke && building.production?.status.kind === 'producing') drawSmoke(ctx, placed, rect, now)
+      if (def.smoke && building.production?.status.kind === 'producing') drawSmoke(ctx, placed, def.smoke, now)
     } else {
       dotHeight = house ? houseHeight(house) : boxHeight(rect, def.category)
       drawBox(ctx, rect, dotHeight, house ? houseColor(house) : def.color)
@@ -72,14 +72,17 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
   }
 }
 
-/** A column of smoke above the roof, looping. */
-function drawSmoke(ctx: CanvasRenderingContext2D, placed: SpritePlacement, rect: TileRect, now: number): void {
+/** A column of smoke that rises from the chimney, looping. `chimney` is the opening as a share of the building picture. */
+function drawSmoke(ctx: CanvasRenderingContext2D, placed: SpritePlacement, chimney: [number, number], now: number): void {
   const image = sprites.get(smokeKey(Math.floor(now / 100)))
   if (!image) return
-  const center = tileToWorld(rect.x + rect.w / 2, rect.y + rect.h / 2)
   const width = image.width / 2
   const height = image.height / 2
-  ctx.drawImage(image, center.x - width / 2, placed.y + placed.height * 0.3 - height, width, height)
+  const fromLeft = placed.mirrored ? 1 - chimney[0] : chimney[0]
+  const x = placed.x + fromLeft * placed.width
+  const y = placed.y + chimney[1] * placed.height
+  // The first puff of the smoke picture starts about 15 px above its bottom edge, in the middle.
+  ctx.drawImage(image, x - width / 2, y - height + 15, width, height)
 }
 
 /** Status colours of producers: green runs, yellow waits for goods, orange is full, red is cut off. */

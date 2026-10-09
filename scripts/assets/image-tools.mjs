@@ -358,3 +358,32 @@ export async function smokeFrame(puffFiles, frame, frames, width = 128, height =
     .toBuffer()
   return sharp(big).extract({ left: margin, top: margin, width, height }).png().toBuffer()
 }
+
+/** Pulls the edge of the cut-out in by `passes` pixels, which removes the last pink fringe of the old background. */
+export async function shrinkMatte(image, passes = 1) {
+  const { data, info } = await image.clone().ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+  const { width, height } = info
+  let alpha = new Uint8Array(width * height)
+  for (let i = 0; i < alpha.length; i++) alpha[i] = data[i * 4 + 3]
+  for (let pass = 0; pass < passes; pass++) {
+    const next = new Uint8Array(alpha)
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        let min = alpha[y * width + x]
+        for (let dy = -1; dy <= 1 && min > 0; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            const nx = x + dx
+            const ny = y + dy
+            if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue
+            const a = alpha[ny * width + nx]
+            if (a < min) min = a
+          }
+        }
+        next[y * width + x] = min
+      }
+    }
+    alpha = next
+  }
+  for (let i = 0; i < alpha.length; i++) data[i * 4 + 3] = alpha[i]
+  return sharp(data, { raw: { width, height, channels: 4 } })
+}

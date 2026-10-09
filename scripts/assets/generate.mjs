@@ -8,7 +8,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import sharp from 'sharp'
-import { fitInto, maskPolygon, padToSquare, removeBackground, roadTile, smokeFrame, SIZE, tileableTexture, waterFrame } from './image-tools.mjs'
+import { fitInto, shrinkMatte, maskPolygon, padToSquare, removeBackground, roadTile, smokeFrame, SIZE, tileableTexture, waterFrame } from './image-tools.mjs'
 import { startServer } from './mcp-client.mjs'
 import { loadJobs, ROOT } from './manifest.mjs'
 
@@ -101,6 +101,18 @@ async function finish(job, rawFile) {
     fs.writeFileSync(target, buffer)
     const { channels } = await sharp(buffer).stats()
     return `deckt ${Math.round((channels[3].mean / 255) * 100)} %`
+  }
+
+  if (job.kind === 'decor') {
+    const cut = await shrinkMatte(await removeBackground(await sharp(rawFile).png().toBuffer(), { low: 62, high: 125 }), 2)
+    fs.writeFileSync(target, await fitInto(cut, job.width, job.height, { margin: 0.02, align: 'bottom' }))
+    return 'ok'
+  }
+
+  if (job.kind === 'ground') {
+    const { data, size } = await tileableTexture(rawFile, 512)
+    fs.writeFileSync(target, await sharp(data, { raw: { width: size, height: size, channels: 3 } }).png().toBuffer())
+    return 'ok'
   }
 
   if (job.kind === 'icon' || job.kind === 'sprite') {

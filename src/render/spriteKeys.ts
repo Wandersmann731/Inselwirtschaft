@@ -1,24 +1,7 @@
-import { Terrain } from '../world/terrain'
 import type { PlacedBuilding } from '../sim/state'
-
-/** Number of picture variants per terrain type. */
-const VARIANTS: Record<number, [string, number]> = {
-  [Terrain.Beach]: ['beach', 3],
-  [Terrain.Grass]: ['grass', 4],
-  [Terrain.Forest]: ['forest', 4],
-  [Terrain.Mountain]: ['mountain', 4],
-}
 
 export const WATER_FRAMES = 8
 export const SMOKE_FRAMES = 12
-
-/** Picks a variant from the position, so the same tile always looks the same. */
-export function terrainKey(terrain: number, x: number, y: number): string | null {
-  const entry = VARIANTS[terrain]
-  if (!entry) return null
-  const hash = (Math.imul(x, 73856093) ^ Math.imul(y, 19349663)) >>> 0
-  return `terrain/${entry[0]}_${(hash % entry[1]) + 1}`
-}
 
 export function waterKey(frame: number): string {
   return `terrain/water_${(frame % WATER_FRAMES) + 1}`

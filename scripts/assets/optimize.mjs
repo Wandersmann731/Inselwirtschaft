@@ -25,6 +25,8 @@ for (const file of files) {
     fs.copyFileSync(source, path.join(ICONS, path.basename(file)))
     continue
   }
+  // The old fixed terrain tiles are no longer used: the game builds the ground from textures and scattered objects.
+  if (/^terrain\/(beach|grass|forest|mountain)_/.test(file)) continue
   const target = path.join(OUT, file.replace(/\.png$/, '.webp'))
   fs.mkdirSync(path.dirname(target), { recursive: true })
   await sharp(source).webp({ quality: 88, alphaQuality: 100, effort: 5 }).toFile(target)
