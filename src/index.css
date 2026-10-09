@@ -889,3 +889,30 @@ body,
     padding: 0 8px;
   }
 }
+
+.tier-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+  overflow-x: auto;
+}
+
+.tier-tab {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--button-size);
+  padding: 0 12px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: #2b4254;
+  color: var(--hud-text);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.tier-tab.active {
+  border-color: var(--accent);
+  background: #3d5a72;
+}

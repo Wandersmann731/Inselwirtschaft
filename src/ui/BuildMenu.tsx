@@ -35,14 +35,21 @@ interface Group {
 }
 
 /** Production buildings are grouped by chain, everything else is one plain list. */
-function groupsFor(category: BuildingCategory): Group[] {
+function groupsFor(category: BuildingCategory, tierId: string): Group[] {
   if (category !== 'production') return [{ id: category, defs: buildings.filter((def) => def.category === category && !def.hidden) }]
-  return chains.map((chain) => ({
-    id: chain.id,
-    title: chain.name,
-    users: chainUsers(chain).join(', '),
-    defs: chain.buildings.map(getBuilding),
-  }))
+  return chains
+    .map((chain) => ({
+      id: chain.id,
+      title: chain.name,
+      users: chainUsers(chain).join(', '),
+      defs: chain.buildings.map(getBuilding).filter((def) => def.unlockTier === tierId),
+    }))
+    .filter((group) => group.defs.length > 0)
+}
+
+/** Tiers that have production buildings and are reached, lowest first: the sub menu of the production category. */
+function productionTiers(highestTier: number): { id: string; name: string }[] {
+  return tiers.filter((tier, index) => index <= highestTier && buildings.some((def) => def.category === 'production' && def.unlockTier === tier.id))
 }
 
 function Thumb({ def }: { def: BuildingDef }) {
@@ -69,10 +76,23 @@ function Flow({ id }: { id: string }) {
 
 export function BuildMenu({ tool, state, onOpenStats, onOpenWorld, onOpenTrade }: BuildMenuProps) {
   const [open, setOpen] = useState<BuildingCategory | null>(null)
-  const groups = open ? groupsFor(open) : []
+  const [tierTab, setTierTab] = useState<string | null>(null)
+  const available = productionTiers(state.highestTier)
+  const activeTier = available.find((tier) => tier.id === tierTab)?.id ?? available[available.length - 1]?.id ?? 'pioneers'
+  const groups = open ? groupsFor(open, activeTier) : []
 
   return (
     <div className="build-menu">
+      {open === 'production' && available.length > 1 && (
+        <div className="tier-tabs">
+          {available.map((tier) => (
+            <button key={tier.id} type="button" className={tier.id === activeTier ? 'tier-tab active' : 'tier-tab'} onClick={() => setTierTab(tier.id)}>
+              <Icon name={`tiers/${tier.id}`} size={20} />
+              <span>{tier.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
       {open && (
         <div className="build-items">
           {groups.map((group) => (

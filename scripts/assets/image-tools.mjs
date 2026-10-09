@@ -435,16 +435,17 @@ export async function featherPlot(buffer, guideFile, width, height) {
   const top = height - width / 2
   const cx = width / 2
   const cy = top + width / 4
-  const k = 0.84
+  // the ground keeps nearly its whole diamond, tips included; only a narrow rim fades out
+  const k = 0.98
   const points = [[cx, top], [width, top + width / 4], [cx, top + width / 2], [0, top + width / 4]]
     .map(([x, y]) => `${cx + (x - cx) * k},${cy + (y - cy) * k}`)
     .join(' ')
   const svg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="#000"/><polygon points="${points}" fill="#fff"/></svg>`)
-  const soft = await sharp(svg).blur(11).greyscale().raw().toBuffer()
+  const soft = await sharp(svg).blur(6).greyscale().raw().toBuffer()
   const { data, info } = await sharp(buffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
   for (let i = 0; i < width * height; i++) {
     if (grown[i]) continue
-    const f = Math.max(0, Math.min(1, (soft[i * (soft.length / (width * height))] / 255 - 0.12) / 0.7))
+    const f = Math.max(0, Math.min(1, (soft[i * (soft.length / (width * height))] / 255 - 0.08) / 0.4))
     data[i * 4 + 3] = Math.round(data[i * 4 + 3] * f)
   }
   return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer()
