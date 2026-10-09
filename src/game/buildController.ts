@@ -142,7 +142,7 @@ export class BuildController {
 
   /** Finger down on the map in route mode. True if it picked up a handle or the route. */
   routeGrab(tile: Tile): boolean {
-    const grabbed = grabRoute(this.loop.getIslandState(), this.snapshot.route, tile)
+    const grabbed = grabRoute(this.snapshot.route, tile)
     if (!grabbed) return false
     this.setRoute(grabbed)
     return true

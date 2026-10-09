@@ -36,7 +36,7 @@ export function tapRoute(state: IslandState, draft: RouteDraft, tile: Tile): Rou
 }
 
 /** The player touched the map: picks up a handle or the route itself. Null if nothing is close. */
-export function grabRoute(state: IslandState, draft: RouteDraft, tile: Tile): RouteDraft | null {
+export function grabRoute(draft: RouteDraft, tile: Tile): RouteDraft | null {
   const { plan, start, end } = draft
   if (!plan || !start || !end) return null
   const radius = world.roadPlanner.grabRadius

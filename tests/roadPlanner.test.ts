@@ -88,7 +88,7 @@ describe('route draft', () => {
   it('pulling the route out adds a waypoint and moves it', () => {
     const state = testIsland()
     let draft = tapRoute(state, tapRoute(state, EMPTY_ROUTE, { x: 3, y: 3 }), { x: 9, y: 3 })
-    draft = grabRoute(state, draft, { x: 6, y: 3 })!
+    draft = grabRoute(draft, { x: 6, y: 3 })!
     expect(draft.via).toHaveLength(1)
     draft = moveRoute(state, draft, { x: 6, y: 1 })
     expect(draft.plan?.tiles.some((t) => t.x === 6 && t.y === 1)).toBe(true)
@@ -99,7 +99,7 @@ describe('route draft', () => {
   it('grabs nothing far away from the route', () => {
     const state = testIsland()
     const draft = tapRoute(state, tapRoute(state, EMPTY_ROUTE, { x: 3, y: 3 }), { x: 9, y: 3 })
-    expect(grabRoute(state, draft, { x: 6, y: 8 })).toBeNull()
+    expect(grabRoute(draft, { x: 6, y: 8 })).toBeNull()
   })
 })
 
