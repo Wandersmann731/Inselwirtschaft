@@ -1,7 +1,8 @@
 import { getBuilding, priceOf } from '../data'
 import type { TierNeed } from '../data'
 import { buildingRect, inRadius, type Rect } from './coverage'
-import type { GameState, PlacedBuilding } from './state'
+import { addTo, cloneLedger } from './ledger'
+import type { CycleLedger, GameState, PlacedBuilding } from './state'
 import { cumulativeNeeds } from './tiers'
 
 const EPSILON = 1e-9
@@ -38,6 +39,7 @@ export function runMarket(state: GameState): GameState {
     })
 
   const stock = { ...state.stock }
+  const ledger = cloneLedger(state.economy.current)
   let coins = state.coins
 
   const buildings = state.buildings.map((building): PlacedBuilding => {
@@ -52,14 +54,15 @@ export function runMarket(state: GameState): GameState {
         needs[need.id] = near.some((provider) => provider.type === need.building) ? 100 : 0
         continue
       }
-      const result = buyNeed(need, house.residents, near, stock)
+      const result = buyNeed(need, house.residents, near, stock, ledger)
       coins += result.paid
+      ledger.income += result.paid
       needs[need.id] = result.percent
     }
     return { ...building, house: { ...house, needs } }
   })
 
-  return { ...state, coins, stock, buildings }
+  return { ...state, coins, stock, buildings, economy: { ...state.economy, current: ledger } }
 }
 
 /** Buys what the residents need of one good, trying the good first, then alternatives and substitutes. */
@@ -68,6 +71,7 @@ function buyNeed(
   residents: number,
   near: Provider[],
   stock: Record<string, number>,
+  ledger: CycleLedger,
 ): { percent: number; paid: number } {
   if (!need.good || need.rate === undefined) return { percent: 100, paid: 0 }
   const options = [need.good, ...(need.alternatives ?? []), ...(need.substitutes ?? [])]
@@ -89,6 +93,7 @@ function buyNeed(
     const take = Math.min(demand - bought, stock[good] ?? 0)
     if (take <= 0) continue
     stock[good] -= take
+    addTo(ledger.consumed, good, take)
     bought += take
     paid += take * priceOf(good)
   }

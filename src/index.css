@@ -96,8 +96,8 @@ body,
 .hud-stats {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0 14px;
+  flex-direction: column;
+  align-items: flex-start;
   min-width: 0;
   font-size: 15px;
   line-height: 1.25;
@@ -328,4 +328,120 @@ body,
 
 .need-bar .panel-bar-fill {
   display: block;
+}
+
+.positive {
+  color: #6bdc84;
+}
+
+.negative {
+  color: #ff7b72;
+}
+
+.hud-stats {
+  flex: 1 1 auto;
+}
+
+.hud-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 14px;
+}
+
+.hud-tier {
+  color: #c4d2dc;
+  font-size: 14px;
+}
+
+.top-hud .speed-button {
+  padding: 0 10px;
+}
+
+.stats-backdrop {
+  z-index: 20;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.stats-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 92vw);
+  max-height: 88vh;
+  padding: 8px 14px 12px;
+  border-radius: 10px;
+  background: #14222e;
+  font-size: 15px;
+}
+
+.stats-scroll {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.stats-scroll h3 {
+  margin: 10px 0 4px;
+  font-size: 15px;
+  color: #b8c7d3;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.stats-table th,
+.stats-table td {
+  padding: 4px 6px;
+  text-align: right;
+}
+
+.stats-table th:first-child,
+.stats-table td:first-child {
+  text-align: left;
+}
+
+.stats-table tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.stats-table tr.warned {
+  color: #ff7b72;
+}
+
+.stats-sum td {
+  border-top: 1px solid #3d5a72;
+  font-weight: 600;
+}
+
+.stats-note {
+  margin: 6px 0 0;
+  color: #9fb0bd;
+  font-size: 13px;
+}
+
+.toasts {
+  z-index: 15;
+  position: fixed;
+  top: 66px;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.toast {
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: rgba(150, 40, 30, 0.95);
+  color: #fff;
+  font-size: 16px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }

@@ -1,7 +1,8 @@
 import { config, getBuilding } from '../data'
 import type { BuildingDef } from '../data'
+import { addTo, cloneLedger } from './ledger'
 import { getLinks, type Link } from './logistics'
-import type { GameState, PlacedBuilding, ProductionState, ProductionStatus } from './state'
+import type { CycleLedger, GameState, PlacedBuilding, ProductionState, ProductionStatus } from './state'
 
 type Stock = Record<string, number>
 
@@ -17,14 +18,15 @@ export function processProduction(state: GameState): GameState {
   if (!state.buildings.some((building) => building.production)) return state
   const links = getLinks(state)
   const stock: Stock = { ...state.stock }
+  const ledger = cloneLedger(state.economy.current)
   const buildings = state.buildings.map((building) => {
     if (!building.production) return building
     return {
       ...building,
-      production: stepBuilding(building, building.production, links.get(building.id), stock, state.tick),
+      production: stepBuilding(building, building.production, links.get(building.id), stock, state.tick, ledger),
     }
   })
-  return { ...state, stock, buildings }
+  return { ...state, stock, buildings, economy: { ...state.economy, current: ledger } }
 }
 
 function stepBuilding(
@@ -33,6 +35,7 @@ function stepBuilding(
   link: Link | undefined,
   stock: Stock,
   now: number,
+  ledger: CycleLedger,
 ): ProductionState {
   const def = getBuilding(building.type)
   const output = def.output
@@ -46,7 +49,8 @@ function stepBuilding(
 
   orderInputs(def, p, stock, now, link.delay)
   shipOutput(def, p, stock, now, link.delay)
-  p.status = produce(def, p)
+  p.status = produce(def, p, ledger)
+  if (p.status.kind === 'producing') p.busyTicks += 1
   return p
 }
 
@@ -96,7 +100,7 @@ function shipOutput(def: BuildingDef, p: ProductionState, stock: Stock, now: num
 }
 
 /** Advances the running cycle or starts a new one. Returns what the building is doing. */
-function produce(def: BuildingDef, p: ProductionState): ProductionStatus {
+function produce(def: BuildingDef, p: ProductionState, ledger: CycleLedger): ProductionStatus {
   const output = def.output
   const cycleTicks = def.cycleTicks ?? 1
   if (!output) return { kind: 'noRoad' }
@@ -109,12 +113,16 @@ function produce(def: BuildingDef, p: ProductionState): ProductionStatus {
       used.push([source, input.amount])
     }
     if (p.output + output.amount > config.production.outputBufferAmount) return { kind: 'outputFull' }
-    for (const [good, amount] of used) p.inputs[good] -= amount
+    for (const [good, amount] of used) {
+      p.inputs[good] -= amount
+      addTo(ledger.consumed, good, amount)
+    }
   }
 
   p.progress += 1
   if (p.progress >= cycleTicks) {
     p.output += output.amount
+    addTo(ledger.produced, output.good, output.amount)
     p.progress = 0
   }
   return { kind: 'producing' }

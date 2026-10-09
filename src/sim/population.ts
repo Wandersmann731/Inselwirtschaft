@@ -1,7 +1,8 @@
 import { config } from '../data'
 import type { BuildingCost } from '../data'
 import { goods } from '../data'
-import type { GameState, HouseState, PlacedBuilding } from './state'
+import { addTo, cloneLedger } from './ledger'
+import type { CycleLedger, GameState, HouseState, PlacedBuilding } from './state'
 import { getTier, nextTier, previousTier, tierIndex } from './tiers'
 
 const FULL = 100 - 1e-6
@@ -21,19 +22,20 @@ function affordable(stock: Record<string, number>, cost: BuildingCost): boolean 
  */
 export function runPopulation(state: GameState): GameState {
   const stock = { ...state.stock }
+  const ledger = cloneLedger(state.economy.current)
   let highestTier = state.highestTier
 
   const buildings = state.buildings.map((building): PlacedBuilding => {
     if (!building.house || building.house.ruin) return building
-    const house = stepHouse(building.house, stock)
+    const house = stepHouse(building.house, stock, ledger)
     highestTier = Math.max(highestTier, tierIndex(house.tier))
     return { ...building, house }
   })
 
-  return { ...state, stock, buildings, highestTier }
+  return { ...state, stock, buildings, highestTier, economy: { ...state.economy, current: ledger } }
 }
 
-function stepHouse(previous: HouseState, stock: Record<string, number>): HouseState {
+function stepHouse(previous: HouseState, stock: Record<string, number>, ledger: CycleLedger): HouseState {
   const house: HouseState = { ...previous }
   const { moveInPerCycle, moveOutPerCycle, upgradeCycles, downgradeCycles, ruinCycles } = config.population
   const tier = getTier(house.tier)
@@ -71,7 +73,10 @@ function stepHouse(previous: HouseState, stock: Record<string, number>): HouseSt
       } else {
         for (const good of goods) {
           const needed = cost?.[good.id as keyof BuildingCost] ?? 0
-          if (needed > 0) stock[good.id] -= needed
+          if (needed > 0) {
+            stock[good.id] -= needed
+            addTo(ledger.consumed, good.id, needed)
+          }
         }
         return { ...house, tier: next.id, upgradeTimer: 0, missingMaterials: false }
       }

@@ -29,6 +29,7 @@ export function BuildingPanel({ tool, state, buildingId }: { tool: BuildControll
             <span className="status-dot" style={{ background: STATUS_COLORS[production.status.kind] }} />
             {statusText(production.status)}
           </div>
+          <div className="panel-line">Auslastung: {production.utilization} % (letzter Zyklus)</div>
           <div className="panel-bar">
             <div className="panel-bar-fill" style={{ width: `${(production.progress / cycleTicks) * 100}%` }} />
           </div>

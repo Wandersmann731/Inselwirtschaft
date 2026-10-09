@@ -2,7 +2,8 @@ import { buildings, goods } from '../data'
 import type { TierNeed } from '../data'
 import type { BuildingCost } from '../data'
 import type { PlacementError } from '../sim/build'
-import type { ProductionStatus } from '../sim/state'
+import type { GameState, ProductionStatus } from '../sim/state'
+import { config } from '../data'
 
 const RESOURCE_NAMES: Record<string, string> = {
   coins: 'Münzen',
@@ -28,6 +29,8 @@ export function placementMessage(error: PlacementError): string {
       return 'Die Fläche ist schon belegt'
     case 'notCoast':
       return 'Muss an der Küste stehen'
+    case 'debt':
+      return 'Münzen im Minus: Neubau gesperrt'
     case 'locked':
       return 'Noch nicht freigeschaltet'
     case 'funds':
@@ -66,4 +69,28 @@ export function statusText(status: ProductionStatus): string {
 export function needLabel(need: TierNeed): string {
   if (need.building) return buildings.find((def) => def.id === need.building)?.name ?? need.building
   return resourceName(need.good ?? need.id)
+}
+
+/** Signed number with thousands separators, e.g. "+1.250" or "-40". */
+export function formatSigned(value: number): string {
+  const rounded = Math.round(value)
+  return `${rounded > 0 ? '+' : ''}${rounded.toLocaleString('de-DE')}`
+}
+
+export function formatWhole(value: number): string {
+  return Math.floor(value).toLocaleString('de-DE')
+}
+
+/** Text of a shortage warning toast. */
+export function shortageText(good: string, cycles: number): string {
+  const name = resourceName(good)
+  return cycles <= 0 ? `${name} ist ausgegangen` : `${name} reicht nur noch für ${cycles.toFixed(1).replace('.', ',')} Zyklen`
+}
+
+/** The building materials in store, e.g. "Münzen 9.800 · Werkzeug 50 · Holz 97". */
+export function formatStock(state: GameState): string {
+  const materials = goods
+    .filter((good) => good.id in config.startStock)
+    .map((good) => `${good.name} ${formatWhole(state.stock[good.id] ?? 0)}`)
+  return [`Münzen ${formatWhole(state.coins)}`, ...materials].join(' · ')
 }

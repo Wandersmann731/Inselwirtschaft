@@ -1,11 +1,12 @@
 import { config } from '../data'
+import { emptyLedger } from './ledger'
 import { generateIsland } from '../world/islandGenerator'
 import type { GameMap } from '../world/terrain'
 
 export type { GameMap }
 
 /** Bump when the GameState shape changes and add a migration in migrations.ts. */
-export const CURRENT_SAVE_VERSION = 6
+export const CURRENT_SAVE_VERSION = 7
 
 export type GameSpeed = number
 
@@ -30,10 +31,31 @@ export interface Shipment {
 export interface ProductionState {
   /** Ticks of the running cycle, 0 when no cycle is running. */
   progress: number
+  /** Ticks spent producing in the current economy cycle. */
+  busyTicks: number
+  /** Share of the last economy cycle spent producing, in percent. */
+  utilization: number
   inputs: Record<string, number>
   output: number
   status: ProductionStatus
   shipments: Shipment[]
+}
+
+/** What happened in one economy cycle: money earned and spent, goods made and used. */
+export interface CycleLedger {
+  /** Coins paid by residents at market stands. */
+  income: number
+  /** Upkeep of all buildings. Set when the cycle is settled. */
+  upkeep: number
+  produced: Record<string, number>
+  consumed: Record<string, number>
+}
+
+export interface Economy {
+  /** The running cycle. */
+  current: CycleLedger
+  /** The last settled cycle, null before the first one ends. */
+  last: CycleLedger | null
 }
 
 export interface HouseState {
@@ -81,6 +103,7 @@ export interface GameState {
   nextBuildingId: number
   /** Index in tiers.json of the highest civilisation tier ever reached. Unlocks buildings. */
   highestTier: number
+  economy: Economy
   /** Per tile: id of the building covering it, 0 for none. Same indexing as map.tiles. */
   occupancy: number[]
   /** Per tile: 1 if a road lies there. */
@@ -101,6 +124,7 @@ export function createInitialState(seed: number = config.startSeed): GameState {
     buildings: [],
     nextBuildingId: 1,
     highestTier: 0,
+    economy: { current: emptyLedger(), last: null },
     occupancy: new Array(map.tiles.length).fill(0),
     roads: new Array(map.tiles.length).fill(0),
   }
