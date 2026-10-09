@@ -141,7 +141,7 @@ for bid in ["kontor", "market_house", "shipyard"]:
 
 # terrain
 terrain = [
-    ("water", 4, "calm blue sea water surface with gentle light ripples, tileable", "Wasser (4 Animationsbilder)"),
+    ("water", 8, "calm blue sea water surface with gentle light ripples, tileable", "Wasser (8 Animationsbilder)"),
     ("beach", 3, "pale sand with a few pebbles and shells, tileable", "Strand"),
     ("grass", 4, "lush green meadow with small flowers and tufts, tileable", "Gras"),
     ("forest", 4, "dense green forest floor with 3 to 5 round-crowned trees, tileable, trees stay inside the tile diamond", "Wald"),
@@ -178,8 +178,8 @@ other = [
     ("ship_iso_sw", "Schiffe", "ships/ship_iso_sw.png", "256x256", "-", "same ship, bow pointing to the bottom-left (south-west)"),
 ]
 effects = []
-for i in range(1, 7):
-    effects.append((f"smoke_{i}", "Effekte", f"effects/smoke_{i}.png", "128x192", "-", f"puff of grey chimney smoke rising, animation frame {i} of 6, soft cartoon smoke, loops seamlessly"))
+for i in range(1, 13):
+    effects.append((f"smoke_{i}", "Effekte", f"effects/smoke_{i}.png", "128x192", "-", f"column of grey chimney smoke rising, animation frame {i} of 12, soft cartoon smoke, loops seamlessly"))
 effects.append(("scaffold_2x2", "Effekte", "effects/scaffold_2x2.png", "256x224", "2x2", "wooden construction scaffold around an empty building plot with planks and a rope"))
 effects.append(("island_icon", "Effekte", "effects/island_icon.png", "256x256", "-", "small top-down island with a palm tree and a tiny harbour, for a map marker"))
 
@@ -251,7 +251,7 @@ for group in groups:
     for item in group:
         by_group.setdefault(item[1], []).append(item)
 notes = {
-    "Gelände": "Jede Kachel ist eine **nahtlose Raute** (128 x 64 px), außerhalb der Raute transparent. Die Varianten sollen sich nur im Detail unterscheiden, damit das Muster nicht auffällt. Wasser besteht aus 4 Bildern einer Schleife (Wellen). Wald: Bäume bleiben innerhalb der Raute.",
+    "Gelände": "Jede Kachel ist eine **nahtlose Raute** (128 x 64 px), außerhalb der Raute transparent. Die Varianten sollen sich nur im Detail unterscheiden, damit das Muster nicht auffällt. Wasser besteht aus 8 Bildern einer nahtlosen Wellen-Schleife. Wald: Bäume bleiben innerhalb der Raute.",
     "Straßen": "16 Kacheln für alle Verbindungen. Die Namen zeigen die Richtungen, in die die Straße weitergeht: n = oben rechts, e = unten rechts, s = unten links, w = oben links (auf dem Bildschirm). Die Arme enden genau in der Mitte der Rautenkante, damit sie an Nachbarkacheln anschließen.",
     "Wohnhäuser": "Alle Wohnhäuser stehen auf 2x2 Kacheln. Die fünf Stufen sollen sich klar in Größe und Pracht unterscheiden, so dass man sie am Handy auf einen Blick erkennt. Dazu kommt die Ruine.",
     "Marktstände": "Stände sind 1x1 Kachel groß und klein. Sie sollen sich durch die Ware und die Farbe der Markise deutlich unterscheiden.",

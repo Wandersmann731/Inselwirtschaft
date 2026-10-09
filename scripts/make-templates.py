@@ -14,7 +14,7 @@ import struct
 import zlib
 from pathlib import Path
 
-from asset_data import B, TILE_H, TILE_W
+from asset_data import B, FARM_BUILDING_HEIGHT, FARM_IDS, TILE_H, TILE_W
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "docs" / "vorlagen"
@@ -134,6 +134,33 @@ def building_guide(bid, w, h, height):
     img.save(OUT / "buildings" / f"{bid}_guide.png")
 
 
+def farm_guide(bid, w, h, height):
+    """Field building: flat ground (no block) and a small box for the farm building at the back corner."""
+    cw, ch = (w + h) * TILE_W // 2, (w + h) * TILE_H // 2 + height
+    top, right, bottom, left = footprint_points(w, h, height)
+
+    def p(x, y, lift=0):  # tile coordinates inside the footprint -> canvas
+        return ((x - y) * TILE_W / 2 + h * TILE_W / 2, (x + y) * TILE_H / 2 + height - lift)
+
+    img = Image(cw, ch, MAGENTA)
+    img.polygon([top, right, bottom, left], GROUND)
+    for a, b in grid_lines(w, h, height):
+        img.line(a, b, GRID, 2)
+    img.outline([top, right, bottom, left], INK, 3)
+    rx, ry, rw, rh, lift = 0.15, 0.15, 0.8, 0.8, FARM_BUILDING_HEIGHT - 10
+    a, b, c, d = p(rx, ry), p(rx + rw, ry), p(rx + rw, ry + rh), p(rx, ry + rh)
+    img.polygon([d, c, p(rx + rw, ry + rh, lift), p(rx, ry + rh, lift)], LEFT_WALL)
+    img.polygon([c, b, p(rx + rw, ry, lift), p(rx + rw, ry + rh, lift)], RIGHT_WALL)
+    img.polygon([p(rx, ry, lift), p(rx + rw, ry, lift), p(rx + rw, ry + rh, lift), p(rx, ry + rh, lift)], ROOF)
+    img.outline([p(rx, ry, lift), p(rx + rw, ry, lift), p(rx + rw, ry + rh, lift), p(rx, ry + rh, lift)], INK, 3)
+    img.line(d, c, INK, 3)
+    img.line(c, b, INK, 3)
+    img.line(d, p(rx, ry + rh, lift), INK, 3)
+    img.line(c, p(rx + rw, ry + rh, lift), INK, 3)
+    img.line(b, p(rx + rw, ry, lift), INK, 3)
+    img.save(OUT / "buildings" / f"{bid}_guide.png")
+
+
 def building_footprint(bid, w, h, height):
     cw, ch = (w + h) * TILE_W // 2, (w + h) * TILE_H // 2 + height
     top, right, bottom, left = footprint_points(w, h, height)
@@ -222,7 +249,10 @@ def main():
             w, h = 2, 2
         else:
             w, h = buildings[bid]["size"]
-        building_guide(bid, w, h, height)
+        if bid in FARM_IDS:
+            farm_guide(bid, w, h, height)
+        else:
+            building_guide(bid, w, h, height)
         building_footprint(bid, w, h, height)
         count += 2
     tile_guides()
