@@ -77,6 +77,8 @@ function jobFor(row) {
       'Keep the exact silhouette, size, position and 2:1 isometric perspective of the block: the building must stand on the diamond-shaped ground area, fill the block volume and not extend beyond it, a roof may overhang only slightly. Do not draw any outline, frame or hexagon around the building. Draw no smoke and no steam (it is added later by the game). ' +
       `${STYLE} Keep the flat magenta background (#FF00FF) completely empty and use no magenta or pink colour in the building. No text, no people.`
     if (base.startsWith('house_') || FARMS.has(base) || PLOTS.has(base)) job.cutSlab = true
+    // the ground of houses and workshops is toned down towards the meadow of the game, so plots do not look like bright tiles
+    if ((base.startsWith('house_') && base !== 'house_ruin') || (PLOTS.has(base) && !MINES.has(base))) job.meadow = true
     if (base.startsWith('house_') || PLOTS.has(base)) {
       job.prompt =
         `Turn the grey diamond on the magenta background into the small flat plot of land of a house, and the grey box into ${desc}. ` +

@@ -51,6 +51,9 @@ padsFile.save = () => {
   fs.writeFileSync(padsPath, JSON.stringify(Object.fromEntries([...padData].sort())))
 }
 
+/** Average colour of the game's grass texture, which the ground of houses and workshops is mixed towards. */
+const MEADOW = [118, 149, 88]
+
 const DIAMOND = [[64, 1], [127, 32], [64, 63], [1, 32]]
 
 /** Produces the raw picture for a job (one API call). Returns the path of the raw file. */
@@ -141,7 +144,7 @@ async function finish(job, rawFile) {
       const bottom = job.height - 1 - lift
       const edge = job.height - job.width / 2 + job.width / 4 - lift
       buffer = await maskPolygon(buffer, job.width, job.height, [[0, 0], [job.width, 0], [job.width, edge], [job.width / 2, bottom], [0, edge]])
-      buffer = await featherPlot(buffer, path.join(ROOT, job.guide), job.width, job.height)
+      buffer = await featherPlot(buffer, path.join(ROOT, job.guide), job.width, job.height, job.meadow ? MEADOW : null)
     }
     fs.writeFileSync(target, buffer)
     const { channels } = await sharp(buffer).stats()

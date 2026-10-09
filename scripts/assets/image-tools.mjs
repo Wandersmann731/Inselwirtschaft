@@ -394,7 +394,22 @@ const BODY_COLORS = [[150, 150, 150], [182, 182, 182], [226, 226, 226]] // wall,
  * Lets the ground of a plot fade out towards its edge, so it blends into the terrain around it.
  * The building itself (found in the guide: the grey block) stays fully opaque.
  */
-export async function featherPlot(buffer, guideFile, width, height) {
+/** Mixes a ground pixel towards the meadow colour (keeping its light and dark), more the more yellow and saturated it is. */
+function tone(data, o, meadow) {
+  const r = data[o]
+  const g = data[o + 1]
+  const b = data[o + 2]
+  const luma = 0.3 * r + 0.59 * g + 0.11 * b
+  const meadowLuma = 0.3 * meadow[0] + 0.59 * meadow[1] + 0.11 * meadow[2]
+  const scale = Math.pow(Math.max(luma, 1) / meadowLuma, 0.9)
+  const earth = r > g * 1.3 && g > b * 1.2 // packed earth and paths stay earthy, only a little
+  const mix = earth ? 0.3 : 0.7
+  data[o] = Math.min(255, r * (1 - mix) + meadow[0] * scale * mix)
+  data[o + 1] = Math.min(255, g * (1 - mix) + meadow[1] * scale * mix)
+  data[o + 2] = Math.min(255, b * (1 - mix) + meadow[2] * scale * mix)
+}
+
+export async function featherPlot(buffer, guideFile, width, height, meadow = null) {
   const guide = await sharp(guideFile).resize(width, height, { kernel: 'nearest' }).removeAlpha().raw().toBuffer()
   // body = pixels of the guide block, grown by a margin for roofs and shadows
   const body = new Uint8Array(width * height)
@@ -445,6 +460,7 @@ export async function featherPlot(buffer, guideFile, width, height) {
   const { data, info } = await sharp(buffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
   for (let i = 0; i < width * height; i++) {
     if (grown[i]) continue
+    if (meadow) tone(data, i * 4, meadow)
     const f = Math.max(0, Math.min(1, (soft[i * (soft.length / (width * height))] / 255 - 0.08) / 0.4))
     data[i * 4 + 3] = Math.round(data[i * 4 + 3] * f)
   }
