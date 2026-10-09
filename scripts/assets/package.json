@@ -1,0 +1,9 @@
+{
+  "name": "inselwirtschaft-assets",
+  "private": true,
+  "type": "module",
+  "description": "Tools that make the game graphics with the ImageGen MCP server. Not part of the game build.",
+  "dependencies": {
+    "sharp": "^0.35.5"
+  }
+}
