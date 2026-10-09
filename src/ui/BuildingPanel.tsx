@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { config, getBuilding, trade } from '../data'
+import { config, getBuilding, tiers, trade } from '../data'
 import type { BuildingCost } from '../data'
 import { cumulativeNeeds, getTier } from '../sim/tiers'
 import type { BuildController } from '../game/buildController'
@@ -79,11 +79,12 @@ export function BuildingPanel({
         </>
       )}
 
-      {building.house && <HousePanel house={building.house} />}
+      {building.house && <HousePanel house={building.house} stopped={state.upgradeStop ?? []} />}
 
       <div className="panel-line">
         Unterhalt: {upkeepOf(building)} Münzen pro Zyklus{building.active ? '' : ' (stillgelegt)'}
       </div>
+      {(building.type === 'kontor' || building.type === 'market_house') && <UpgradeStops tool={tool} state={state} />}
       {building.type === 'kontor' && (
         <button type="button" className="action-button panel-toggle" onClick={onOpenKontor}>
           Handel einstellen
@@ -123,8 +124,10 @@ export function BuildingPanel({
   )
 }
 
-function HousePanel({ house }: { house: NonNullable<IslandState['buildings'][number]['house']> }) {
+function HousePanel({ house, stopped }: { house: NonNullable<IslandState['buildings'][number]['house']>; stopped: string[] }) {
   const tier = getTier(house.tier)
+  const next = tiers[tiers.indexOf(tier) + 1]
+  const stoppedNext = next !== undefined && stopped.includes(next.id)
   if (house.ruin) {
     return <div className="panel-status">Ruine: Die Aristokraten sind ausgezogen. Nur Abriss hilft.</div>
   }
@@ -150,7 +153,37 @@ function HousePanel({ house }: { house: NonNullable<IslandState['buildings'][num
       })}
       <div className="panel-line">Steuer: {formatWhole(taxOf(house))} Münzen pro Zyklus</div>
       {house.missingMaterials && <div className="panel-line invalid">Aufstieg wartet auf Baumaterial</div>}
+      {stoppedNext && <div className="panel-line">Aufstieg im Markthaus gesperrt</div>}
     </>
+  )
+}
+
+/** At the market house and Kontor: which tiers the houses of this island may rise into. Stopping saves materials. */
+function UpgradeStops({ tool, state }: { tool: BuildController; state: IslandState }) {
+  const stopped = new Set(state.upgradeStop ?? [])
+  const rising = tiers.filter((tier) => tier.upgradeCost)
+  return (
+    <div className="upgrade-stops">
+      <div className="panel-line">
+        <strong>Aufstiege</strong> (verbrauchen Baumaterial)
+      </div>
+      {rising.map((tier) => {
+        const blocked = stopped.has(tier.id)
+        return (
+          <button
+            key={tier.id}
+            type="button"
+            className={blocked ? 'action-button upgrade-stop blocked' : 'action-button upgrade-stop'}
+            onClick={() => tool.setUpgradeStop(tier.id, !blocked)}
+          >
+            <span>
+              {blocked ? 'Gesperrt' : 'Erlaubt'}: zu {tier.name}
+            </span>
+            <small>{formatCost(tier.upgradeCost!)} je Haus</small>
+          </button>
+        )
+      })}
+    </div>
   )
 }
 

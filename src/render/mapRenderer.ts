@@ -15,6 +15,7 @@ import {
 import { mapBounds, tileToWorld, worldToTile, type Bounds, type Point } from './iso'
 import { yardField } from '../world/settlement'
 import { drawBuildings, drawRoads, type TileRange } from './buildingRenderer'
+import { drawShips } from './shipRenderer'
 import { OverlayRenderer } from './overlayRenderer'
 import { getSettings } from '../save/settings'
 import { findStartSite } from '../world/startSite'
@@ -168,7 +169,13 @@ export class MapRenderer {
       this.cameraMap = map
       this.selected = null
       this.camera = centerCamera(mapBounds(map), 1, viewport)
-      if (this.getState().owned && !this.getState().buildings.some((b) => b.house)) {
+      const shown = this.getState()
+      const market = shown.buildings.find((b) => b.type === 'market_house') ?? shown.buildings.find((b) => b.type === 'kontor')
+      if (!shown.owned && market) {
+        // islands of others: look at their town
+        const at = tileToWorld(market.x + 1, market.y + 1)
+        this.camera = clampCamera({ ...this.camera, x: at.x, y: at.y }, viewport, mapBounds(map))
+      } else if (shown.owned && !shown.buildings.some((b) => b.house)) {
         const site = findStartSite(map)
         const at = tileToWorld(site.x + 0.5, site.y + 0.5)
         this.camera = clampCamera({ ...this.camera, x: at.x, y: at.y }, viewport, mapBounds(map))
@@ -187,6 +194,7 @@ export class MapRenderer {
     this.drawTerrain(map, state)
     drawRoads(ctx, state, range)
     drawBuildings(ctx, state, range, now, settings.smoke)
+    drawShips(ctx, state, now)
     this.overlay.draw(ctx, state, this.getTool(), range)
     this.drawSelection()
 

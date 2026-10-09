@@ -4,6 +4,7 @@ import { generateWorld, layoutRng, layoutWorld } from '../world/worldGenerator'
 import { emptyLedger } from './ledger'
 import { createProduction } from './productionState'
 import { createHouse } from './tiers'
+import { addTraderTowns } from './traderTown'
 import { CURRENT_SAVE_VERSION, type GameState, type Island } from './state'
 
 type RawState = Record<string, unknown>
@@ -152,6 +153,11 @@ export const MIGRATIONS: Record<number, Migration> = {
       return { ...island, occupancy }
     })
     return { ...data, islands }
+  },
+  // v13: the trader island gets its town, and islands can stop houses from rising (to save building materials).
+  12: (data) => {
+    const islands = (data.islands as Record<string, unknown>[]).map((island) => ({ upgradeStop: [], ...island }))
+    return addTraderTowns({ ...data, islands } as unknown as GameState) as unknown as RawState
   },
 }
 

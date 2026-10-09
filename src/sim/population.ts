@@ -32,9 +32,10 @@ export function runPopulation(state: IslandState): IslandState {
   const ledger = cloneLedger(state.economy.current)
   let highestTier = state.highestTier
 
+  const stopped = new Set(state.upgradeStop ?? [])
   const buildings = state.buildings.map((building): PlacedBuilding => {
     if (!building.house || building.house.ruin) return building
-    const house = stepHouse(building.house, stock, ledger)
+    const house = stepHouse(building.house, stock, ledger, stopped)
     highestTier = Math.max(highestTier, tierIndex(house.tier))
     return { ...building, house }
   })
@@ -42,7 +43,7 @@ export function runPopulation(state: IslandState): IslandState {
   return { ...state, stock, buildings, highestTier, economy: { ...state.economy, current: ledger } }
 }
 
-function stepHouse(previous: HouseState, stock: Record<string, number>, ledger: CycleLedger): HouseState {
+function stepHouse(previous: HouseState, stock: Record<string, number>, ledger: CycleLedger, stopped: Set<string>): HouseState {
   const house: HouseState = { ...previous }
   const { moveInPerCycle, moveOutPerCycle, upgradeCycles, downgradeCycles, ruinCycles } = config.population
   const tier = getTier(house.tier)
@@ -71,6 +72,12 @@ function stepHouse(previous: HouseState, stock: Record<string, number>, ledger: 
   house.residents = Math.min(tier.residents, house.residents + moveInPerCycle)
 
   const next = nextTier(house.tier)
+  // the player stopped rising into this tier at the market house: no materials are used
+  if (next && stopped.has(next.id)) {
+    house.upgradeTimer = 0
+    house.missingMaterials = false
+    return house
+  }
   if (next && house.residents >= tier.residents && allMet(house)) {
     house.upgradeTimer += 1
     const cost = next.upgradeCost
@@ -93,4 +100,11 @@ function stepHouse(previous: HouseState, stock: Record<string, number>, ledger: 
     house.missingMaterials = false
   }
   return house
+}
+
+/** Allows or stops houses rising into a tier on this island. */
+export function setUpgradeStop(state: IslandState, tierId: string, stopped: boolean): IslandState {
+  const current = state.upgradeStop ?? []
+  if (current.includes(tierId) === stopped) return state
+  return { ...state, upgradeStop: stopped ? [...current, tierId] : current.filter((id) => id !== tierId) }
 }

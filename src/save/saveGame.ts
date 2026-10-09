@@ -58,10 +58,9 @@ export interface SaveInfo {
 }
 
 export function describeSave(state: GameState): SaveInfo {
-  const residents = state.islands.reduce(
-    (sum, island) => sum + island.buildings.reduce((inner, building) => inner + (building.house?.residents ?? 0), 0),
-    0,
-  )
+  const residents = state.islands
+    .filter((island) => island.owned)
+    .reduce((sum, island) => sum + island.buildings.reduce((inner, building) => inner + (building.house?.residents ?? 0), 0), 0)
   return { tick: state.tick, coins: Math.floor(state.coins), residents: Math.floor(residents), seed: state.seed, savedAt: Date.now() }
 }
 

@@ -5,6 +5,7 @@ import { checkPlacement, placeBuilding } from './build'
 import { fromIslandState, toIslandState } from './islands'
 import { createInitialState, type GameState, type Ship } from './state'
 import { trade } from '../data'
+import { addTraderTowns } from './traderTown'
 
 /** The Kontor and ship every new game starts with. They are free: nothing is taken from the start money or goods. */
 export function addStartKit(game: GameState): GameState {
@@ -50,7 +51,7 @@ export function addStartKit(game: GameState): GameState {
   return { ...next, ships: [...next.ships, ship], nextShipId: next.nextShipId + 1 }
 }
 
-/** A new game as the player starts it: the world, a Kontor on the home island and a first ship. */
+/** A new game as the player starts it: the world, a Kontor on the home island, a first ship and the trader town. */
 export function createNewGame(seed: number = config.startSeed, startCoins: number = config.startCoins): GameState {
-  return addStartKit(createInitialState(seed, startCoins))
+  return addTraderTowns(addStartKit(createInitialState(seed, startCoins)))
 }

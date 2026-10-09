@@ -36,7 +36,7 @@ export function BuildBar({ tool, island, onOpenStats, onOpenWorld, onOpenTrade, 
         <div className="place-info">
           <strong>{island.name}</strong>
           <span className="place-hint">
-            {island.role === 'trader' ? 'Insel der Händler' : 'Noch nicht erschlossen'}: Hier kannst du noch nicht bauen.
+            {island.role === 'trader' ? 'Stadt der Händler: Waren kaufst und verkaufst du hier mit deinem Schiff (Handel, Routen).' : 'Noch nicht erschlossen: Mit einem Schiff und dem Kontor-Set gründest du hier eine Kolonie.'}
           </span>
         </div>
         <div className="place-actions">

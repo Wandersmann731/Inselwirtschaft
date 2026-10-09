@@ -1030,3 +1030,27 @@ body,
 .hud-material.low {
   color: #ff6b5b;
 }
+
+.upgrade-stops {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.action-button.upgrade-stop {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 6px 12px;
+  text-align: left;
+  border-left: 6px solid #4cd964;
+}
+
+.action-button.upgrade-stop.blocked {
+  border-left-color: #ff4d4d;
+}
+
+.action-button.upgrade-stop small {
+  color: #b8c7d3;
+}

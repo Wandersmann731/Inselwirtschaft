@@ -3,6 +3,7 @@ import { demolishBuilding, demolishTiles, footprint, placeBuilding, placeRoads }
 import { haptic } from './haptic'
 import { buildSettlement, planSettlement } from '../sim/settlementPlanner'
 import { setBuildingActive } from '../sim/production'
+import { setUpgradeStop } from '../sim/population'
 import { buildShip } from '../sim/ships'
 import type { GameLoop } from './gameLoop'
 import { grabRoute, moveRoute, releaseRoute, resetWaypoints, tapRoute, EMPTY_ROUTE, type RouteDraft } from './routeDraft'
@@ -111,6 +112,11 @@ export class BuildController {
   buildShip(): void {
     const islandId = this.loop.activeIsland
     this.loop.dispatch((state) => buildShip(state, islandId))
+  }
+
+  /** Allows or stops houses of the island on screen rising into a tier. */
+  setUpgradeStop(tierId: string, stopped: boolean): void {
+    this.loop.dispatchIsland((state) => setUpgradeStop(state, tierId, stopped))
   }
 
   /** Switches a building on or off (shut down). */

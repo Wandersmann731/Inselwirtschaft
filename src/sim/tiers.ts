@@ -32,9 +32,10 @@ export function createHouse(tierId: string): HouseState {
   return { tier: tierId, residents: 0, needs: {}, upgradeTimer: 0, shortageTimer: 0, ruin: false, missingMaterials: false }
 }
 
-/** Residents of the realm living in houses of one tier. */
+/** Residents of the realm (the player's islands only) living in houses of one tier. */
 export function residentsOfTier(state: GameState | IslandState, tierId: string): number {
   return islandsOf(state)
+    .filter((island) => island.owned)
     .flatMap((island) => island.buildings)
     .reduce(
       (sum, building) =>
@@ -45,6 +46,7 @@ export function residentsOfTier(state: GameState | IslandState, tierId: string):
 
 export function totalResidents(state: GameState | IslandState): number {
   return islandsOf(state)
+    .filter((island) => island.owned)
     .flatMap((island) => island.buildings)
     .reduce((sum, building) => sum + (building.house?.residents ?? 0), 0)
 }

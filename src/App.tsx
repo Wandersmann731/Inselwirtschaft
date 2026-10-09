@@ -42,7 +42,7 @@ export function App({ loop, onQuit }: { loop: GameLoop; onQuit: () => void }) {
   // Looking at another island drops the current tool and selection.
   useEffect(() => tool.cancel(), [tool, activeIsland])
 
-  const settled = state.islands.flatMap((entry) => (entry.economy.last ? [entry.economy.last] : []))
+  const settled = state.islands.flatMap((entry) => (entry.owned && entry.economy.last ? [entry.economy.last] : []))
   const balance = settled.length > 0 ? settled.reduce((sum, ledger) => sum + balanceOf(ledger), 0) : null
 
   return (
@@ -58,6 +58,7 @@ export function App({ loop, onQuit }: { loop: GameLoop; onQuit: () => void }) {
         speed={state.speed}
         islandName={island.name}
         stock={island.stock}
+        owned={island.owned}
         onSpeedChange={(speed) => loop.setSpeed(speed)}
         onOpenMenu={() => setShowMenu(true)}
         debug={debug}
