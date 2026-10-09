@@ -18,7 +18,9 @@ Eine Kachel ist im doppelten Maßstab **128 x 64 px**. Ein Gebäude mit `w x h` 
 
 - **Bildbreite** = `(w + h) x 64` px.
 - **Bildhöhe** = `(w + h) x 32` px (Raute) plus die Höhe des Gebäudes über dem Boden (steht in der Tabelle).
-- Die Raute liegt **unten im Bild**, ihre untere Spitze auf der unteren Bildkante in der Mitte. Wände beginnen an den Rautenkanten. Dächer dürfen nach oben ragen, aber nie über die Bildränder.
+- Die Grundfläche liegt **unten im Bild**. Bei quadratischen Gebäuden ist sie eine Raute, bei 3x4, 7x6 und Ähnlichem ein Parallelogramm. Mit `E` = Höhe über dem Boden (Tabelle) hat sie diese Ecken im Bild: oben `(h x 64, E)`, rechts `((w + h) x 64, E + w x 32)`, unten `(w x 64, E + (w + h) x 32)`, links `(0, E + h x 32)`. Ihre untere Spitze liegt immer auf der unteren Bildkante, aber nur bei quadratischen Gebäuden in der Mitte.
+- Wände beginnen an den Kanten der Grundfläche. Dächer dürfen nach oben ragen, aber nie über die Bildränder.
+- **Fertige Vorlagen** für jede Datei liegen in `docs/vorlagen/` (siehe dort die `README.md`).
 - Nicht quadratische Gebäude (3x4, 7x6, 6x5, 6x7, 8x6) liefere nur in **einer** Ausrichtung. Gedrehte Gebäude entstehen im Spiel durch Spiegeln.
 
 ## 3. Die Liste
@@ -294,7 +296,7 @@ text, letters, logo, watermark, frame, border, multiple objects, people in the f
 - **Symbol Holz:** `stack of cut logs, game UI icon, centred, simple bold shapes, thick dark-brown outline, saturated flat colours, plain flat magenta background (#FF00FF), no text, no frame, no watermark, hand-painted cel-shaded`
 
 ### Tipps gegen typische KI-Fehler
-- Die Raute stimmt nicht: Gib eine **Rautenvorlage** als Bild mit (ControlNet / "structure reference"). Diese Vorlagen lassen sich für jede Gebäudegröße per Skript als PNG erzeugen (bei Claude anfragen).
+- Die Raute stimmt nicht: Gib eine **Rautenvorlage** als Bild mit (ControlNet / "structure reference"). Die Vorlagen für jede Datei liegen in `docs/vorlagen/` (erzeugt mit `scripts/make-templates.py`).
 - Zwei Gebäude im Bild: im Prompt `one single object` betonen, Negativ-Prompt nutzen.
 - Der Hintergrund ist nicht einfarbig: nochmal erzeugen oder mit einem Hintergrundentferner (zum Beispiel rembg) freistellen.
 - Die Stile weichen ab: immer dieselbe Stilreferenz und dieselben Basis-Wörter nutzen. Gleiche Farbpalette je Kategorie (Wohnen warm, Betriebe erdig, öffentlich hell).
