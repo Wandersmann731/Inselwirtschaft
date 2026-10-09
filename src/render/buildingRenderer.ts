@@ -92,8 +92,8 @@ function drawSmoke(ctx: CanvasRenderingContext2D, placed: SpritePlacement, chimn
   const fromLeft = placed.mirrored ? 1 - chimney[0] : chimney[0]
   const x = placed.x + fromLeft * placed.width
   const y = placed.y + chimney[1] * placed.height
-  // The first puff of the smoke picture starts about 15 px above its bottom edge, in the middle.
-  ctx.drawImage(image, x - width / 2, y - height + 15, width, height)
+  // The first puff of the smoke picture starts about 34 px above its bottom edge, in the middle.
+  ctx.drawImage(image, x - width / 2, y - height + 34, width, height)
 }
 
 /** Status colours of producers: green runs, yellow waits for goods, orange is full, red is cut off. */

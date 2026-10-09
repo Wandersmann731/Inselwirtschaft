@@ -37,7 +37,8 @@ function parseCsv(text) {
 }
 
 /** Field buildings: flat ground with a small building, not a raised block. */
-const PLOTS = new Set(['forester', 'fishery', 'quarry', 'ore_mine', 'salt_mine', 'gold_mine', 'gem_mine'])
+const WORKSHOPS = new Set(['weaver', 'bakery', 'mill', 'stonemason', 'smelter', 'toolmaker', 'distillery', 'tannery', 'tobacco_factory', 'dyer', 'oil_boiler', 'winery', 'goldsmith', 'market_house'])
+const PLOTS = new Set(['forester', 'fishery', 'quarry', 'ore_mine', 'salt_mine', 'gold_mine', 'gem_mine', ...WORKSHOPS])
 const MINES = new Set(['quarry', 'ore_mine', 'salt_mine', 'gold_mine', 'gem_mine'])
 const FARMS = new Set([
   'cotton_plantation', 'sheep_farm', 'potato_farm', 'tobacco_plantation', 'hops_farm', 'spice_plantation',
@@ -82,7 +83,9 @@ function jobFor(row) {
         'The plot is flat and ends exactly at the edges of the diamond: no raised slab, no thickness, no earth cross-section, no side walls, no plinth and no outline around the diamond. ' +
         'The house stands in the middle of the plot and is clearly smaller than the plot, so that neighbouring houses never touch: the house itself must not reach the corners of the diamond. ' +
         `${STYLE} Keep the flat magenta background (#FF00FF) completely empty and use no magenta or pink colour. No text, no people. Draw no smoke.` +
-        (MINES.has(base)
+        (WORKSHOPS.has(base)
+          ? ' The ground of the plot is a small work yard of packed earth with a few cobblestones, crates and tools, with a grassy fringe and no hard border, so that it blends into its surroundings. The building is in the middle and clearly smaller than the plot.'
+          : MINES.has(base)
           ? ' The ground of the plot is bare grey-brown rock, gravel and a few small boulders with no hard border, and the working is cut into a rocky slope, so that it blends into the surrounding mountain.'
           : PLOTS.has(base)
             ? ' The ground of the plot is natural: grass, leaf litter, soil, a few stumps or sand, with no hard border, so that it can blend into the surrounding forest or shore.'

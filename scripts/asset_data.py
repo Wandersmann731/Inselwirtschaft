@@ -71,7 +71,8 @@ FARM_BUILDING_HEIGHT = 80
 HOUSE_VARIANTS = 16
 RUIN_VARIANTS = 4
 FIELD_VARIANTS = 4  # extra pictures for often built field buildings and workshops (variant 1 is the plain id)
-PLOT_IDS = ["forester", "fishery", "quarry", "ore_mine", "salt_mine", "gold_mine", "gem_mine"]  # workshops that stand on a small plot like a house
+WORKSHOP_IDS = ["weaver", "bakery", "mill", "stonemason", "smelter", "toolmaker", "distillery", "tannery", "tobacco_factory", "dyer", "oil_boiler", "winery", "goldsmith", "market_house"]
+PLOT_IDS = ["forester", "fishery", "quarry", "ore_mine", "salt_mine", "gold_mine", "gem_mine"] + WORKSHOP_IDS  # workshops that stand on a small plot like a house
 VARIANT_BUILDINGS = list(FARM_IDS) + PLOT_IDS
 
 # Per tier: the kind of house and lists the variants pick from. Every variant mixes one entry of each list

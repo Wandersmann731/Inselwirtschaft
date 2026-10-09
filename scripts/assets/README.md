@@ -54,3 +54,4 @@ Weitere Optionen: `--parallel 5`, `--provider flux-2-pro` (je nach Anbieter und 
 - Bäume, Büsche und Felsen **direkt neben** einem Gebäude werden mit dem Gebäude tiefensortiert gezeichnet (`src/render/frontDecor.ts`),
   einige stehen also vor dem Gebäude. Unter Gebäuden und Straßen wächst nichts: der Wald wird dort gerodet.
 - Alle Varianten sind erzeugt: 16 je Wohnhausstufe, 4 Ruinen, je 4 für Farmen, Forsthaus, Fischerei und Minen.
+- Auch die Werkstätten (Weberei, Bäckerei, Mühle, Steinmetz, Schmelze, Werkzeugmacher, Brennerei, Gerberei, Tabakmanufaktur, Färberei, Trankocherei, Kelterei, Goldschmied) und das Markthaus stehen auf einem Grundstück (Werkhof aus Erde und Pflaster). Die Schornsteinpositionen für den Rauch stehen in `buildings.json` (`smoke`) und müssen nach dem Neuerzeugen eines Bildes geprüft werden.
