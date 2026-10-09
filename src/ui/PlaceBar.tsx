@@ -2,7 +2,7 @@ import { getBuilding } from '../data'
 import type { BuildingCost } from '../data'
 import type { BuildController, ToolSnapshot } from '../game/buildController'
 import { checkPlacement, footprint } from '../sim/build'
-import { suppliedHouses } from '../sim/coverage'
+import { hubReaches, suppliedHouses } from '../sim/coverage'
 import type { IslandState } from '../sim/state'
 import { formatStock, placementMessage } from './messages'
 import { Cost } from './Icon'
@@ -39,6 +39,15 @@ export function PlaceBar({ tool, snapshot, state }: PlaceBarProps) {
       const { w, h } = footprint(def, rotated)
       const count = suppliedHouses(state, { x: origin.x, y: origin.y, w, h }, def.radius).length
       hint = `Radius ${def.radius} Kacheln · versorgt ${count} ${count === 1 ? 'Haus' : 'Häuser'}`
+    } else if (def.catchment !== undefined) {
+      const { w, h } = footprint(def, rotated)
+      const count = suppliedHouses(state, { x: origin.x, y: origin.y, w, h }, def.catchment).length
+      hint = `Einzugsgebiet ${def.catchment} Kacheln · versorgt ${count} ${count === 1 ? 'Haus' : 'Häuser'} und die Betriebe darin`
+    } else if ((def.houseTier || def.output) && !hubReaches(state, { x: origin.x, y: origin.y, ...footprint(def, rotated) })) {
+      hint = def.houseTier
+        ? 'Außerhalb von Kontor und Markthaus: die Bewohner bekommen keine Waren'
+        : 'Außerhalb von Kontor und Markthaus: der Betrieb liefert nichts ab'
+      hintClass = 'place-hint invalid'
     } else {
       hint = 'Bereit: „Bauen“ oder die Stelle noch einmal antippen'
     }

@@ -182,7 +182,7 @@ export class MapRenderer {
     this.drawTerrain(map, state)
     drawRoads(ctx, state, range)
     drawBuildings(ctx, state, range, now, settings.smoke)
-    this.overlay.draw(ctx, state, this.getTool())
+    this.overlay.draw(ctx, state, this.getTool(), range)
     this.drawSelection()
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)

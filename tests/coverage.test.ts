@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { buildingRect, inRadius, suppliedHouses, tilesInRadius } from '../src/sim/coverage'
+import { buildingRect, hubReaches, inRadius, suppliedHouses, tilesInRadius } from '../src/sim/coverage'
 import { placeBuilding } from '../src/sim/build'
-import { testIsland } from './helpers'
+import { grassField, patchBuilding, testIsland } from './helpers'
 
 describe('radius from the building edge', () => {
   const stand = { x: 10, y: 10, w: 1, h: 1 }
@@ -49,5 +49,15 @@ describe('suppliedHouses', () => {
     state = placeBuilding(state, 'forester', 6, 3, false)
     const farStand = { x: 11, y: 4, w: 1, h: 1 } // 5 empty tiles away from the house edge
     expect(suppliedHouses(state, farStand, 4)).toHaveLength(0)
+  })
+})
+
+describe('hubReaches', () => {
+  it('is true inside the catchment of an active Kontor or market house and false outside or when shut down', () => {
+    let state = grassField(80, 30, { coins: 1_000_000, stock: { tools: 500, wood: 500, bricks: 500, marble: 50 } })
+    state = placeBuilding(state, 'market_house', 2, 10, false) // x 2..3, catchment 22
+    expect(hubReaches(state, { x: 20, y: 10, w: 2, h: 2 })).toBe(true)
+    expect(hubReaches(state, { x: 40, y: 10, w: 2, h: 2 })).toBe(false)
+    expect(hubReaches(patchBuilding(state, 1, { active: false }), { x: 20, y: 10, w: 2, h: 2 })).toBe(false)
   })
 })

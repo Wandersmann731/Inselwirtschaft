@@ -61,3 +61,18 @@ export function suppliedHouses(state: IslandState, rect: Rect, radius: number): 
     return false
   })
 }
+
+/** True if a Kontor or market house reaches at least one tile of the rectangle with its catchment. */
+export function hubReaches(state: IslandState, rect: Rect): boolean {
+  return state.buildings.some((building) => {
+    const catchment = getBuilding(building.type).catchment
+    if (catchment === undefined || !building.active) return false
+    const hub = buildingRect(building)
+    for (let y = rect.y; y < rect.y + rect.h; y++) {
+      for (let x = rect.x; x < rect.x + rect.w; x++) {
+        if (inRadius(x, y, hub, catchment)) return true
+      }
+    }
+    return false
+  })
+}

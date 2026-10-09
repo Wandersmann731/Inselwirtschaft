@@ -8,6 +8,8 @@ import { drawPlacedSprite, placeSprite } from './spriteDraw'
 import { ghostKey } from './spriteKeys'
 import { boxHeight, drawBox, rectPath, type TileRect } from './shapes'
 import { diamondPath } from './terrainStyle'
+import { addDiamond, drawGrid, drawHubReach, reachOf } from './reachOverlay'
+import type { TileRange } from './buildingRenderer'
 
 const VALID = 'rgba(80, 220, 110, 0.5)'
 const INVALID = 'rgba(235, 70, 70, 0.55)'
@@ -26,7 +28,9 @@ interface CoverageCache {
 export class OverlayRenderer {
   private coverage: CoverageCache | null = null
 
-  draw(ctx: CanvasRenderingContext2D, state: IslandState, tool: ToolSnapshot): void {
+  draw(ctx: CanvasRenderingContext2D, state: IslandState, tool: ToolSnapshot, range: TileRange): void {
+    if (tool.mode === 'place' || tool.mode === 'road') drawGrid(ctx, state, range)
+    if (tool.mode === 'place' && tool.typeId) this.drawReachHints(ctx, state, tool.typeId)
     if (tool.mode === 'place' && tool.area) this.drawArea(ctx, tool)
     else if (tool.mode === 'place' && tool.typeId && tool.origin) this.drawGhost(ctx, state, tool)
     else if (tool.mode === 'road' && !tool.freehand) this.drawRoute(ctx, tool, state)
@@ -66,13 +70,23 @@ export class OverlayRenderer {
     }
   }
 
+  /** While placing: where a Kontor and market house supply the land (for houses, producers and the hubs themselves). */
+  private drawReachHints(ctx: CanvasRenderingContext2D, state: IslandState, typeId: string): void {
+    const def = getBuilding(typeId)
+    if (def.houseTier || def.output || def.catchment !== undefined) drawHubReach(ctx, state)
+  }
+
   private drawSelectedBuilding(ctx: CanvasRenderingContext2D, state: IslandState, tool: ToolSnapshot): void {
     const building = state.buildings.find((b) => b.id === tool.selectedBuildingId)
     if (!building) return
+    const rect = buildingRect(building)
+    const def = getBuilding(building.type)
+    const reach = reachOf(def)
+    if (reach !== undefined) this.drawCoverage(ctx, state, building.type, rect, reach, building.rotated)
     ctx.strokeStyle = '#ffd23f'
     ctx.lineWidth = 3
     ctx.beginPath()
-    rectPath(ctx, buildingRect(building))
+    rectPath(ctx, rect)
     ctx.stroke()
   }
 
@@ -83,7 +97,8 @@ export class OverlayRenderer {
     const { w, h } = footprint(def, rotated)
     const rect: TileRect = { x: origin.x, y: origin.y, w, h }
 
-    if (def.radius !== undefined) this.drawCoverage(ctx, state, typeId, rect, def.radius, rotated)
+    const reach = reachOf(def)
+    if (reach !== undefined) this.drawCoverage(ctx, state, typeId, rect, reach, rotated)
 
     const valid = checkPlacement(state, typeId, origin.x, origin.y, rotated) === null
     ctx.fillStyle = valid ? VALID : INVALID
@@ -126,7 +141,7 @@ export class OverlayRenderer {
     ctx.beginPath()
     for (const tile of this.coverage.tiles) {
       const top = tileToWorld(tile.x, tile.y)
-      diamondPath(ctx, top.x, top.y, 0.5)
+      addDiamond(ctx, top.x, top.y, 0.5)
     }
     ctx.fill()
 
