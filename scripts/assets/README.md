@@ -53,6 +53,4 @@ Weitere Optionen: `--parallel 5`, `--provider flux-2-pro` (je nach Anbieter und 
   füllt nur die Mitte, deshalb überlappen Nachbarn nicht und sie fügen sich in Wald oder Berg ein.
 - Bäume, Büsche und Felsen **direkt neben** einem Gebäude werden mit dem Gebäude tiefensortiert gezeichnet (`src/render/frontDecor.ts`),
   einige stehen also vor dem Gebäude. Unter Gebäuden und Straßen wächst nichts: der Wald wird dort gerodet.
-- Ausstehend wegen des erreichten Monatslimits des OpenRouter-Schlüssels: Wohnhaus-Varianten Siedler 9 bis 16 und alle weiteren Stufen
-  (Bürger, Kaufleute, Aristokraten, Ruinen), außerdem Varianten für Farmen, Forsthaus, Fischerei und Minen. Bis sie da sind, nutzt das Spiel
-  die vorhandenen Bilder. Weiter mit: `node scripts/assets/generate.mjs --group "Wohnhäuser"` (erzeugt nur, was fehlt).
+- Alle Varianten sind erzeugt: 16 je Wohnhausstufe, 4 Ruinen, je 4 für Farmen, Forsthaus, Fischerei und Minen.
