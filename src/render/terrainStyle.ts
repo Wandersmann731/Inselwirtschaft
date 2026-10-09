@@ -4,7 +4,7 @@ import { HALF_H, HALF_W } from './iso'
 /** Placeholder colours until real sprites exist. */
 export const SEA_COLOR = '#1d4e6b'
 
-const TILE_COLORS: Record<number, string> = {
+export const TILE_COLORS: Record<number, string> = {
   [Terrain.Beach]: '#e2d39a',
   [Terrain.Grass]: '#6aa84f',
   [Terrain.Forest]: '#38761d',
