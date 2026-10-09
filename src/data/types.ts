@@ -137,6 +137,16 @@ export interface TierDef {
   unlock?: { tier: string; residents: number }
 }
 
+/** A production chain as the build menu shows it: its buildings from raw material to the finished good. */
+export interface ChainDef {
+  id: string
+  name: string
+  /** What the chain delivers; used to tell who needs it. */
+  goods: string[]
+  /** Buildings in order, raw material first. */
+  buildings: string[]
+}
+
 export interface ClimateDef {
   id: string
   name: string

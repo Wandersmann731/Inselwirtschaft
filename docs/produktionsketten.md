@@ -35,5 +35,10 @@ Ein Betrieb mit `cycleTicks` 40 macht 1,5 Waren pro Wirtschaftszyklus (60 Ticks)
 - Freischaltung der Betriebe nach Stufe: Hopfen ab Siedlern, Zuckerrohr ab Bürgern, Marmor ab Bürgern, Wein ab Kaufleuten (wie die Seite), der Rest wie vorher.
 - Alte Spielstände (Version 9) werden migriert: Kelterei-Gebäude werden entfernt, Waren Kartoffeln und Trauben entfallen, Indigo wird zu Farbstoffen.
 
+## Prüfung der Ketten
+`tests/chainAudit.test.ts` prüft bei jedem Testlauf die Daten: jede Ware wird irgendwo hergestellt und von Bewohnern, beim Bauen oder von einem anderen Betrieb gebraucht, jeder Betrieb liefert etwas Gebrauchtes, jedes Bedürfnis einer Stufe ist mit Betrieben erreichbar, die bis zu dieser Stufe freigeschaltet sind, und jede Fruchtbarkeit und jedes Vorkommen wird von einem Gebäude genutzt. Dabei gefunden und behoben: Die Erzmine war erst ab Siedlern baubar, obwohl schon Pioniergebäude Werkzeug kosten (jetzt ab Pionieren), und die Fruchtbarkeit „Pelztiere“ hatte keinen Betrieb (entfernt).
+
+Das Baumenü gruppiert die Betriebe nach Ketten (`src/data/chains.json`), zeigt je Betrieb Vorschaubild und Waren (Eingang → Ausgang) und je Kette, wer sie braucht.
+
 ## Noch nicht im Spiel (stehen auf der Seite)
 Seile (Hanfplantage, Seilerei), Kleidung (Schneiderei mit Stoffen und Pelzen, Pelztierjäger), Webstube als zweite Weberei, große Erzmine und große Erzschmelze mit Holzkohle (Köhlerei), Wissen, Papier und Bücher (Schule, Universität) und alle Militärwaren. Auch die Freischaltung nach Einwohnerzahl (zum Beispiel Salz ab 125 Pionieren) ist nicht eingebaut, bei uns schaltet die Stufe frei.

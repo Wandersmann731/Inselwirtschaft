@@ -9,13 +9,13 @@
     "id": "tundra",
     "name": "Tundrazone",
     "color": "#9fb59b",
-    "fertilities": ["forest", "cattle", "fur", "potatoes", "game"]
+    "fertilities": ["forest", "cattle", "potatoes", "game"]
   },
   {
     "id": "north",
     "name": "Nordzone",
     "color": "#6aa84f",
-    "fertilities": ["forest", "cattle", "fur", "sheep", "grain", "potatoes", "hops", "game"]
+    "fertilities": ["forest", "cattle", "sheep", "grain", "potatoes", "hops", "game"]
   },
   {
     "id": "prairie",

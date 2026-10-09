@@ -2,7 +2,6 @@
   "fertilities": [
     { "id": "forest", "name": "Wald" },
     { "id": "cattle", "name": "Weideland für Rinder" },
-    { "id": "fur", "name": "Pelztiere" },
     { "id": "sheep", "name": "Schafweiden" },
     { "id": "grain", "name": "Getreideanbau" },
     { "id": "potatoes", "name": "Kartoffelanbau" },
