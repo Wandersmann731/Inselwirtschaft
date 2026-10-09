@@ -1,0 +1,19 @@
+[
+  { "id": "wood", "name": "Holz", "goods": ["wood"], "buildings": ["forester"] },
+  { "id": "bricks", "name": "Ziegel", "goods": ["bricks"], "buildings": ["quarry", "stonemason"] },
+  { "id": "tools", "name": "Werkzeug", "goods": ["tools"], "buildings": ["ore_mine", "smelter", "toolmaker"] },
+  { "id": "marble", "name": "Marmor", "goods": ["marble"], "buildings": ["marble_quarry", "marble_mason"] },
+  { "id": "fish", "name": "Fisch", "goods": ["food"], "buildings": ["fishery"] },
+  { "id": "bread", "name": "Brot", "goods": ["food"], "buildings": ["grain_farm", "mill", "bakery"] },
+  { "id": "meat", "name": "Fleisch und Wild", "goods": ["food", "hides"], "buildings": ["cattle_farm", "butcher", "hunting_lodge"] },
+  { "id": "leather", "name": "Leder", "goods": ["leather"], "buildings": ["tannery"] },
+  { "id": "cloth", "name": "Stoffe", "goods": ["cloth"], "buildings": ["sheep_farm", "cotton_plantation", "weaver"] },
+  { "id": "salt", "name": "Salz", "goods": ["salt"], "buildings": ["salt_mine", "saltworks"] },
+  { "id": "alcohol", "name": "Alkohol", "goods": ["alcohol"], "buildings": ["potato_farm", "hops_farm", "brewery", "sugar_plantation", "distillery"] },
+  { "id": "tobacco", "name": "Tabak", "goods": ["tobacco"], "buildings": ["tobacco_plantation", "tobacco_factory"] },
+  { "id": "spices", "name": "Gewürze", "goods": ["spices"], "buildings": ["spice_plantation"] },
+  { "id": "silk", "name": "Seide", "goods": ["silk"], "buildings": ["silk_plantation", "indigo_farm", "dyer"] },
+  { "id": "lamp_oil", "name": "Lampenöl", "goods": ["lamp_oil"], "buildings": ["whaler", "oil_boiler"] },
+  { "id": "wine", "name": "Wein", "goods": ["wine"], "buildings": ["vineyard"] },
+  { "id": "jewelry", "name": "Schmuck", "goods": ["jewelry"], "buildings": ["gold_mine", "gem_mine", "goldsmith"] }
+]

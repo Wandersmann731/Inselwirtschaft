@@ -122,13 +122,82 @@ body,
   -webkit-overflow-scrolling: touch;
 }
 
-.build-item {
+.build-group {
   flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 10px;
+  border-right: 1px solid #3a5266;
+}
+
+.build-group:last-child {
+  border-right: 0;
+}
+
+.build-group-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffd23f;
+}
+
+.build-group-users {
+  font-weight: 400;
+  color: #b8c7d3;
+}
+
+.build-group-row,
+.build-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chain-arrow {
+  font-size: 22px;
+  color: #8ba3b5;
+}
+
+.build-thumb {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+
+.build-item-text {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
-  min-width: 130px;
+}
+
+.build-item-size {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.build-flow {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.flow-arrow {
+  color: #8ba3b5;
+  font-size: 14px;
+}
+
+.build-item {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-width: 0;
   min-height: var(--button-size);
   padding: 6px 10px;
   border: 2px solid transparent;

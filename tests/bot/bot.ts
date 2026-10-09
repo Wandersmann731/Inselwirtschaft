@@ -274,7 +274,7 @@ export class Bot {
     const n = houses.length
     const stock = (good: string): number => island.stock[good] ?? 0
     // the tool chain itself costs tools, so it is built early, while there still are some
-    const needTools = n >= 4 || stock('tools') < 40
+    const needTools = stock('tools') < 50 // the ore mine is open from the start now, but the chain is only worth its upkeep once the start stock is half used
     const needBricks = n >= 8 || stock('bricks') < 70
     const settlers = houses.some((h) => tierRank(h.house!.tier) >= 1) || n >= 8
     const plan: { type: string; want: number }[] = [

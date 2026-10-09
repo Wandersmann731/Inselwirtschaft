@@ -210,7 +210,7 @@
     "size": [2, 2],
     "cost": { "tools": 2, "wood": 6, "bricks": 0, "marble": 0, "coins": 400 },
     "upkeep": { "active": 15, "idle": 4 },
-    "unlockTier": "settlers",
+    "unlockTier": "pioneers",
     "placement": "mountain",
     "color": "#4a4a55",
     "needsRoad": true,
