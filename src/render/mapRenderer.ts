@@ -162,7 +162,7 @@ export class MapRenderer {
       this.cameraMap = map
       this.selected = null
       this.camera = centerCamera(mapBounds(map), 1, viewport)
-      if (this.getState().owned && this.getState().buildings.length === 0) {
+      if (this.getState().owned && !this.getState().buildings.some((b) => b.house)) {
         const site = findStartSite(map)
         const at = tileToWorld(site.x + 0.5, site.y + 0.5)
         this.camera = clampCamera({ ...this.camera, x: at.x, y: at.y }, viewport, mapBounds(map))

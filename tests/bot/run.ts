@@ -1,7 +1,8 @@
 import { config } from '../../src/data'
 import { snapshotOf, type CycleSnapshot } from '../../src/game/history'
 import { createRng } from '../../src/sim/rng'
-import { createInitialState, type GameState } from '../../src/sim/state'
+import { createNewGame } from '../../src/sim/newGame'
+import type { GameState } from '../../src/sim/state'
 import { tick } from '../../src/sim/tick'
 import { residentsOfTier } from '../../src/sim/tiers'
 import { Bot } from './bot'
@@ -30,7 +31,7 @@ const TIERS = ['pioneers', 'settlers', 'citizens', 'merchants', 'aristocrats']
 
 /** Lets the bot play the home island for `minutes` of game time (1 tick = 1 second). */
 export function playthrough(seed: number, minutes: number, startCoins = config.startCoins): Summary {
-  let state = createInitialState(seed, startCoins)
+  let state = createNewGame(seed, startCoins)
   const bot = new Bot(0)
   const history: CycleSnapshot[] = []
   const milestones: Record<string, Milestone> = {}
