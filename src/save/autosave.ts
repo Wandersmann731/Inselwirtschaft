@@ -2,6 +2,11 @@ import { config } from '../data'
 import type { GameLoop } from '../game/gameLoop'
 import { saveState } from './saveGame'
 
+/** Saves right now into the autosave slot. */
+export function saveNow(loop: GameLoop): Promise<void> {
+  return saveState(loop.getState())
+}
+
 function save(loop: GameLoop): void {
   saveState(loop.getState()).catch((error) => console.error('Autosave failed', error))
 }

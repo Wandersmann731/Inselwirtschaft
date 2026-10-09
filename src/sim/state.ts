@@ -208,14 +208,14 @@ export interface GameState {
 export type IslandState = GameState & Island
 
 /** Game with the given islands. The first island is the home island. */
-export function createStateWith(seed: number, islands: Island[], world: WorldChart): GameState {
+export function createStateWith(seed: number, islands: Island[], world: WorldChart, startCoins: number = config.startCoins): GameState {
   return {
     version: CURRENT_SAVE_VERSION,
     seed,
     rngState: seed >>> 0,
     tick: 0,
     speed: config.defaultSpeed,
-    coins: config.startCoins,
+    coins: startCoins,
     highestTier: 0,
     islands,
     world,
@@ -226,7 +226,7 @@ export function createStateWith(seed: number, islands: Island[], world: WorldCha
   }
 }
 
-export function createInitialState(seed: number = config.startSeed): GameState {
+export function createInitialState(seed: number = config.startSeed, startCoins: number = config.startCoins): GameState {
   const { islands, world } = generateWorld(seed)
-  return createStateWith(seed, islands, world)
+  return createStateWith(seed, islands, world, startCoins)
 }

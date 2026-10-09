@@ -7,6 +7,14 @@ export interface GameConfig {
   loopIntervalMs: number
   maxTicksPerUpdate: number
   economyCycleTicks: number
+  /** Start money choices in the new game menu. */
+  startCoinOptions: number[]
+  /** Extra speeds for testing and balancing, only offered in debug mode. */
+  debugSpeeds: number[]
+  /** Manual save slots next to the autosave. */
+  saveSlots: number
+  /** The start view looks for a grass area of size x size tiles, at most this far from the sea. */
+  startSite: { size: number; maxCoastDistance: number }
   autosaveSeconds: number
   startStock: Record<string, number>
   /** Share of the building cost paid back on demolition. */

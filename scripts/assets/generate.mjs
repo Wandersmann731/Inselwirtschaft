@@ -131,7 +131,7 @@ async function finish(job, rawFile) {
 
   if (job.kind === 'app') {
     if (job.id === 'logo') {
-      const cut = await removeBackground(await sharp(rawFile).png().toBuffer())
+      const cut = await shrinkMatte(await removeBackground(await sharp(rawFile).png().toBuffer(), { low: 55, high: 120 }), 2)
       fs.writeFileSync(target, await fitInto(cut, job.width, job.height, { margin: 0.03 }))
     } else if (job.id === 'splash') {
       fs.writeFileSync(target, await sharp(rawFile).resize(job.width, job.height, { fit: 'cover' }).png().toBuffer())

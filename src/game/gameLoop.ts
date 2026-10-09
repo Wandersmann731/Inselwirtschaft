@@ -4,6 +4,7 @@ import { getIsland, onIsland, toIslandState } from '../sim/islands'
 import { createRng } from '../sim/rng'
 import type { GameSpeed, GameState, IslandState } from '../sim/state'
 import { setSpeed, tick } from '../sim/tick'
+import { recordCycles, type CycleSnapshot } from './history'
 
 type Listener = () => void
 
@@ -23,11 +24,15 @@ export class GameLoop {
   private timer: number | undefined
   private lastTime = 0
   private accumulatorMs = 0
+  private history: CycleSnapshot[] = []
 
   constructor(initial: GameState) {
     const home = initial.islands.find((island) => island.owned) ?? initial.islands[0]
     this.view = { state: initial, activeIsland: home.id }
   }
+
+  /** The last economy cycles, for the balancing panel. Not saved. */
+  getHistory = (): CycleSnapshot[] => this.history
 
   /** Changes whenever the state or the shown island changes. */
   getView = (): GameView => this.view
@@ -85,8 +90,20 @@ export class GameLoop {
     this.dispatch((state) => onIsland(state, islandId, command))
   }
 
+  /** Runs a number of ticks at once, without waiting. For balancing. */
+  fastForward(ticks: number): void {
+    let next = this.view.state
+    for (let i = 0; i < ticks; i++) {
+      const before = next
+      next = tick(next, createRng(next.rngState))
+      this.history = recordCycles(this.history, before, next, config.economyCycleTicks)
+    }
+    this.setState(next)
+  }
+
   /** Replaces the whole state, e.g. after loading a save. */
   replaceState(state: GameState): void {
+    this.history = []
     this.accumulatorMs = 0
     const stillThere = state.islands.some((island) => island.id === this.view.activeIsland)
     this.view = { state, activeIsland: stillThere ? this.view.activeIsland : state.islands[0].id }
@@ -107,7 +124,9 @@ export class GameLoop {
     if (due.ticks === 0) return
     let next = state
     for (let i = 0; i < due.ticks; i++) {
+      const before = next
       next = tick(next, createRng(next.rngState))
+      this.history = recordCycles(this.history, before, next, config.economyCycleTicks)
     }
     this.setState(next)
   }
