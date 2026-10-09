@@ -1,6 +1,8 @@
 import { getBuilding } from '../data'
 import { buildingRect } from '../sim/coverage'
-import type { GameState, ProductionStatusKind } from '../sim/state'
+import type { GameState, HouseState, ProductionStatusKind } from '../sim/state'
+import { getTier, tierIndex } from '../sim/tiers'
+import { config } from '../data'
 import { diamondPath } from './terrainStyle'
 import { boxHeight, drawBox, type TileRect } from './shapes'
 import { tileToWorld } from './iso'
@@ -44,9 +46,11 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: GameState, r
     .sort((a, b) => a.rect.x + a.rect.w + a.rect.y + a.rect.h - (b.rect.x + b.rect.w + b.rect.y + b.rect.h))
   for (const { building, rect } of visible) {
     const def = getBuilding(building.type)
-    const height = boxHeight(rect, def.category)
-    drawBox(ctx, rect, height, def.color)
-    if (building.production) drawStatusDot(ctx, rect, height, building.production.status.kind)
+    const house = building.house
+    const height = house ? houseHeight(house) : boxHeight(rect, def.category)
+    drawBox(ctx, rect, height, house ? houseColor(house) : def.color)
+    if (building.production) drawStatusDot(ctx, rect, height, STATUS_COLORS[building.production.status.kind])
+    else if (house && !house.ruin && house.residents > 0) drawStatusDot(ctx, rect, height, houseDotColor(house))
   }
 }
 
@@ -60,13 +64,32 @@ export const STATUS_COLORS: Record<ProductionStatusKind, string> = {
   inactive: '#9aa0a6',
 }
 
-function drawStatusDot(ctx: CanvasRenderingContext2D, rect: TileRect, height: number, kind: ProductionStatusKind): void {
+function drawStatusDot(ctx: CanvasRenderingContext2D, rect: TileRect, height: number, color: string): void {
   const center = tileToWorld(rect.x + rect.w / 2, rect.y + rect.h / 2)
-  ctx.fillStyle = STATUS_COLORS[kind]
+  ctx.fillStyle = color
   ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)'
   ctx.lineWidth = 1.5
   ctx.beginPath()
   ctx.arc(center.x, center.y - height, 6, 0, Math.PI * 2)
   ctx.fill()
   ctx.stroke()
+}
+
+const RUIN_COLOR = '#4d4a47'
+
+function houseColor(house: HouseState): string {
+  return house.ruin ? RUIN_COLOR : getTier(house.tier).color
+}
+
+/** Houses grow taller with their tier. Ruins are low. */
+function houseHeight(house: HouseState): number {
+  return house.ruin ? 8 : 20 + tierIndex(house.tier) * 6
+}
+
+/** Green if all needs are met, red if one is in shortage, yellow in between. */
+function houseDotColor(house: HouseState): string {
+  const values = Object.values(house.needs)
+  if (values.some((percent) => percent < config.population.shortageBelow)) return STATUS_COLORS.noRoad
+  if (values.some((percent) => percent < 100 - 1e-6)) return STATUS_COLORS.waiting
+  return STATUS_COLORS.producing
 }

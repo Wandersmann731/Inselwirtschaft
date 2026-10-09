@@ -1,7 +1,8 @@
 import { config, getBuilding } from '../data'
 import { generateIsland } from '../world/islandGenerator'
 import { createProduction } from './productionState'
-import { CURRENT_SAVE_VERSION, type GameState } from './state'
+import { createHouse } from './tiers'
+import { CURRENT_SAVE_VERSION, createInitialState, type GameState } from './state'
 
 type RawState = Record<string, unknown>
 /** Upgrades a save from version N to N + 1. */
@@ -30,6 +31,21 @@ export const MIGRATIONS: Record<number, Migration> = {
       getBuilding(building.type).output ? { ...building, production: createProduction() } : building,
     ),
   }),
+  // v5 adds houses with residents and the highest tier reached.
+  4: (data) => ({
+    ...data,
+    highestTier: 0,
+    buildings: (data.buildings as { type: string }[]).map((building) => {
+      const tier = getBuilding(building.type).houseTier
+      return tier ? { ...building, house: createHouse(tier) } : building
+    }),
+  }),
+  // v6 makes all houses 2x2 and the islands much larger. The old layout no longer fits:
+  // the world is generated again from the seed and the buildings are gone. Time, coins and goods stay.
+  5: (data) => {
+    const fresh = createInitialState(Number(data.seed))
+    return { ...fresh, tick: data.tick, speed: data.speed, coins: data.coins, stock: data.stock, rngState: data.rngState }
+  },
 }
 
 /** Brings a raw saved object up to the current version or throws if that is impossible. */

@@ -73,8 +73,8 @@ describe('placement rules', () => {
 
   it('rejects overlapping buildings and building on roads', () => {
     let state = placeBuilding(testIsland(), 'house_pioneers', 3, 3, false)
-    expect(checkPlacement(state, 'house_pioneers', 5, 5, false)?.code).toBe('occupied')
-    expect(checkPlacement(state, 'house_pioneers', 6, 3, false)).toBeNull()
+    expect(checkPlacement(state, 'house_pioneers', 4, 4, false)?.code).toBe('occupied')
+    expect(checkPlacement(state, 'house_pioneers', 5, 3, false)).toBeNull()
     state = placeRoads(state, [{ x: 9, y: 9 }])
     expect(checkPlacement(state, 'food_salt_stand', 9, 9, false)?.code).toBe('occupied')
   })
@@ -114,8 +114,8 @@ describe('costs', () => {
     const state = placeBuilding(testIsland(), 'house_pioneers', 3, 3, false)
     const id = state.buildings[0].id
     const { width } = state.map
-    for (let y = 3; y < 6; y++) for (let x = 3; x < 6; x++) expect(state.occupancy[y * width + x]).toBe(id)
-    expect(state.occupancy.filter((v) => v === id)).toHaveLength(9)
+    for (let y = 3; y < 5; y++) for (let x = 3; x < 5; x++) expect(state.occupancy[y * width + x]).toBe(id)
+    expect(state.occupancy.filter((v) => v === id)).toHaveLength(4)
   })
 })
 

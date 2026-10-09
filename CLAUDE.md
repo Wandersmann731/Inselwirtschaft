@@ -8,8 +8,8 @@ Das Projekt ist privat und nicht kommerziell.
 ## Spielkern
 - Keine Steuern. Einnahmen entstehen nur, wenn Bewohner an Marktständen Waren kaufen.
 - Jedes Gebäude hat Unterhalt, aktiv oder stillgelegt (günstiger).
-- 5 Stufen: Pioniere (8 Bewohner), Siedler (15), Bürger (28), Kaufleute (42) auf 3x3,
-  Aristokraten (30) auf 4x4. Aufstieg nur bei 100 % Erfüllung und vorhandenem Baumaterial.
+- 5 Stufen: Pioniere (8 Bewohner), Siedler (15), Bürger (28), Kaufleute (42),
+  Aristokraten (30). Alle Wohnhäuser sind 2x2, ebenso alle Startgebäude (Betriebe, Markthaus, Kontor). Aufstieg nur bei 100 % Erfüllung und vorhandenem Baumaterial.
   Salz ersetzt bestimmte fehlende Waren. Aristokraten werden bei Mangel zu Ruinen.
 - Öffentliche Gebäude und Marktstände wirken in einem Radius ab dem Gebäuderand.
 - Mehrstufige Produktionsketten, mehrere Inseln mit Klimazonen und Fruchtbarkeiten,

@@ -2,6 +2,7 @@ import { config, getBuilding, goods } from '../data'
 import type { BuildingCost, BuildingDef } from '../data'
 import { Terrain } from '../world/terrain'
 import { createProduction } from './productionState'
+import { createHouse, isTierUnlocked } from './tiers'
 import type { GameState, PlacedBuilding } from './state'
 
 export type PlacementErrorCode =
@@ -12,6 +13,7 @@ export type PlacementErrorCode =
   | 'occupied'
   | 'notCoast'
   | 'funds'
+  | 'locked'
 
 export interface PlacementError {
   code: PlacementErrorCode
@@ -77,6 +79,7 @@ export function checkPlacement(
   rotated: boolean,
 ): PlacementError | null {
   const def = getBuilding(typeId)
+  if (!isTierUnlocked(state, def.unlockTier)) return { code: 'locked' }
   const { w, h } = footprint(def, rotated)
   for (let ty = y; ty < y + h; ty++) {
     for (let tx = x; tx < x + w; tx++) {
@@ -112,6 +115,7 @@ export function placeBuilding(
   const { w, h } = footprint(def, rotated)
   const building: PlacedBuilding = { id: state.nextBuildingId, type: typeId, x, y, rotated, active: true }
   if (def.output) building.production = createProduction()
+  if (def.houseTier) building.house = createHouse(def.houseTier)
   const occupancy = state.occupancy.slice()
   for (let ty = y; ty < y + h; ty++) {
     for (let tx = x; tx < x + w; tx++) occupancy[ty * state.map.width + tx] = building.id

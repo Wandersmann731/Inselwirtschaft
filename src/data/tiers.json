@@ -3,7 +3,90 @@
     "id": "pioneers",
     "name": "Pioniere",
     "residents": 8,
-    "size": [3, 3],
-    "needs": ["food", "cloth", "chapel"]
+    "size": [2, 2],
+    "color": "#c98a4b",
+    "needs": [
+      { "id": "food", "good": "food", "rate": 0.1 },
+      {
+        "id": "cloth",
+        "good": "cloth",
+        "rate": 0.05,
+        "alternatives": ["leather"]
+      },
+      { "id": "chapel", "building": "chapel" }
+    ]
+  },
+  {
+    "id": "settlers",
+    "name": "Siedler",
+    "residents": 15,
+    "size": [2, 2],
+    "color": "#d9a066",
+    "upgradeCost": { "tools": 1, "wood": 3, "bricks": 0, "marble": 0, "coins": 0 },
+    "needs": [
+      { "id": "alcohol", "good": "alcohol", "rate": 0.06 },
+      { "id": "salt", "good": "salt", "rate": 0.04 },
+      { "id": "tavern", "building": "tavern" }
+    ]
+  },
+  {
+    "id": "citizens",
+    "name": "Bürger",
+    "residents": 28,
+    "size": [2, 2],
+    "color": "#e0b98a",
+    "upgradeCost": { "tools": 2, "wood": 4, "bricks": 4, "marble": 0, "coins": 0 },
+    "needs": [
+      {
+        "id": "tobacco",
+        "good": "tobacco",
+        "rate": 0.04,
+        "substitutes": ["salt"]
+      },
+      {
+        "id": "spices",
+        "good": "spices",
+        "rate": 0.04,
+        "substitutes": ["salt"]
+      },
+      { "id": "church", "building": "church" }
+    ]
+  },
+  {
+    "id": "merchants",
+    "name": "Kaufleute",
+    "residents": 42,
+    "size": [2, 2],
+    "color": "#eed2ad",
+    "upgradeCost": { "tools": 3, "wood": 5, "bricks": 8, "marble": 0, "coins": 0 },
+    "needs": [
+      {
+        "id": "silk",
+        "good": "silk",
+        "rate": 0.03,
+        "substitutes": ["salt"]
+      },
+      {
+        "id": "lamp_oil",
+        "good": "lamp_oil",
+        "rate": 0.03,
+        "substitutes": ["salt"]
+      },
+      { "id": "bathhouse", "building": "bathhouse" }
+    ]
+  },
+  {
+    "id": "aristocrats",
+    "name": "Aristokraten",
+    "residents": 30,
+    "size": [2, 2],
+    "color": "#f5e6c8",
+    "unlock": { "tier": "merchants", "residents": 1900 },
+    "needs": [
+      { "id": "jewelry", "good": "jewelry", "rate": 0.02 },
+      { "id": "wine", "good": "wine", "rate": 0.03 },
+      { "id": "theater", "building": "theater" },
+      { "id": "cathedral", "building": "cathedral" }
+    ]
   }
 ]

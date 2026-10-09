@@ -4,6 +4,7 @@ import type { GameSpeed } from '../sim/state'
 interface TopHudProps {
   tick: number
   coins: number
+  residents: number
   stock: Record<string, number>
   speed: GameSpeed
   onSpeedChange: (speed: GameSpeed) => void
@@ -13,16 +14,17 @@ function speedLabel(speed: GameSpeed): string {
   return speed === 0 ? 'Pause' : `${speed}x`
 }
 
-export function TopHud({ tick, coins, stock, speed, onSpeedChange }: TopHudProps) {
+export function TopHud({ tick, coins, residents, stock, speed, onSpeedChange }: TopHudProps) {
   return (
     <div className="top-hud">
       <div className="hud-stats">
-        <span className="hud-stat">Münzen: {coins.toLocaleString('de-DE')}</span>
+        <span className="hud-stat">Münzen: {Math.floor(coins).toLocaleString('de-DE')}</span>
+        <span className="hud-stat">Einwohner: {Math.floor(residents).toLocaleString('de-DE')}</span>
         {goods
           .filter((good) => good.id in config.startStock)
           .map((good) => (
             <span key={good.id} className="hud-stat">
-              {good.name}: {(stock[good.id] ?? 0).toLocaleString('de-DE')}
+              {good.name}: {Math.floor(stock[good.id] ?? 0).toLocaleString('de-DE')}
             </span>
           ))}
         <span className="hud-stat">Tick: {tick.toLocaleString('de-DE')}</span>

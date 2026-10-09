@@ -15,6 +15,7 @@ export function stateFromRows(rows: string[], overrides: Partial<GameState> = {}
   const tiles = rows.flatMap((row) => Array.from(row, (char) => CHARS[char]))
   return {
     ...createInitialState(1),
+    highestTier: 3,
     map: { width, height: rows.length, tiles },
     occupancy: new Array(tiles.length).fill(0),
     roads: new Array(tiles.length).fill(0),
@@ -51,4 +52,17 @@ export function grassField(width: number, height: number, overrides: Partial<Gam
     Array.from({ length: height }, () => ','.repeat(width)),
     overrides,
   )
+}
+
+/** Replaces the house state of the building with the given id. */
+export function patchHouse(state: GameState, buildingId: number, patch: Partial<NonNullable<GameState['buildings'][number]['house']>>): GameState {
+  return {
+    ...state,
+    buildings: state.buildings.map((b) => (b.id === buildingId && b.house ? { ...b, house: { ...b.house, ...patch } } : b)),
+  }
+}
+
+/** Changes one building (for example to switch it off). */
+export function patchBuilding(state: GameState, buildingId: number, patch: Partial<GameState['buildings'][number]>): GameState {
+  return { ...state, buildings: state.buildings.map((b) => (b.id === buildingId ? { ...b, ...patch } : b)) }
 }

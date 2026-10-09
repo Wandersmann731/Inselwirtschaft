@@ -11,6 +11,20 @@ export interface GameConfig {
   startStock: Record<string, number>
   /** Share of the building cost paid back on demolition. */
   refundRate: number
+  population: {
+    /** Residents moving into a house with all needs met, per economy cycle. */
+    moveInPerCycle: number
+    /** Residents leaving a house in shortage, per economy cycle. */
+    moveOutPerCycle: number
+    /** Cycles with all needs at 100 % (and full house) before a house rises a tier. */
+    upgradeCycles: number
+    /** Cycles in shortage before a house falls back one tier. */
+    downgradeCycles: number
+    /** Cycles in shortage before an aristocrat house turns into a ruin. */
+    ruinCycles: number
+    /** A need below this percentage counts as shortage. */
+    shortageBelow: number
+  }
   production: {
     /** Input buffer of a producer, in multiples of what one cycle needs. */
     inputBufferCycles: number
@@ -26,6 +40,8 @@ export interface GameConfig {
 export interface GoodDef {
   id: string
   name: string
+  /** Coins paid by residents for one unit at a market stand. */
+  price?: number
 }
 
 export interface BuildingInput {
@@ -62,6 +78,10 @@ export interface BuildingDef {
   radius?: number
   /** Market houses and Kontore: producers within this many tiles of the edge deliver to them. */
   catchment?: number
+  /** Market stand: the goods residents can buy here, within `radius`. */
+  sells?: string[]
+  /** Housing: the civilisation tier a new house starts in. */
+  houseTier?: string
   /** Roads are stored in the road layer instead of as buildings. */
   kind?: 'road'
   inputs?: BuildingInput[]
@@ -70,12 +90,33 @@ export interface BuildingDef {
   needsRoad?: boolean
 }
 
+/** One need of a civilisation tier: either a good bought at stands or a public building nearby. */
+export interface TierNeed {
+  id: string
+  /** Good bought at market stands. */
+  good?: string
+  /** Units per resident and economy cycle. */
+  rate?: number
+  /** Goods that count the same as `good`. */
+  alternatives?: string[]
+  /** Goods that replace `good` if it is missing, e.g. salt. */
+  substitutes?: string[]
+  /** Public building type that must cover the house instead of a good. */
+  building?: string
+}
+
 export interface TierDef {
   id: string
   name: string
   residents: number
   size: [number, number]
-  needs: string[]
+  color: string
+  /** Needs this tier adds to those of the tiers below. */
+  needs: TierNeed[]
+  /** Building materials taken from the store when a house rises into this tier. */
+  upgradeCost?: BuildingCost
+  /** Houses of this tier can only be built once enough residents of `tier` live in the realm. */
+  unlock?: { tier: string; residents: number }
 }
 
 export interface ClimateDef {

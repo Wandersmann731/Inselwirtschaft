@@ -1,54 +1,25 @@
 [
-  {
-    "id": "tools",
-    "name": "Werkzeug"
-  },
-  {
-    "id": "wood",
-    "name": "Holz"
-  },
-  {
-    "id": "bricks",
-    "name": "Ziegel"
-  },
-  {
-    "id": "marble",
-    "name": "Marmor"
-  },
-  {
-    "id": "stone",
-    "name": "Naturstein"
-  },
-  {
-    "id": "ore",
-    "name": "Eisenerz"
-  },
-  {
-    "id": "iron",
-    "name": "Eisen"
-  },
-  {
-    "id": "wool",
-    "name": "Wolle"
-  },
-  {
-    "id": "cotton",
-    "name": "Baumwolle"
-  },
-  {
-    "id": "cloth",
-    "name": "Stoffe"
-  },
-  {
-    "id": "grain",
-    "name": "Getreide"
-  },
-  {
-    "id": "flour",
-    "name": "Mehl"
-  },
-  {
-    "id": "food",
-    "name": "Nahrung"
-  }
+  { "id": "tools", "name": "Werkzeug" },
+  { "id": "wood", "name": "Holz" },
+  { "id": "bricks", "name": "Ziegel" },
+  { "id": "marble", "name": "Marmor" },
+  { "id": "stone", "name": "Naturstein" },
+  { "id": "ore", "name": "Eisenerz" },
+  { "id": "iron", "name": "Eisen" },
+  { "id": "wool", "name": "Wolle" },
+  { "id": "cotton", "name": "Baumwolle" },
+  { "id": "cloth", "name": "Stoffe", "price": 10 },
+  { "id": "leather", "name": "Leder", "price": 10 },
+  { "id": "grain", "name": "Getreide" },
+  { "id": "flour", "name": "Mehl" },
+  { "id": "food", "name": "Nahrung", "price": 8 },
+  { "id": "potatoes", "name": "Kartoffeln" },
+  { "id": "alcohol", "name": "Alkohol", "price": 12 },
+  { "id": "salt", "name": "Salz", "price": 6 },
+  { "id": "tobacco", "name": "Tabak", "price": 14 },
+  { "id": "spices", "name": "Gewürze", "price": 14 },
+  { "id": "silk", "name": "Seidenstoffe", "price": 20 },
+  { "id": "lamp_oil", "name": "Lampenöl", "price": 14 },
+  { "id": "jewelry", "name": "Schmuck", "price": 40 },
+  { "id": "wine", "name": "Wein", "price": 20 }
 ]

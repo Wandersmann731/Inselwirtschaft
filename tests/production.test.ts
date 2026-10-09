@@ -26,7 +26,7 @@ function connected(producer: string, stockOverride: Record<string, number> = {})
   let state = grassField(40, 12, rich)
   state = placeBuilding(state, 'market_house', 2, 2, false)
   state = placeBuilding(state, producer, 8, 2, false)
-  state = roadRow(state, 3, 5, 7)
+  state = roadRow(state, 3, 4, 7)
   return { ...state, stock: { ...state.stock, ...stockOverride } }
 }
 
@@ -54,10 +54,10 @@ describe('producer without inputs (forester)', () => {
     const base = grassField(40, 12, rich)
     const noWood = (state: GameState): GameState => ({ ...state, stock: { ...state.stock, wood: 0 } })
     const near = noWood(
-      roadRow(placeBuilding(placeBuilding(base, 'market_house', 2, 2, false), 'forester', 8, 2, false), 3, 5, 7),
+      roadRow(placeBuilding(placeBuilding(base, 'market_house', 2, 2, false), 'forester', 8, 2, false), 3, 4, 7),
     )
     const farBase = placeBuilding(placeBuilding(base, 'market_house', 2, 2, false), 'forester', 20, 2, false)
-    const far = noWood(roadRow(farBase, 3, 5, 19))
+    const far = noWood(roadRow(farBase, 3, 4, 19))
     const arrival = (state: GameState): number => {
       let s = state
       for (let i = 1; i <= 200; i++) {
@@ -107,7 +107,7 @@ describe('link status', () => {
     state = placeBuilding(state, 'kontor', 1, 1, false)
     expect(state.buildings).toHaveLength(1)
     state = placeBuilding(state, 'forester', 8, 2, false)
-    state = roadRow(state, 3, 4, 7)
+    state = roadRow(state, 3, 2, 7)
     const result = run(state, 60)
     expect(forester(result).production!.status.kind).toBe('producing')
   })
@@ -209,8 +209,7 @@ describe('chains', () => {
     state = placeBuilding(state, 'forester', 8, 2, false)
     state = placeBuilding(state, 'sheep_farm', 12, 2, false)
     state = placeBuilding(state, 'weaver', 16, 2, false)
-    state = roadRow(state, 5, 4, 17)
-    state = placeRoads(state, [{ x: 5, y: 4 }, { x: 9, y: 4 }, { x: 13, y: 4 }, { x: 17, y: 4 }])
+    state = roadRow(state, 4, 2, 17)
     const result = run({ ...state, stock: { ...state.stock, wood: 0, wool: 0, cloth: 0 } }, 600)
     expect(result.stock.wood).toBeGreaterThan(0)
     expect(result.stock.cloth).toBeGreaterThan(0)

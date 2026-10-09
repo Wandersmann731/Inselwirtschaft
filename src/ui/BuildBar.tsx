@@ -17,7 +17,7 @@ export function BuildBar({ tool, loop }: { tool: BuildController; loop: GameLoop
       {snapshot.selectedBuildingId !== null && (
         <BuildingPanel tool={tool} state={state} buildingId={snapshot.selectedBuildingId} />
       )}
-      <BuildMenu tool={tool} />
+      <BuildMenu tool={tool} state={state} />
     </>
   )
 }

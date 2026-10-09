@@ -1,4 +1,5 @@
 import { useMemo, useSyncExternalStore } from 'react'
+import { totalResidents } from './sim/tiers'
 import { BuildController } from './game/buildController'
 import type { GameLoop } from './game/gameLoop'
 import { BuildBar } from './ui/BuildBar'
@@ -16,6 +17,7 @@ export function App({ loop }: { loop: GameLoop }) {
       <TopHud
         tick={state.tick}
         coins={state.coins}
+        residents={totalResidents(state)}
         stock={state.stock}
         speed={state.speed}
         onSpeedChange={(speed) => loop.setSpeed(speed)}

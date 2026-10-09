@@ -8,17 +8,8 @@
   "maxTicksPerUpdate": 20,
   "economyCycleTicks": 60,
   "autosaveSeconds": 120,
-  "startStock": {
-    "tools": 50,
-    "wood": 100,
-    "bricks": 50,
-    "marble": 20
-  },
+  "startStock": { "tools": 50, "wood": 100, "bricks": 50, "marble": 20 },
   "refundRate": 0.5,
-  "production": {
-    "inputBufferCycles": 2,
-    "outputBufferAmount": 5,
-    "ticksPerRoadTile": 1,
-    "stockCapacity": 200
-  }
+  "production": { "inputBufferCycles": 2, "outputBufferAmount": 5, "ticksPerRoadTile": 1, "stockCapacity": 200 },
+  "population": { "moveInPerCycle": 4, "moveOutPerCycle": 1, "upgradeCycles": 2, "downgradeCycles": 5, "ruinCycles": 2, "shortageBelow": 50 }
 }

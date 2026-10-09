@@ -37,9 +37,9 @@ describe('radius from the building edge', () => {
 
 describe('suppliedHouses', () => {
   it('counts a house if at least one of its tiles is in range', () => {
-    // house at 3..5 x 3..5, stand at 9,4: nearest house tile (5,4) has 3 empty tiles between
+    // house at 3..4 x 3..4, stand at 8,4: nearest house tile (4,4) has 3 empty tiles between
     let state = placeBuilding(testIsland(), 'house_pioneers', 3, 3, false)
-    state = placeBuilding(state, 'food_salt_stand', 9, 4, false)
+    state = placeBuilding(state, 'food_salt_stand', 8, 4, false)
     const stand = state.buildings[1]
     expect(suppliedHouses(state, buildingRect(stand), 4)).toHaveLength(1)
   })
