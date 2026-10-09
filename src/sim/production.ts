@@ -40,7 +40,7 @@ function stepBuilding(
   const def = getBuilding(building.type)
   const output = def.output
   if (!output) return previous
-  const p: ProductionState = { ...previous, inputs: { ...previous.inputs }, shipments: [...previous.shipments] }
+  const p: ProductionState = { ...previous, inputs: { ...previous.inputs }, extra: { ...previous.extra }, shipments: [...previous.shipments] }
 
   deliver(p, stock, now)
 
@@ -87,10 +87,19 @@ function orderInputs(def: BuildingDef, p: ProductionState, stock: Stock, now: nu
   }
 }
 
-/** Sends finished goods to the island store, as far as the store has room. */
+/** Sends finished goods and byproducts to the island store, as far as the store has room. */
 function shipOutput(def: BuildingDef, p: ProductionState, stock: Stock, now: number, delay: number): void {
   const output = def.output
-  if (!output || p.output <= 0) return
+  if (!output) return
+  for (const [good, waiting] of Object.entries(p.extra)) {
+    if (waiting <= 0) continue
+    const underway = sum(p.shipments.filter((s) => s.kind === 'out' && s.good === good).map((s) => s.amount))
+    const amount = Math.min(waiting, config.production.stockCapacity - (stock[good] ?? 0) - underway)
+    if (amount <= 0) continue
+    p.extra[good] = waiting - amount
+    p.shipments.push({ kind: 'out', good, amount, arrive: now + delay })
+  }
+  if (p.output <= 0) return
   const onTheWay = sum(p.shipments.filter((s) => s.kind === 'out').map((s) => s.amount))
   const room = config.production.stockCapacity - (stock[output.good] ?? 0) - onTheWay
   const amount = Math.min(p.output, room)
@@ -112,7 +121,8 @@ function produce(def: BuildingDef, p: ProductionState, ledger: CycleLedger): Pro
       if (!source) return { kind: 'waiting', good: input.good }
       used.push([source, input.amount])
     }
-    if (p.output + output.amount > config.production.outputBufferAmount) return { kind: 'outputFull' }
+    const extraFull = (def.byproducts ?? []).some((extra) => (p.extra[extra.good] ?? 0) + extra.amount > config.production.outputBufferAmount)
+    if (p.output + output.amount > config.production.outputBufferAmount || extraFull) return { kind: 'outputFull' }
     for (const [good, amount] of used) {
       p.inputs[good] -= amount
       addTo(ledger.consumed, good, amount)
@@ -123,6 +133,10 @@ function produce(def: BuildingDef, p: ProductionState, ledger: CycleLedger): Pro
   if (p.progress >= cycleTicks) {
     p.output += output.amount
     addTo(ledger.produced, output.good, output.amount)
+    for (const extra of def.byproducts ?? []) {
+      p.extra[extra.good] = (p.extra[extra.good] ?? 0) + extra.amount
+      addTo(ledger.produced, extra.good, extra.amount)
+    }
     p.progress = 0
   }
   return { kind: 'producing' }

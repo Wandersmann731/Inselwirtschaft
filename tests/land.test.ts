@@ -57,7 +57,7 @@ describe('fertility and deposit rules', () => {
 describe('the data hangs together', () => {
   const fertilities = new Set(climates.flatMap((climate) => climate.fertilities))
   const deposits = new Set(world.archipelago.flatMap((spec) => spec.deposits))
-  const made = new Set(buildings.flatMap((def) => (def.output ? [def.output.good] : [])))
+  const made = new Set(buildings.flatMap((def) => (def.output ? [def.output.good, ...(def.byproducts ?? []).map((extra) => extra.good)] : [])))
 
   it('only asks for fertilities that some climate has and deposits that some island has', () => {
     for (const def of buildings) {
@@ -114,7 +114,7 @@ describe('the data hangs together', () => {
         (def.requiresDeposit && !home.deposits.includes(def.requiresDeposit)),
     )
     const lost = new Set(impossible.flatMap((def) => (def.output ? [def.output.good] : [])))
-    for (const good of ['tobacco_leaf', 'spices', 'raw_silk', 'indigo', 'blubber', 'grapes', 'gold', 'gems']) {
+    for (const good of ['tobacco_leaf', 'spices', 'raw_silk', 'dye', 'blubber', 'wine', 'gold', 'gems']) {
       expect(lost.has(good), good).toBe(true)
     }
   })
@@ -134,24 +134,22 @@ describe('new chains', () => {
     return next
   }
 
-  it('needs both raw silk and indigo for the dyer', () => {
-    const noIndigo = run(connected('dyer', { raw_silk: 10, indigo: 0, silk: 0 }), 20)
-    expect(noIndigo.buildings.find((b) => b.type === 'dyer')!.production!.status).toEqual({ kind: 'waiting', good: 'indigo' })
-    const both = run(connected('dyer', { raw_silk: 10, indigo: 10, silk: 0 }), 120)
+  it('needs both raw silk and dye for the dyer', () => {
+    const noDye = run(connected('dyer', { raw_silk: 10, dye: 0, silk: 0 }), 20)
+    expect(noDye.buildings.find((b) => b.type === 'dyer')!.production!.status).toEqual({ kind: 'waiting', good: 'dye' })
+    const both = run(connected('dyer', { raw_silk: 10, dye: 10, silk: 0 }), 120)
     expect(both.stock.silk).toBeGreaterThanOrEqual(1)
   })
 
-  it('lets the distillery use hops or sugar instead of potatoes', () => {
-    const hops = run(connected('distillery', { potatoes: 0, hops: 10, sugar: 0, alcohol: 0 }), 120)
-    expect(hops.stock.alcohol).toBeGreaterThanOrEqual(1)
-    const sugar = run(connected('distillery', { potatoes: 0, hops: 0, sugar: 10, alcohol: 0 }), 120)
-    expect(sugar.stock.alcohol).toBeGreaterThanOrEqual(1)
+  it('makes alcohol from sugar in the rum distillery and from hops in the brewery', () => {
+    expect(run(connected('distillery', { sugar: 10, alcohol: 0 }), 120).stock.alcohol).toBeGreaterThanOrEqual(1)
+    expect(run(connected('brewery', { hops: 10, alcohol: 0 }), 120).stock.alcohol).toBeGreaterThanOrEqual(1)
+    expect(run(connected('brewery', { hops: 0, alcohol: 0 }), 60).stock.alcohol ?? 0).toBe(0)
   })
 
-  it('goes from tobacco leaves to tobacco, from blubber to lamp oil and from grapes to wine', () => {
+  it('goes from tobacco leaves to tobacco and from blubber to lamp oil', () => {
     expect(run(connected('tobacco_factory', { tobacco_leaf: 10, tobacco: 0 }), 100).stock.tobacco).toBeGreaterThanOrEqual(1)
     expect(run(connected('oil_boiler', { blubber: 10, lamp_oil: 0 }), 100).stock.lamp_oil).toBeGreaterThanOrEqual(1)
-    expect(run(connected('winery', { grapes: 10, wine: 0 }), 100).stock.wine).toBeGreaterThanOrEqual(1)
   })
 
   it('makes jewelry only from gold and gems together', () => {

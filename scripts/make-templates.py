@@ -245,6 +245,8 @@ def main():
     count = 0
     # one template per building id of the graphics list (houses by tier, stands, public buildings, producers, infrastructure)
     for bid, (_description, height) in B.items():
+        if not bid.startswith("house_") and bid not in buildings:
+            continue  # described in asset_data but no longer part of the game
         if bid.startswith("house_"):
             w, h = 2, 2
         else:

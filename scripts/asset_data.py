@@ -35,6 +35,12 @@ B = {
     "stonemason": ("stonemason's yard with cut stone blocks, chisels and a small workshop", 96),
     "smelter": ("ironworks smelter with a brick furnace, a tall brick chimney on the roof and glowing molten metal", 144),
     "toolmaker": ("tool smithy with an anvil, hammers and tools hanging on the wall, forge glow and a brick chimney on the roof", 112),
+    "brewery": ("brewery with a big copper brewing kettle, stacked oak barrels, a brick chimney on the roof and sacks of hops", 112),
+    "saltworks": ("salt works: long shallow evaporation pans with white salt crystals, a low wooden boiling house with a chimney, salt sacks", 96),
+    "butcher": ("butcher's shop with hanging meat and sausages, a wooden chopping block, a stone cellar entrance and a cattle pen at the side", 96),
+    "hunting_lodge": ("hunter's lodge: small timber hut with antlers over the door, drying hides on a frame, a stack of firewood and a bow", 96),
+    "marble_quarry": ("marble quarry cut into a white rocky slope with big pale marble blocks, a wooden crane and a ramp", 112),
+    "marble_mason": ("marble mason's workshop with a stone saw, pale marble slabs and half carved statues, a stone building with a tile roof", 112),
     "salt_mine": ("salt mine with piles of white crystals, a wooden hoist and barrels", 96),
     "potato_farm": ("flat ploughed potato field filling the whole ground: ridged brown soil with green potato plants in rows, a small barn at the back corner", 80),
     "distillery": ("distillery with a copper still, oak barrels and a brick building with a brick chimney on the roof", 112),
@@ -51,7 +57,6 @@ B = {
     "whaler": ("whaling station on a cold shore with a whale-bone arch, boiling barrels and a harpoon boat", 112),
     "oil_boiler": ("oil boilery with big iron cauldrons, barrels, dark brick walls and a tall brick chimney on the roof", 112),
     "vineyard": ("flat vineyard filling the whole ground: rows of grape vines on wires, a small press house at the back corner", 80),
-    "winery": ("winery with big wooden presses and wine barrels in a stone building", 112),
     "gold_mine": ("gold mine entrance with timber supports, carts full of gold ore and gleaming nuggets", 96),
     "gem_mine": ("gemstone mine with blue and red crystals and a timber entrance", 96),
     "goldsmith": ("goldsmith's workshop with a display of gold jewellery and a small furnace", 112),
@@ -71,8 +76,8 @@ FARM_BUILDING_HEIGHT = 80
 HOUSE_VARIANTS = 16
 RUIN_VARIANTS = 4
 FIELD_VARIANTS = 4  # extra pictures for often built field buildings and workshops (variant 1 is the plain id)
-WORKSHOP_IDS = ["weaver", "bakery", "mill", "stonemason", "smelter", "toolmaker", "distillery", "tannery", "tobacco_factory", "dyer", "oil_boiler", "winery", "goldsmith", "market_house"]
-PLOT_IDS = ["forester", "fishery", "quarry", "ore_mine", "salt_mine", "gold_mine", "gem_mine"] + WORKSHOP_IDS  # workshops that stand on a small plot like a house
+WORKSHOP_IDS = ["brewery", "saltworks", "butcher", "hunting_lodge", "marble_mason", "weaver", "bakery", "mill", "stonemason", "smelter", "toolmaker", "distillery", "tannery", "tobacco_factory", "dyer", "oil_boiler", "goldsmith", "market_house"]
+PLOT_IDS = ["forester", "fishery", "quarry", "ore_mine", "salt_mine", "gold_mine", "gem_mine", "marble_quarry"] + WORKSHOP_IDS  # workshops that stand on a small plot like a house
 VARIANT_BUILDINGS = list(FARM_IDS) + PLOT_IDS
 
 # Per tier: the kind of house and lists the variants pick from. Every variant mixes one entry of each list

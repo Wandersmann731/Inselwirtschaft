@@ -33,6 +33,10 @@ from asset_data import (  # noqa: E402
 # --- goods icons -----------------------------------------------------------------------------------
 G = {
     "tools": "pile of hammer, saw and pickaxe",
+    "saltstone": "heap of rough grey-white rock salt chunks",
+    "marble_stone": "rough block of pale grey marble with veins",
+    "cattle": "brown cow standing, side view",
+    "dye": "three small clay pots of blue, green and red dye",
     "wood": "stack of cut logs",
     "bricks": "stack of red clay bricks",
     "marble": "block of white marble with grey veins",
@@ -172,9 +176,11 @@ for mask, name in enumerate(NAMES):
         desc += ", path arms leave the tile centre towards " + ", ".join(arms[c] for c in name)
     roads.append((f"road_{name}", "Straßen", f"roads/road_{name}.png", f"{TILE_W}x{TILE_H}", "1x1 Kachel", desc))
 
+goods_ids = {g["id"] for g in goods}
 goods_rows = [
     (f"good_{gid}", "Warensymbole", f"icons/goods/{gid}.png", "128x128", "-", f"{G[gid]} ({GOOD_NAMES[gid]})")
     for gid in G
+    if gid in goods_ids
 ]
 tier_rows = [(f"tier_{tid}", "Stufensymbole", f"icons/tiers/{tid}.png", "128x128", "-", d) for tid, d in TIER_ICONS.items()]
 ui_rows = [(uid, "Oberfläche", f"icons/ui/{uid}.png", "128x128", "-", f"{name}: {d}") for uid, (name, d) in UI.items()]

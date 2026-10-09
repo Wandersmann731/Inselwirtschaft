@@ -13,7 +13,6 @@
   { "id": "grain", "name": "Getreide", "tradePrice": 10 },
   { "id": "flour", "name": "Mehl", "tradePrice": 14 },
   { "id": "food", "name": "Nahrung", "price": 24, "tradePrice": 20 },
-  { "id": "potatoes", "name": "Kartoffeln", "tradePrice": 8 },
   { "id": "alcohol", "name": "Alkohol", "price": 36, "tradePrice": 30 },
   { "id": "salt", "name": "Salz", "price": 18, "tradePrice": 15 },
   { "id": "tobacco", "name": "Tabak", "price": 42, "tradePrice": 32 },
@@ -27,9 +26,11 @@
   { "id": "sugar", "name": "Zuckerrohr", "tradePrice": 12 },
   { "id": "tobacco_leaf", "name": "Tabakblätter", "tradePrice": 15 },
   { "id": "raw_silk", "name": "Rohseide", "tradePrice": 30 },
-  { "id": "indigo", "name": "Indigo", "tradePrice": 28 },
   { "id": "blubber", "name": "Tran", "tradePrice": 20 },
-  { "id": "grapes", "name": "Trauben", "tradePrice": 14 },
   { "id": "gold", "name": "Gold", "tradePrice": 90 },
-  { "id": "gems", "name": "Edelsteine", "tradePrice": 120 }
+  { "id": "gems", "name": "Edelsteine", "tradePrice": 120 },
+  { "id": "saltstone", "name": "Salzstein", "tradePrice": 10 },
+  { "id": "marble_stone", "name": "Marmorstein", "tradePrice": 60 },
+  { "id": "cattle", "name": "Schlachtvieh", "tradePrice": 25 },
+  { "id": "dye", "name": "Farbstoffe", "tradePrice": 24 }
 ]
