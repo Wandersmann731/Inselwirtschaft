@@ -40,6 +40,17 @@ fs.mkdirSync(path.join(RAW, 'server'), { recursive: true })
 
 // slightly inside the tile so no edge pixels of the background show
 const textures = {}
+/** art/pads.json: extra border per building picture beyond the footprint box, in picture pixels. Written one file at a time. */
+const padsPath = path.join(ROOT, 'art', 'pads.json')
+const padData = new Map(Object.entries(fs.existsSync(padsPath) ? JSON.parse(fs.readFileSync(padsPath, 'utf8')) : {}))
+function padsFile() {
+  return padData
+}
+padsFile.save = () => {
+  fs.mkdirSync(path.dirname(padsPath), { recursive: true })
+  fs.writeFileSync(padsPath, JSON.stringify(Object.fromEntries([...padData].sort())))
+}
+
 const DIAMOND = [[64, 1], [127, 32], [64, 63], [1, 32]]
 
 /** Produces the raw picture for a job (one API call). Returns the path of the raw file. */
@@ -96,7 +107,33 @@ async function finish(job, rawFile) {
     const { box } = await padToSquare(path.join(ROOT, job.guide))
     let image = sharp(await load())
     if (job.kind === 'building') image = await removeBackground(await image.png().toBuffer())
-    let buffer = await image.extract(box).resize(job.width, job.height).png().toBuffer()
+
+    // Buildings that are not on a plot keep what sticks out of the guide area (awnings, towers, wide roofs): the picture is
+    // cut larger than the footprint and the extra border is written to art/pads.json, so the game places it exactly the same.
+    let buffer
+    const pads = padsFile()
+    if (job.kind === 'building' && !job.cutSlab) {
+      const growX = Math.round(box.width * 0.14)
+      const growTop = Math.round(box.height * 0.16)
+      const growBottom = Math.round(box.height * 0.05)
+      const left = Math.max(0, box.left - growX)
+      const right = Math.min(SIZE, box.left + box.width + growX)
+      const top = Math.max(0, box.top - growTop)
+      const bottom = Math.min(SIZE, box.top + box.height + growBottom)
+      const scale = job.width / box.width
+      const region = { left, top, width: right - left, height: bottom - top }
+      buffer = await image.extract(region).resize(Math.round(region.width * scale), Math.round(region.height * scale)).png().toBuffer()
+      pads.set(job.id, {
+        l: Math.round((box.left - left) * scale),
+        r: Math.round((right - (box.left + box.width)) * scale),
+        t: Math.round((box.top - top) * scale),
+        b: Math.round((bottom - (box.top + box.height)) * scale),
+      })
+    } else {
+      buffer = await image.extract(box).resize(job.width, job.height).png().toBuffer()
+      pads.delete(job.id)
+    }
+    padsFile.save()
     if (job.kind === 'tile') buffer = await maskPolygon(buffer, job.width, job.height, DIAMOND)
     if (job.cutSlab) {
       // Plots must be flat: cut away everything below the lower edges of the ground diamond (the painted earth edge).
