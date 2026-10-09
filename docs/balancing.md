@@ -20,3 +20,9 @@ Alle Werte stehen in `src/data/*.json`. Sie waren meine Startwerte, die Analyse 
 - Die ersten 15 Minuten: Reicht das Startgeld, und wann wird die Bilanz positiv?
 - Wird Werkzeug knapp? Wie lange dauert es, bis die Stadt wächst?
 - Kommen die Bürger über Salz (ohne Tabak und Gewürze) wirklich an Kirche und Badehaus?
+
+## Grundsteuer statt Marktstände (Spielstand-Version 11)
+- Bewohner holen ihre Waren automatisch aus dem Inselvorrat, wenn ein Kontor oder Markthaus sie im Einzugsgebiet (`catchment`) erreicht. Die Marktstände sind weg (alte Spielstände werden migriert, die Stände entfallen).
+- Jedes bewohnte Haus zahlt je Zyklus `Einwohner × tax(Stufe) × (base + (1 − base) × Versorgung)`. `tax` steht in `tiers.json` (die Summe aus Rate × Preis aller Waren bis zu dieser Stufe, so bleibt der Ertrag bei voller Versorgung wie vorher), `base` (0,35) in `config.json`. Versorgung = Mittel der erfüllten Warenbedürfnisse.
+- Öffentliche Gebäude (Kapelle, Wirtshaus ...) wirken weiter im Radius.
+- Bot-Playtest: Seeds 1–6 laufen durch, Bürger nach 11–13 Minuten, Bilanz am Ende 480–800 pro Zyklus. Der Bot sucht für große Gebäude jetzt in 18 statt 14 Kacheln einen Platz.

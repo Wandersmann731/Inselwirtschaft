@@ -3,7 +3,7 @@ import { config, getBuilding } from '../src/data'
 import { placeBuilding, placeRoads } from '../src/sim/build'
 import { MIGRATIONS, migrateState } from '../src/sim/migrations'
 import { createRng } from '../src/sim/rng'
-import { createInitialState, type IslandState } from '../src/sim/state'
+import { createInitialState, CURRENT_SAVE_VERSION, type IslandState } from '../src/sim/state'
 import { grassField, tickFlat } from './helpers'
 
 const rich = { coins: 1_000_000, stock: { tools: 900, wood: 900, bricks: 900, marble: 90 } }
@@ -132,7 +132,7 @@ describe('migration from version 9', () => {
     game.ships = [{ id: 1, name: 'S', capacity: 60, cargo: { indigo: 5, wood: 2 }, island: 0, x: 0, y: 0, path: [], destination: null, routeId: null, stopIndex: 0 }]
     const migrated = migrateState(game, MIGRATIONS)
     const island = migrated.islands[0]
-    expect(migrated.version).toBe(10)
+    expect(migrated.version).toBe(CURRENT_SAVE_VERSION)
     expect(island.buildings.map((b) => b.type)).toEqual(['forester'])
     expect(island.occupancy[5 * width + 5]).toBe(0)
     expect(island.occupancy[9 * width + 9]).toBe(2)

@@ -124,6 +124,19 @@ export const MIGRATIONS: Record<number, Migration> = {
     const ships = (data.ships as { cargo: Record<string, number> }[]).map((ship) => ({ ...ship, cargo: clean(ship.cargo) }))
     return { ...data, islands, ships }
   },
+  // v11: residents fetch their goods from the Kontor by themselves and pay a land tax, so the market stands are gone.
+  10: (data) => {
+    const islands = (data.islands as Record<string, unknown>[]).map((island) => {
+      const buildings = island.buildings as { id: number; type: string }[]
+      const removed = new Set(buildings.filter((b) => getBuilding(b.type).sells !== undefined).map((b) => b.id))
+      return {
+        ...island,
+        buildings: buildings.filter((b) => !removed.has(b.id)),
+        occupancy: (island.occupancy as number[]).map((id) => (removed.has(id) ? 0 : id)),
+      }
+    })
+    return { ...data, islands }
+  },
 }
 
 /** Brings a raw saved object up to the current version or throws if that is impossible. */

@@ -7,6 +7,8 @@ export interface GameConfig {
   loopIntervalMs: number
   maxTicksPerUpdate: number
   economyCycleTicks: number
+  /** Land tax: the share of the full tax that houses pay even when none of their needs is met. */
+  tax: { base: number }
   /** Start money choices in the new game menu. */
   startCoinOptions: number[]
   /** Extra speeds for testing and balancing, only offered in debug mode. */
@@ -100,6 +102,8 @@ export interface BuildingDef {
   houseTier?: string
   /** Roads are stored in the road layer instead of as buildings. */
   kind?: 'road'
+  /** Not offered in the build menu any more (kept so old saves can be read). */
+  hidden?: boolean
   inputs?: BuildingInput[]
   output?: { good: string; amount: number }
   /** Goods that come out in addition to the output each cycle (the butcher also makes hides). */
@@ -133,6 +137,8 @@ export interface TierDef {
   needs: TierNeed[]
   /** Building materials taken from the store when a house rises into this tier. */
   upgradeCost?: BuildingCost
+  /** Land tax per resident and economy cycle when all needs are met. */
+  tax: number
   /** Houses of this tier can only be built once enough residents of `tier` live in the realm. */
   unlock?: { tier: string; residents: number }
 }

@@ -6,7 +6,7 @@ und eigenen Grafiken. Keine Namen, Grafiken, Texte oder Sounds aus Anno verwende
 Das Projekt ist privat und nicht kommerziell.
 
 ## Spielkern
-- Keine Steuern. Einnahmen entstehen nur, wenn Bewohner an Marktständen Waren kaufen.
+- Einnahmen: Grundsteuer, ab dem ersten Bewohner. Bewohner holen ihre Waren selbst aus dem Lager, solange ein Kontor oder Markthaus sie erreicht (Einzugsgebiet). Je mehr ihrer Warenbedürfnisse erfüllt sind, desto mehr zahlen sie (config.tax.base ist der Anteil ohne Waren). Marktstände gibt es nicht mehr.
 - Jedes Gebäude hat Unterhalt, aktiv oder stillgelegt (günstiger).
 - 5 Stufen: Pioniere (8 Bewohner), Siedler (15), Bürger (28), Kaufleute (42),
   Aristokraten (30). Alle Wohnhäuser sind 2x2, ebenso alle Startgebäude (Betriebe, Markthaus, Kontor). Aufstieg nur bei 100 % Erfüllung und vorhandenem Baumaterial.

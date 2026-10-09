@@ -168,8 +168,7 @@ export class Bot {
     const addIf = (type: string, rank: number): void => {
       if (maxTier >= rank - 1) wanted.push({ type })
     }
-    wanted.push({ type: 'food_salt_stand' }, { type: 'cloth_stand' }, { type: 'chapel' })
-    addIf('drink_stand', 1)
+    wanted.push({ type: 'chapel' })
     addIf('tavern', 1)
     addIf('church', 2)
     addIf('bathhouse', 3)
@@ -187,7 +186,7 @@ export class Bot {
       const target = open[0]
       const rect = buildingRect(target)
       const big = (def.radius ?? 0) > 5
-      const result = this.place(island, type, rect.x, rect.y, big ? 14 : 4, big ? 1 : 0)
+      const result = this.place(island, type, rect.x, rect.y, big ? 18 : 4, big ? 1 : 0)
       if (result) {
         this.note(state, `built ${type} for house ${target.id}`)
         return result
@@ -236,7 +235,7 @@ export class Bot {
   /** True if a house still lacks one of the basic stands or the chapel. */
   private coverageMissing(island: IslandState): boolean {
     const houses = this.houses(island)
-    for (const type of ['food_salt_stand', 'cloth_stand', 'chapel']) {
+    for (const type of ['chapel']) {
       const def = getBuilding(type)
       const covered = new Set<number>()
       for (const b of island.buildings) {

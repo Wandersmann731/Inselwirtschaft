@@ -208,8 +208,7 @@ describe('economy cycle in the tick', () => {
   it('lets a supplied village grow from pioneers to settlers without player action', () => {
     let state = grassField(50, 30, rich)
     state = placeBuilding(state, 'house_pioneers', 10, 10, false)
-    state = placeBuilding(state, 'food_salt_stand', 14, 10, false)
-    state = placeBuilding(state, 'cloth_stand', 14, 12, false)
+    state = placeBuilding(state, 'market_house', 14, 10, false)
     state = placeBuilding(state, 'chapel', 20, 10, false)
     state = { ...state, stock: { ...state.stock, food: 1000, cloth: 1000 } }
     state = { ...state, highestTier: 0 }
@@ -221,8 +220,7 @@ describe('economy cycle in the tick', () => {
 
   it('earns money from the residents', () => {
     let state = patchHouse(oneHouse(), 1, { needs: ALL_MET, residents: 8 })
-    state = placeBuilding(state, 'food_salt_stand', 14, 10, false)
-    state = placeBuilding(state, 'cloth_stand', 14, 12, false)
+    state = placeBuilding(state, 'market_house', 14, 10, false)
     const before = { ...state, stock: { ...state.stock, food: 100, cloth: 100 } }
     expect(cycleFlat(before).coins).toBeGreaterThan(before.coins)
   })

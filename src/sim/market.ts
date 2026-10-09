@@ -1,20 +1,19 @@
-import { getBuilding, priceOf } from '../data'
+import { config, getBuilding } from '../data'
 import type { TierNeed } from '../data'
 import { buildingRect, inRadius, type Rect } from './coverage'
 import { addTo, cloneLedger } from './ledger'
 import type { CycleLedger, IslandState, PlacedBuilding } from './state'
-import { cumulativeNeeds } from './tiers'
+import { cumulativeNeeds, getTier } from './tiers'
 
 const EPSILON = 1e-9
 
-interface Provider {
+interface Reach {
   rect: Rect
   radius: number
   type: string
-  sells: string[]
 }
 
-function rangeCovers(provider: Provider, house: Rect): boolean {
+function rangeCovers(provider: Reach, house: Rect): boolean {
   for (let y = house.y; y < house.y + house.h; y++) {
     for (let x = house.x; x < house.x + house.w; x++) {
       if (inRadius(x, y, provider.rect, provider.radius)) return true
@@ -24,19 +23,21 @@ function rangeCovers(provider: Provider, house: Rect): boolean {
 }
 
 /**
- * Residents buy goods at market stands within reach: the goods leave the island store and
- * their price is paid into the treasury. Also records how well each need of each house is met.
- * Runs once per economy cycle.
+ * Residents fetch their goods from the island store by themselves, as long as a Kontor or market house reaches their
+ * house (its catchment). Public buildings (chapel, tavern ...) serve houses in their radius. Every house pays a land
+ * tax, from the first resident on: the more of its goods needs are met, the more it pays. Also records how well each
+ * need of each house is met. Runs once per economy cycle.
  */
 export function runMarket(state: IslandState): IslandState {
-  const providers: Provider[] = state.buildings
-    .filter((building) => building.active)
-    .flatMap((building) => {
-      const def = getBuilding(building.type)
-      return def.radius === undefined
-        ? []
-        : [{ rect: buildingRect(building), radius: def.radius, type: building.type, sells: def.sells ?? [] }]
-    })
+  const active = state.buildings.filter((building) => building.active)
+  const hubs: Reach[] = active.flatMap((building) => {
+    const catchment = getBuilding(building.type).catchment
+    return catchment === undefined ? [] : [{ rect: buildingRect(building), radius: catchment, type: building.type }]
+  })
+  const services: Reach[] = active.flatMap((building) => {
+    const radius = getBuilding(building.type).radius
+    return radius === undefined ? [] : [{ rect: buildingRect(building), radius, type: building.type }]
+  })
 
   const stock = { ...state.stock }
   const ledger = cloneLedger(state.economy.current)
@@ -46,56 +47,50 @@ export function runMarket(state: IslandState): IslandState {
     const house = building.house
     if (!house || house.ruin) return building
     const rect = buildingRect(building)
-    const near = providers.filter((provider) => rangeCovers(provider, rect))
+    const supplied = hubs.some((hub) => rangeCovers(hub, rect))
+    const near = services.filter((service) => rangeCovers(service, rect))
     const needs: Record<string, number> = {}
+    let goodsSum = 0
+    let goodsCount = 0
 
     for (const need of cumulativeNeeds(house.tier)) {
       if (need.building) {
-        needs[need.id] = near.some((provider) => provider.type === need.building) ? 100 : 0
+        needs[need.id] = near.some((service) => service.type === need.building) ? 100 : 0
         continue
       }
-      const result = buyNeed(need, house.residents, near, stock, ledger)
-      coins += result.paid
-      ledger.income += result.paid
-      needs[need.id] = result.percent
+      const percent = fetchNeed(need, house.residents, supplied, stock, ledger)
+      needs[need.id] = percent
+      goodsSum += percent
+      goodsCount++
     }
+    const supply = goodsCount > 0 ? goodsSum / goodsCount / 100 : 1
+    const tax = house.residents * getTier(house.tier).tax * (config.tax.base + (1 - config.tax.base) * supply)
+    coins += tax
+    ledger.income += tax
     return { ...building, house: { ...house, needs } }
   })
 
   return { ...state, coins, stock, buildings, economy: { ...state.economy, current: ledger } }
 }
 
-/** Buys what the residents need of one good, trying the good first, then alternatives and substitutes. */
-function buyNeed(
-  need: TierNeed,
-  residents: number,
-  near: Provider[],
-  stock: Record<string, number>,
-  ledger: CycleLedger,
-): { percent: number; paid: number } {
-  if (!need.good || need.rate === undefined) return { percent: 100, paid: 0 }
+/** Takes what the residents need of one good from the store, trying the good first, then alternatives and substitutes. */
+function fetchNeed(need: TierNeed, residents: number, supplied: boolean, stock: Record<string, number>, ledger: CycleLedger): number {
+  if (!need.good || need.rate === undefined) return 100
+  if (!supplied) return 0
   const options = [need.good, ...(need.alternatives ?? []), ...(need.substitutes ?? [])]
   const demand = residents * need.rate
 
-  // An empty house buys nothing, but it is only "supplied" if a stand in reach has the goods.
-  if (demand <= 0) {
-    const available = options.some(
-      (good) => (stock[good] ?? 0) > 0 && near.some((provider) => provider.sells.includes(good)),
-    )
-    return { percent: available ? 100 : 0, paid: 0 }
-  }
+  // An empty house takes nothing, but it counts as supplied if the goods are there.
+  if (demand <= 0) return options.some((good) => (stock[good] ?? 0) > 0) ? 100 : 0
 
-  let bought = 0
-  let paid = 0
+  let taken = 0
   for (const good of options) {
-    if (bought >= demand - EPSILON) break
-    if (!near.some((provider) => provider.sells.includes(good))) continue
-    const take = Math.min(demand - bought, stock[good] ?? 0)
+    if (taken >= demand - EPSILON) break
+    const take = Math.min(demand - taken, stock[good] ?? 0)
     if (take <= 0) continue
     stock[good] -= take
     addTo(ledger.consumed, good, take)
-    bought += take
-    paid += take * priceOf(good)
+    taken += take
   }
-  return { percent: bought >= demand - EPSILON ? 100 : (bought / demand) * 100, paid }
+  return taken >= demand - EPSILON ? 100 : (taken / demand) * 100
 }

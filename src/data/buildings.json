@@ -34,7 +34,8 @@
     "placement": "land",
     "color": "#e8b04a",
     "radius": 4,
-    "sells": ["food", "salt"]
+    "sells": ["food", "salt"],
+    "hidden": true
   },
   {
     "id": "cloth_stand",
@@ -47,7 +48,8 @@
     "placement": "land",
     "color": "#d36a9b",
     "radius": 4,
-    "sells": ["cloth", "leather", "silk"]
+    "sells": ["cloth", "leather", "silk"],
+    "hidden": true
   },
   {
     "id": "chapel",
@@ -132,7 +134,8 @@
     "placement": "land",
     "color": "#8e5aa8",
     "radius": 4,
-    "sells": ["alcohol", "wine"]
+    "sells": ["alcohol", "wine"],
+    "hidden": true
   },
   {
     "id": "tobacco_spice_stand",
@@ -145,7 +148,8 @@
     "placement": "land",
     "color": "#a0522d",
     "radius": 4,
-    "sells": ["tobacco", "spices"]
+    "sells": ["tobacco", "spices"],
+    "hidden": true
   },
   {
     "id": "lamp_oil_stand",
@@ -158,7 +162,8 @@
     "placement": "land",
     "color": "#e0a030",
     "radius": 4,
-    "sells": ["lamp_oil"]
+    "sells": ["lamp_oil"],
+    "hidden": true
   },
   {
     "id": "jewelry_stand",
@@ -171,7 +176,8 @@
     "placement": "land",
     "color": "#e0c060",
     "radius": 4,
-    "sells": ["jewelry"]
+    "sells": ["jewelry"],
+    "hidden": true
   },
   {
     "id": "forester",

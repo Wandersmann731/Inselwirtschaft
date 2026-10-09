@@ -36,7 +36,7 @@ interface Group {
 
 /** Production buildings are grouped by chain, everything else is one plain list. */
 function groupsFor(category: BuildingCategory): Group[] {
-  if (category !== 'production') return [{ id: category, defs: buildings.filter((def) => def.category === category) }]
+  if (category !== 'production') return [{ id: category, defs: buildings.filter((def) => def.category === category && !def.hidden) }]
   return chains.map((chain) => ({
     id: chain.id,
     title: chain.name,
