@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { tiers } from './data'
 import { BuildController } from './game/buildController'
 import type { GameLoop } from './game/gameLoop'
@@ -7,7 +7,9 @@ import { toIslandState } from './sim/islands'
 import { residentsOfTier } from './sim/tiers'
 import { BuildBar } from './ui/BuildBar'
 import { KontorPanel } from './ui/KontorPanel'
+import type { MapRenderer } from './render/mapRenderer'
 import { MapCanvas } from './ui/MapCanvas'
+import { MiniMap } from './ui/MiniMap'
 import { RotateHint } from './ui/RotateHint'
 import { StatsPanel } from './ui/StatsPanel'
 import { Toasts } from './ui/Toasts'
@@ -18,6 +20,11 @@ import { WorldMap } from './ui/WorldMap'
 export function App({ loop }: { loop: GameLoop }) {
   const { state, activeIsland } = useSyncExternalStore(loop.subscribe, loop.getView)
   const tool = useMemo(() => new BuildController(loop), [loop])
+  const rendererRef = useRef<MapRenderer | null>(null)
+  const setRenderer = useCallback((renderer: MapRenderer | null) => {
+    rendererRef.current = renderer
+  }, [])
+  const getRenderer = useCallback(() => rendererRef.current, [])
   const [showStats, setShowStats] = useState(false)
   const [showWorld, setShowWorld] = useState(false)
   const [showTrade, setShowTrade] = useState(false)
@@ -33,7 +40,8 @@ export function App({ loop }: { loop: GameLoop }) {
 
   return (
     <>
-      <MapCanvas getState={loop.getIslandState} tool={tool} />
+      <MapCanvas getState={loop.getIslandState} tool={tool} onRenderer={setRenderer} />
+      <MiniMap getIsland={loop.getIslandState} getRenderer={getRenderer} />
       <TopHud
         tick={state.tick}
         coins={state.coins}

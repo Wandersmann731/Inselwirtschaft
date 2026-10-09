@@ -12,7 +12,7 @@ import {
   type Camera,
   type Viewport,
 } from './camera'
-import { mapBounds, tileToWorld, worldToTile, type Point } from './iso'
+import { mapBounds, tileToWorld, worldToTile, type Bounds, type Point } from './iso'
 import { drawBuildings, drawRoads, type TileRange } from './buildingRenderer'
 import { OverlayRenderer } from './overlayRenderer'
 import { CHUNK_PX_H, CHUNK_PX_W, TerrainCache, chunkOrigin } from './terrainCache'
@@ -83,6 +83,16 @@ export class MapRenderer {
   /** Zooms by a factor around a screen point (CSS pixels relative to the canvas). */
   zoomAt(factor: number, sx: number, sy: number): void {
     this.camera = zoomCameraAt(this.camera, factor, sx, sy, this.viewport, this.bounds(), ZOOM_LIMITS)
+  }
+
+  /** The part of the world that is on screen right now. */
+  visibleRect(): Bounds {
+    return visibleWorldRect(this.camera, this.viewport)
+  }
+
+  /** Moves the camera so that a world point is in the middle of the screen. */
+  centerOnWorld(wx: number, wy: number): void {
+    this.camera = clampCamera({ ...this.camera, x: wx, y: wy }, this.viewport, this.bounds())
   }
 
   /** The map tile under a screen point (CSS pixels relative to the canvas), or null outside the map. */

@@ -573,3 +573,15 @@ body,
   padding: 0 6px;
   font-size: 15px;
 }
+
+.minimap {
+  position: fixed;
+  left: max(8px, env(safe-area-inset-left));
+  top: 64px;
+  z-index: 5;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: 4px;
+  background: #1d4e6b;
+  opacity: 0.92;
+  touch-action: none;
+}

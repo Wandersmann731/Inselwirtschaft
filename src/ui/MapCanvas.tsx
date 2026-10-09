@@ -9,9 +9,11 @@ const DEBUG = new URLSearchParams(window.location.search).has('debug')
 interface MapCanvasProps {
   getState: () => IslandState
   tool: BuildController
+  /** Called with the renderer once it exists and with null when it is gone. */
+  onRenderer?: (renderer: MapRenderer | null) => void
 }
 
-export function MapCanvas({ getState, tool }: MapCanvasProps) {
+export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -19,6 +21,7 @@ export function MapCanvas({ getState, tool }: MapCanvasProps) {
     if (!canvas) return
     const renderer = new MapRenderer(canvas, getState, tool.getSnapshot, DEBUG)
     renderer.start()
+    onRenderer?.(renderer)
     const input = new MapInput(canvas, {
       onPan: (dx, dy) => renderer.panBy(dx, dy),
       onZoom: (factor, x, y) => renderer.zoomAt(factor, x, y),
@@ -48,11 +51,12 @@ export function MapCanvas({ getState, tool }: MapCanvasProps) {
     input.setDrawMode(tool.drawing)
     const unsubscribe = tool.subscribe(() => input.setDrawMode(tool.drawing))
     return () => {
+      onRenderer?.(null)
       unsubscribe()
       input.destroy()
       renderer.destroy()
     }
-  }, [getState, tool])
+  }, [getState, tool, onRenderer])
 
   return <canvas ref={canvasRef} className="map-canvas" />
 }
