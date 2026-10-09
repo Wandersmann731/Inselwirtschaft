@@ -7,7 +7,9 @@ export interface MapInputHandlers {
   onZoom(factor: number, x: number, y: number): void
   /** Short tap or click without movement. */
   onTap(x: number, y: number): void
-  /** Draw mode only: a single finger or the mouse starts, continues and ends a stroke. */
+  /** Grab mode only: a single finger went down; return true to take it as a drag (see onStrokeMove/End), false to pan. */
+  onGrab?(x: number, y: number): boolean
+  /** Draw and grab mode: a single finger or the mouse starts, continues and ends a stroke. */
   onStrokeStart?(x: number, y: number): void
   onStrokeMove?(x: number, y: number): void
   onStrokeEnd?(): void
@@ -31,8 +33,8 @@ export class MapInput {
   private moved = false
   /** True once a second finger touched during this gesture, so it can no longer be a tap. */
   private multiTouch = false
-  /** In draw mode one finger draws a stroke instead of panning the map. */
-  private drawMode = false
+  /** In draw mode one finger draws a stroke, in grab mode it may pick up something, instead of panning the map. */
+  private mode: 'pan' | 'draw' | 'grab' = 'pan'
   private stroking = false
   private pinchDistance = 0
   private pinchCenter: Pos = { x: 0, y: 0 }
@@ -47,10 +49,10 @@ export class MapInput {
     canvas.addEventListener('wheel', this.onWheel, { passive: false })
   }
 
-  setDrawMode(on: boolean): void {
-    if (on === this.drawMode) return
+  setMode(mode: 'pan' | 'draw' | 'grab'): void {
+    if (mode === this.mode) return
     this.cancelStroke()
-    this.drawMode = on
+    this.mode = mode
   }
 
   destroy(): void {
@@ -77,9 +79,11 @@ export class MapInput {
       this.tapStartTime = event.timeStamp
       this.moved = false
       this.multiTouch = false
-      if (this.drawMode) {
+      if (this.mode === 'draw') {
         this.stroking = true
         this.handlers.onStrokeStart?.(pos.x, pos.y)
+      } else if (this.mode === 'grab' && this.handlers.onGrab?.(pos.x, pos.y)) {
+        this.stroking = true
       }
     } else if (this.pointers.size === 2) {
       this.cancelStroke()
@@ -125,7 +129,7 @@ export class MapInput {
       this.afterPointerRemoved()
       return
     }
-    if (wasSingle && !this.drawMode && !this.moved && !this.multiTouch && event.timeStamp - this.tapStartTime <= world.input.tapMaxMs) {
+    if (wasSingle && this.mode !== 'draw' && !this.moved && !this.multiTouch && event.timeStamp - this.tapStartTime <= world.input.tapMaxMs) {
       this.handlers.onTap(this.tapStart.x, this.tapStart.y)
     }
     this.afterPointerRemoved()

@@ -48,6 +48,7 @@ describe('BuildController', () => {
   it('draws a road along the drag and applies it on release', () => {
     const { loop, tool } = setup()
     tool.startRoads()
+    tool.setFreehand(true)
     tool.strokeStart({ x: 3, y: 3 })
     tool.strokeMove({ x: 6, y: 3 })
     expect(tool.getSnapshot().stroke).toHaveLength(4)
@@ -60,6 +61,7 @@ describe('BuildController', () => {
   it('demolishes along the drag', () => {
     const { loop, tool } = setup()
     tool.startRoads()
+    tool.setFreehand(true)
     tool.strokeStart({ x: 3, y: 3 })
     tool.strokeMove({ x: 5, y: 3 })
     tool.strokeEnd()

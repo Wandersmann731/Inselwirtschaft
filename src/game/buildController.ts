@@ -3,6 +3,7 @@ import { footprint, demolishTiles, placeBuilding, placeRoads } from '../sim/buil
 import { setBuildingActive } from '../sim/production'
 import { buildShip } from '../sim/ships'
 import type { GameLoop } from './gameLoop'
+import { grabRoute, moveRoute, releaseRoute, resetWaypoints, tapRoute, EMPTY_ROUTE, type RouteDraft } from './routeDraft'
 import { strokeLine, type Tile } from './stroke'
 
 export type ToolMode = 'none' | 'place' | 'road' | 'demolish'
@@ -19,6 +20,10 @@ export interface ToolSnapshot {
   origin: Tile | null
   /** Tiles touched by the current drag (modes 'road' and 'demolish'). */
   stroke: Tile[]
+  /** Road mode: draw by hand instead of planning a route between two points. */
+  freehand: boolean
+  /** Road mode: the planned route. */
+  route: RouteDraft
   /** Building whose info panel is open (mode 'none'). */
   selectedBuildingId: number | null
 }
@@ -30,6 +35,8 @@ const IDLE: ToolSnapshot = {
   rotated: false,
   origin: null,
   stroke: [],
+  freehand: false,
+  route: EMPTY_ROUTE,
   selectedBuildingId: null,
 }
 
@@ -55,7 +62,18 @@ export class BuildController {
 
   /** True while single-finger drags should draw instead of pan the map. */
   get drawing(): boolean {
-    return this.snapshot.mode === 'road' || this.snapshot.mode === 'demolish'
+    return this.snapshot.mode === 'demolish' || (this.snapshot.mode === 'road' && this.snapshot.freehand)
+  }
+
+  /** True while a finger on the route picks up handles instead of panning the map. */
+  get grabbing(): boolean {
+    const { mode, freehand, route } = this.snapshot
+    return mode === 'road' && !freehand && route.plan !== null
+  }
+
+  /** How single-finger drags on the map are read right now. */
+  get inputMode(): 'pan' | 'draw' | 'grab' {
+    return this.drawing ? 'draw' : this.grabbing ? 'grab' : 'pan'
   }
 
   startPlacing(typeId: string): void {
@@ -109,6 +127,56 @@ export class BuildController {
     this.loop.dispatchIsland((state) => placeBuilding(state, typeId, origin.x, origin.y, rotated))
     // Stay in placing mode so several buildings of one kind can follow each other.
     this.set({ ...this.snapshot, center: null, origin: null })
+  }
+
+  setFreehand(on: boolean): void {
+    if (this.snapshot.mode !== 'road') return
+    this.set({ ...this.snapshot, freehand: on, stroke: [], route: EMPTY_ROUTE })
+  }
+
+  /** Tap in route mode: sets the start, then the end of the road. */
+  routeTap(tile: Tile): void {
+    if (this.snapshot.mode !== 'road' || this.snapshot.freehand) return
+    this.setRoute(tapRoute(this.loop.getIslandState(), this.snapshot.route, tile))
+  }
+
+  /** Finger down on the map in route mode. True if it picked up a handle or the route. */
+  routeGrab(tile: Tile): boolean {
+    const grabbed = grabRoute(this.loop.getIslandState(), this.snapshot.route, tile)
+    if (!grabbed) return false
+    this.setRoute(grabbed)
+    return true
+  }
+
+  routeMove(tile: Tile): void {
+    this.setRoute(moveRoute(this.loop.getIslandState(), this.snapshot.route, tile))
+  }
+
+  routeRelease(): void {
+    this.setRoute(releaseRoute(this.loop.getIslandState(), this.snapshot.route))
+  }
+
+  /** Back to the best route without waypoints. */
+  routeReset(): void {
+    this.setRoute(resetWaypoints(this.loop.getIslandState(), this.snapshot.route))
+  }
+
+  /** Throws the planned route away and starts over with a new start point. */
+  routeClear(): void {
+    this.setRoute(EMPTY_ROUTE)
+  }
+
+  /** Builds the planned route. Stays in road mode for the next one. */
+  routeConfirm(): void {
+    const plan = this.snapshot.route.plan
+    if (this.snapshot.mode !== 'road' || !plan) return
+    this.loop.dispatchIsland((state) => placeRoads(state, plan.newTiles))
+    this.setRoute(EMPTY_ROUTE)
+  }
+
+  private setRoute(route: RouteDraft): void {
+    if (route === this.snapshot.route) return
+    this.set({ ...this.snapshot, route })
   }
 
   strokeStart(tile: Tile): void {

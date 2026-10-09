@@ -20,7 +20,7 @@ export function BuildBar({ tool, island, onOpenStats, onOpenWorld, onOpenTrade, 
   const snapshot = useSyncExternalStore(tool.subscribe, tool.getSnapshot)
   if (!island.owned) return <ForeignBar />
   if (snapshot.mode === 'place') return <PlaceBar tool={tool} snapshot={snapshot} state={island} />
-  if (snapshot.mode === 'road' || snapshot.mode === 'demolish') return <DrawBar tool={tool} mode={snapshot.mode} />
+  if (snapshot.mode === 'road' || snapshot.mode === 'demolish') return <DrawBar tool={tool} snapshot={snapshot} state={island} />
   return (
     <>
       {snapshot.selectedBuildingId !== null && (
