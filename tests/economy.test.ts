@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { config, getBuilding } from '../src/data'
+import { config, getBuilding, priceOf } from '../src/data'
 import { checkPlacement, checkRoad, demolishAt, placeBuilding, placeRoads } from '../src/sim/build'
 import { balanceOf, settleCycle, totalUpkeep } from '../src/sim/economy'
 import { runMarket } from '../src/sim/market'
@@ -83,7 +83,7 @@ describe('goods ledger', () => {
     state = patchHouse(state, 1, { residents: 8 })
     const next = runMarket({ ...state, stock: { ...state.stock, food: 100 } })
     expect(next.economy.current.consumed.food).toBeCloseTo(0.8)
-    expect(next.economy.current.income).toBeCloseTo(0.8 * 8)
+    expect(next.economy.current.income).toBeCloseTo(0.8 * priceOf('food'))
   })
 
   it('counts production and the inputs it uses up', () => {
