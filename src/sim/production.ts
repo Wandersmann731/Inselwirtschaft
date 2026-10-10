@@ -132,8 +132,8 @@ function produce(def: BuildingDef, p: ProductionState, ledger: CycleLedger): Pro
       if (!source) return { kind: 'waiting', good: input.good }
       used.push([source, input.amount])
     }
-    const extraFull = (def.byproducts ?? []).some((extra) => (p.extra[extra.good] ?? 0) + extra.amount > config.production.outputBufferAmount)
-    if (p.output + output.amount > config.production.outputBufferAmount || extraFull) return { kind: 'outputFull' }
+    // only the main product can stop a building: a byproduct nobody needs (hides without a tannery) is thrown away
+    if (p.output + output.amount > config.production.outputBufferAmount) return { kind: 'outputFull' }
     for (const [good, amount] of used) {
       p.inputs[good] -= amount
       addTo(ledger.consumed, good, amount)
@@ -145,8 +145,10 @@ function produce(def: BuildingDef, p: ProductionState, ledger: CycleLedger): Pro
     p.output += output.amount
     addTo(ledger.produced, output.good, output.amount)
     for (const extra of def.byproducts ?? []) {
-      p.extra[extra.good] = (p.extra[extra.good] ?? 0) + extra.amount
-      addTo(ledger.produced, extra.good, extra.amount)
+      // what does not fit into the buffer any more (the store is full of it) is left behind
+      const kept = Math.min(extra.amount, Math.max(0, config.production.outputBufferAmount - (p.extra[extra.good] ?? 0)))
+      p.extra[extra.good] = (p.extra[extra.good] ?? 0) + kept
+      addTo(ledger.produced, extra.good, kept)
     }
     p.progress = 0
   }
