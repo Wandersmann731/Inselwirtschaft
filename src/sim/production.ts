@@ -80,13 +80,23 @@ function deliver(p: ProductionState, stock: Stock, now: number): void {
   p.shipments = waiting
 }
 
+/**
+ * How much of an input a producer keeps in its buffer and on the way: the buffer cycles plus the cycles that pass
+ * while a delivery travels the road. Without the second part a fast producer at the end of a long road runs dry
+ * between deliveries although the store is full.
+ */
+export function inputTarget(def: BuildingDef, input: { amount: number }, delay: number): number {
+  const cycleTicks = Math.max(1, def.cycleTicks ?? 1)
+  return input.amount * (config.production.inputBufferCycles + Math.ceil(delay / cycleTicks))
+}
+
 /** Fetches missing inputs from the island store. They arrive after the road delay. */
 function orderInputs(def: BuildingDef, p: ProductionState, stock: Stock, now: number, delay: number): void {
   for (const input of def.inputs ?? []) {
     const goods = options(input)
     const have = sum(goods.map((good) => p.inputs[good] ?? 0))
     const onTheWay = sum(p.shipments.filter((s) => s.kind === 'in' && goods.includes(s.good)).map((s) => s.amount))
-    const wanted = input.amount * config.production.inputBufferCycles - have - onTheWay
+    const wanted = inputTarget(def, input, delay) - have - onTheWay
     if (wanted <= 0) continue
     for (const good of goods) {
       const take = Math.min(wanted, stock[good] ?? 0)
@@ -128,9 +138,15 @@ function produce(def: BuildingDef, p: ProductionState, ledger: CycleLedger): Pro
   if (p.progress === 0) {
     const used: [string, number][] = []
     for (const input of def.inputs ?? []) {
-      const source = options(input).find((good) => (p.inputs[good] ?? 0) >= input.amount)
-      if (!source) return { kind: 'waiting', good: input.good }
-      used.push([source, input.amount])
+      // alternatives may be mixed: 1 wool and 1 cotton make 2 of the input
+      const goods = options(input)
+      if (sum(goods.map((good) => p.inputs[good] ?? 0)) < input.amount) return { kind: 'waiting', good: input.good }
+      let rest = input.amount
+      for (const good of goods) {
+        const take = Math.min(rest, p.inputs[good] ?? 0)
+        if (take > 0) used.push([good, take])
+        rest -= take
+      }
     }
     // only the main product can stop a building: a byproduct nobody needs (hides without a tannery) is thrown away
     if (p.output + output.amount > config.production.outputBufferAmount) return { kind: 'outputFull' }

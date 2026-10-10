@@ -3,7 +3,8 @@ import { config, getBuilding, tiers, trade } from '../data'
 import type { BuildingCost } from '../data'
 import { cumulativeNeeds, getTier } from '../sim/tiers'
 import type { BuildController } from '../game/buildController'
-import { upkeepOf } from '../sim/production'
+import { inputTarget, upkeepOf } from '../sim/production'
+import { getLinks } from '../sim/logistics'
 import { taxOf } from '../sim/market'
 import type { HouseState, IslandState } from '../sim/state'
 import { housesLosingSupply } from '../sim/coverage'
@@ -35,6 +36,9 @@ export function BuildingPanel({
   const def = getBuilding(building.type)
   const production = building.production
   const cycleTicks = def.cycleTicks ?? 1
+  const link = production ? getLinks(state).get(building.id) : undefined
+  // the buffer grows with the road: what is on the way counts as well
+  const delay = link?.kind === 'ok' ? link.delay : 0
 
   return (
     <div className="building-panel">
@@ -57,11 +61,13 @@ export function BuildingPanel({
           </div>
           {(def.inputs ?? []).map((input) => {
             const goods = [input.good, ...(input.alternatives ?? [])]
-            const have = goods.reduce((sum, good) => sum + (production.inputs[good] ?? 0), 0)
+            const have =
+              goods.reduce((sum, good) => sum + (production.inputs[good] ?? 0), 0) +
+              production.shipments.filter((s) => s.kind === 'in' && goods.includes(s.good)).reduce((sum, s) => sum + s.amount, 0)
             const names = goods.map(resourceName).join(' / ')
             return (
               <div key={input.good} className="panel-line">
-                Eingang {names}: {have} / {input.amount * config.production.inputBufferCycles}
+                Eingang {names}: {have} / {inputTarget(def, input, delay)}
               </div>
             )
           })}
