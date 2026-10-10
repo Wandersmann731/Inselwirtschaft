@@ -5,7 +5,7 @@ import { liftIsland } from '../src/sim/islands'
 import { createInitialState } from '../src/sim/state'
 import { createRng } from '../src/sim/rng'
 import { tick } from '../src/sim/tick'
-import { grassField, patchHouse, stateFromRows, testIsland } from './helpers'
+import { grassField, patchHouse, stateFromRows, testIsland, placeUnlocked } from './helpers'
 import type { Ship } from '../src/sim/state'
 
 const rich = { coins: 1_000_000, stock: { tools: 900, wood: 900, bricks: 900, marble: 90 } }
@@ -91,7 +91,7 @@ describe('workLevels', () => {
 
   it('hears a chapel from afar', () => {
     let island = grassField(60, 60, { ...rich })
-    island = placeBuilding(island, 'chapel', 10, 10, false)
+    island = placeUnlocked(island, 'chapel', 10, 10, false)
     expect(chapelNear(island, 25, 12)).toBe(true)
     expect(chapelNear(island, 55, 55)).toBe(false)
   })

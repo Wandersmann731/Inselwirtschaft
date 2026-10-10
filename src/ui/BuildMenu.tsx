@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { buildings } from '../data'
 import type { BuildingCategory } from '../data'
 import type { BuildController } from '../game/buildController'
@@ -23,8 +23,12 @@ interface BuildMenuProps {
 }
 
 export function BuildMenu({ tool, state, onOpenStats, onOpenWorld, onOpenTrade }: BuildMenuProps) {
-  const [open, setOpen] = useState<BuildingCategory | null>(null)
-  const items = open && open !== 'production' ? buildings.filter((def) => def.category === open && !def.hidden) : []
+  const [open, setOpen] = useState<BuildingCategory | 'recent' | null>(null)
+  const { recent } = useSyncExternalStore(tool.subscribe, tool.getSnapshot)
+  // ids from older versions may no longer exist
+  const recentDefs = recent.flatMap((id) => buildings.find((def) => def.id === id && !def.hidden) ?? [])
+  const items =
+    open === 'recent' ? recentDefs : open && open !== 'production' ? buildings.filter((def) => def.category === open && !def.hidden) : []
 
   return (
     <div className="build-menu">
@@ -37,6 +41,18 @@ export function BuildMenu({ tool, state, onOpenStats, onOpenWorld, onOpenTrade }
         </div>
       )}
       <div className="build-categories">
+        {recentDefs.length > 0 && (
+          <button
+            type="button"
+            className={open === 'recent' ? 'category-button active' : 'category-button'}
+            onClick={() => setOpen(open === 'recent' ? null : 'recent')}
+          >
+            <span className="category-glyph" aria-hidden="true">
+              ↺
+            </span>
+            <span>Zuletzt</span>
+          </button>
+        )}
         {CATEGORIES.map(({ id, label, icon }) => (
           <button
             key={id}

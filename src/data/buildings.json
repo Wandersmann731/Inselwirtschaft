@@ -59,6 +59,7 @@
     "cost": { "tools": 6, "wood": 10, "bricks": 0, "marble": 0, "coins": 700 },
     "upkeep": { "active": 15, "idle": 4 },
     "unlockTier": "pioneers",
+    "unlock": { "tier": "pioneers", "residents": 64 },
     "placement": "land",
     "color": "#e9e4d0",
     "radius": 19
@@ -83,6 +84,7 @@
     "cost": { "tools": 9, "wood": 15, "bricks": 20, "marble": 0, "coins": 1600 },
     "upkeep": { "active": 50, "idle": 12 },
     "unlockTier": "citizens",
+    "unlock": { "tier": "settlers", "residents": 240 },
     "placement": "land",
     "color": "#d9d2bd",
     "radius": 21
@@ -107,6 +109,7 @@
     "cost": { "tools": 35, "wood": 15, "bricks": 30, "marble": 20, "coins": 2500 },
     "upkeep": { "active": 200, "idle": 50 },
     "unlockTier": "merchants",
+    "unlock": { "tier": "merchants", "residents": 1500 },
     "placement": "land",
     "color": "#b05fb0",
     "radius": 22
@@ -119,6 +122,7 @@
     "cost": { "tools": 40, "wood": 30, "bricks": 60, "marble": 30, "coins": 12000 },
     "upkeep": { "active": 80, "idle": 20 },
     "unlockTier": "merchants",
+    "unlock": { "tier": "aristocrats", "residents": 600 },
     "placement": "land",
     "color": "#f2efe6",
     "radius": 22

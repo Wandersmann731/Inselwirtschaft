@@ -313,7 +313,12 @@ export class Bot {
     }
 
     // 4. more houses, once everything works and there is money
-    const green = houses.filter((h) => h.house!.residents > 0 && Object.values(h.house!.needs).every((p) => p >= 99.9))
+    // a public building that is still locked (chapel before 125 pioneers) cannot be had yet: it does not stop growth
+    const reachable = (tier: string, id: string): boolean => {
+      const building = cumulativeNeeds(tier).find((need) => need.id === id)?.building
+      return !building || isBuildingUnlocked(island, building)
+    }
+    const green = houses.filter((h) => h.house!.residents > 0 && Object.entries(h.house!.needs).every(([id, p]) => p >= 99.9 || !reachable(h.house!.tier, id)))
     const full = houses.filter((h) => h.house!.residents >= getTier(h.house!.tier).residents)
     if (houses.length < this.maxHouses && green.length >= houses.length * 0.75 && full.length >= houses.length * 0.6 && island.coins > 600) {
       return this.newHouse(state, island)

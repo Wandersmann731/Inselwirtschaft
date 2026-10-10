@@ -110,10 +110,10 @@ export function depositName(id: string | undefined): string {
 }
 
 /** Short reason why a menu entry cannot be chosen on this island. */
-export function blockerLabel(error: PlacementError, tierName: string): string {
+export function blockerLabel(error: PlacementError, lockLabel: string): string {
   switch (error.code) {
     case 'locked':
-      return `ab ${tierName}`
+      return lockLabel
     case 'noFertility':
       return `Braucht: ${fertilityName(error.missing)}`
     case 'noDeposit':

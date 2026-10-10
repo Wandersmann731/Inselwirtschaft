@@ -5,11 +5,28 @@ import { buildSettlement, planSettlement } from '../sim/settlementPlanner'
 import { setBuildingActive } from '../sim/production'
 import { setUpgradeStop } from '../sim/population'
 import { buildShip } from '../sim/ships'
+import type { IslandState } from '../sim/state'
+import { recordBuild, undoBuild, type BuildRecord } from '../sim/undo'
 import type { GameLoop } from './gameLoop'
+import { nearestSpot, originAt } from './placeSearch'
+import { loadRecent, pushRecent } from './recent'
 import { grabRoute, moveRoute, releaseRoute, resetWaypoints, tapRoute, EMPTY_ROUTE, type RouteDraft } from './routeDraft'
 import { strokeLine, type Tile } from './stroke'
 
 export type ToolMode = 'none' | 'place' | 'road' | 'demolish'
+
+/** How long the last build action can be taken back, in milliseconds. */
+export const UNDO_MS = 12000
+
+/** The last build action, which "Rückgängig" can take back for its full cost. */
+export interface UndoEntry {
+  record: BuildRecord
+  islandId: number
+  /** performance.now() when it was built. */
+  at: number
+  /** What was built, for the button: "Förster", "3 Häuser", "Straße". */
+  label: string
+}
 
 /** Everything the UI and the renderer need to know about the current build tool. */
 export interface ToolSnapshot {
@@ -33,6 +50,10 @@ export interface ToolSnapshot {
   route: RouteDraft
   /** Building whose info panel is open (mode 'none'). */
   selectedBuildingId: number | null
+  /** The last build action, while it can still be taken back. Kept across tool changes. */
+  undo: UndoEntry | null
+  /** Building types built last, newest first. Kept across tool changes. */
+  recent: string[]
 }
 
 const IDLE: ToolSnapshot = {
@@ -47,6 +68,8 @@ const IDLE: ToolSnapshot = {
   freehand: false,
   route: EMPTY_ROUTE,
   selectedBuildingId: null,
+  undo: null,
+  recent: [],
 }
 
 /**
@@ -57,9 +80,21 @@ export class BuildController {
   private loop: GameLoop
   private snapshot: ToolSnapshot = IDLE
   private listeners = new Set<() => void>()
+  private undoEntry: UndoEntry | null = null
+  private recent: string[] = loadRecent()
+  /** The tile in the middle of the map view; set by the map canvas. */
+  private viewCenter: () => Tile | null = () => null
+  /** While the ghost building is dragged: where the finger holds it, relative to its centre. */
+  private dragOffset: { x: number; y: number; moved: boolean } | null = null
 
   constructor(loop: GameLoop) {
     this.loop = loop
+    this.snapshot = { ...IDLE, recent: this.recent }
+  }
+
+  /** The map canvas tells where the middle of the view lies, so a new ghost starts there. */
+  setViewCenter(provider: () => Tile | null): void {
+    this.viewCenter = provider
   }
 
   getSnapshot = (): ToolSnapshot => this.snapshot
@@ -75,9 +110,10 @@ export class BuildController {
     return mode === 'demolish' || (mode === 'road' && freehand) || (mode === 'place' && areaMode)
   }
 
-  /** True while a finger on the route picks up handles instead of panning the map. */
+  /** True while a finger may pick up something (route handles, the ghost building) instead of panning the map. */
   get grabbing(): boolean {
-    const { mode, freehand, route } = this.snapshot
+    const { mode, freehand, route, areaMode, origin } = this.snapshot
+    if (mode === 'place') return !areaMode && origin !== null
     return mode === 'road' && !freehand && route.plan !== null
   }
 
@@ -86,8 +122,11 @@ export class BuildController {
     return this.drawing ? 'draw' : this.grabbing ? 'grab' : 'pan'
   }
 
+  /** Starts placing a building. The ghost appears on the free spot closest to the middle of the view. */
   startPlacing(typeId: string): void {
-    this.set({ ...IDLE, mode: 'place', typeId })
+    const middle = this.viewCenter()
+    const center = middle ? nearestSpot(this.loop.getIslandState(), typeId, false, middle) : null
+    this.set({ ...IDLE, mode: 'place', typeId, center }, true)
   }
 
   startRoads(): void {
@@ -148,19 +187,23 @@ export class BuildController {
     if (mode !== 'place' || !typeId) return
     if (area) {
       if (area.origins.length === 0) return
-      this.loop.dispatchIsland((state) => buildSettlement(state, typeId, area.origins))
+      const count = area.origins.length
+      this.track(`${count} ${count === 1 ? 'Haus' : 'Häuser'}`, typeId, () => this.loop.dispatchIsland((state) => buildSettlement(state, typeId, area.origins)))
       haptic()
       this.set({ ...this.snapshot, area: null })
       return
     }
     if (!origin) return
-    const before = this.loop.getIslandState().buildings.length
-    this.loop.dispatchIsland((state) => placeBuilding(state, typeId, origin.x, origin.y, rotated))
-    if (this.loop.getIslandState().buildings.length === before) return // not possible here: the ghost stays for another try
+    const built = this.track(getBuilding(typeId).name, typeId, () =>
+      this.loop.dispatchIsland((state) => placeBuilding(state, typeId, origin.x, origin.y, rotated)),
+    )
+    if (!built) return // not possible here: the ghost stays for another try
     haptic()
     // Production buildings are built one at a time: back to the overview. Houses and the like can follow each other.
-    if (getBuilding(typeId).category === 'production') this.cancel()
-    else this.set({ ...this.snapshot, center: null, origin: null })
+    if (getBuilding(typeId).category === 'production') return this.cancel()
+    // the next ghost waits on the free spot next to the one just built: "Bauen" again builds a row
+    const center = this.snapshot.center ? nearestSpot(this.loop.getIslandState(), typeId, rotated, this.snapshot.center, 6) : null
+    this.set({ ...this.snapshot, center }, true)
   }
 
   setFreehand(on: boolean): void {
@@ -174,20 +217,47 @@ export class BuildController {
     this.setRoute(tapRoute(this.loop.getIslandState(), this.snapshot.route, tile))
   }
 
-  /** Finger down on the map in route mode. True if it picked up a handle or the route. */
-  routeGrab(tile: Tile): boolean {
+  /** Finger down on the map: picks up a route handle or the ghost building. True if it took something. */
+  grab(tile: Tile): boolean {
+    const { mode, origin, center, typeId, rotated } = this.snapshot
+    if (mode === 'place') {
+      if (!origin || !center || !typeId) return false
+      const { w, h } = footprint(getBuilding(typeId), rotated)
+      // one tile of slack around the ghost: a finger is wider than a tile
+      const inside = tile.x >= origin.x - 1 && tile.x <= origin.x + w && tile.y >= origin.y - 1 && tile.y <= origin.y + h
+      if (!inside) return false
+      this.dragOffset = { x: tile.x - center.x, y: tile.y - center.y, moved: false }
+      return true
+    }
     const grabbed = grabRoute(this.snapshot.route, tile)
     if (!grabbed) return false
     this.setRoute(grabbed)
     return true
   }
 
-  routeMove(tile: Tile): void {
+  grabMove(tile: Tile): void {
+    if (this.snapshot.mode === 'place') {
+      const drag = this.dragOffset
+      const center = this.snapshot.center
+      if (!drag || !center) return
+      const next = { x: tile.x - drag.x, y: tile.y - drag.y }
+      if (next.x === center.x && next.y === center.y) return
+      drag.moved = true
+      this.set({ ...this.snapshot, center: next }, true)
+      return
+    }
     this.setRoute(moveRoute(this.loop.getIslandState(), this.snapshot.route, tile))
   }
 
-  routeRelease(): void {
+  /** Finger up after a grab. For the ghost building: false if it was not moved (the touch was a tap on it). */
+  grabRelease(): boolean {
+    if (this.snapshot.mode === 'place') {
+      const moved = this.dragOffset?.moved ?? false
+      this.dragOffset = null
+      return moved
+    }
     this.setRoute(releaseRoute(this.loop.getIslandState(), this.snapshot.route))
+    return true
   }
 
   /** Back to the best route without waypoints. */
@@ -204,9 +274,37 @@ export class BuildController {
   routeConfirm(): void {
     const plan = this.snapshot.route.plan
     if (this.snapshot.mode !== 'road' || !plan) return
-    this.loop.dispatchIsland((state) => placeRoads(state, plan.newTiles))
+    this.track('Straße', null, () => this.loop.dispatchIsland((state) => placeRoads(state, plan.newTiles)))
     haptic()
     this.cancel() // the road is built: back to the overview
+  }
+
+  /** Takes the last build action back, for its full cost. Only on the island it happened on and only for a while. */
+  undo(): void {
+    const entry = this.undoEntry
+    if (!entry || entry.islandId !== this.loop.activeIsland || performance.now() - entry.at > UNDO_MS) return
+    this.loop.dispatchIsland((state) => undoBuild(state, entry.record))
+    haptic()
+    this.undoEntry = null
+    this.set({ ...this.snapshot })
+  }
+
+  /** Forgets the last build action (its time ran out). */
+  dropUndo(): void {
+    if (!this.undoEntry) return
+    this.undoEntry = null
+    this.set({ ...this.snapshot })
+  }
+
+  /** Runs a build command and remembers what it added for "Rückgängig". True if something was built. */
+  private track(label: string, typeId: string | null, build: () => void): boolean {
+    const before: IslandState = this.loop.getIslandState()
+    build()
+    const record = recordBuild(before, this.loop.getIslandState())
+    if (!record) return false
+    this.undoEntry = { record, islandId: this.loop.activeIsland, at: performance.now(), label }
+    if (typeId) this.recent = pushRecent(this.recent, typeId)
+    return true
   }
 
   private setArea(a: Tile, b: Tile): void {
@@ -258,7 +356,7 @@ export class BuildController {
     if (mode === 'place') return // the area stays until it is built or dragged again
     if (stroke.length === 0) return
     if (mode === 'road') {
-      this.loop.dispatchIsland((state) => placeRoads(state, stroke))
+      this.track('Straße', null, () => this.loop.dispatchIsland((state) => placeRoads(state, stroke)))
       haptic()
       this.cancel() // the road is built: back to the overview
       return
@@ -299,13 +397,12 @@ export class BuildController {
   }
 
   private set(next: ToolSnapshot, recomputeOrigin = false): void {
-    this.snapshot = recomputeOrigin ? { ...next, origin: this.originFor(next) } : next
+    const kept = { ...next, undo: this.undoEntry, recent: this.recent }
+    this.snapshot = recomputeOrigin ? { ...kept, origin: this.originFor(kept) } : kept
     this.listeners.forEach((listener) => listener())
   }
 
   private originFor({ typeId, center, rotated }: ToolSnapshot): Tile | null {
-    if (!typeId || !center) return null
-    const { w, h } = footprint(getBuilding(typeId), rotated)
-    return { x: center.x - Math.floor(w / 2), y: center.y - Math.floor(h / 2) }
+    return typeId && center ? originAt(typeId, rotated, center) : null
   }
 }

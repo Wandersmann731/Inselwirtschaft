@@ -5,11 +5,18 @@ import { buildingFlow } from '../game/chains'
 import { spriteUrl } from '../render/sprites'
 import { ghostKey } from '../render/spriteKeys'
 import { buildingBlocker } from '../sim/build'
+import { isTierUnlocked, residentsFromTier } from '../sim/tiers'
 import type { IslandState } from '../sim/state'
 import { Cost, Icon } from './Icon'
 import { blockerLabel, resourceName } from './messages'
 
 const tierName = (id: string): string => tiers.find((tier) => tier.id === id)?.name ?? id
+
+/** Why a building is still locked: the tier ("ab Bürger") or the residents still missing ("64/125 Pioniere"). */
+function lockLabel(state: IslandState, def: BuildingDef): string {
+  if (!isTierUnlocked(state, def.unlockTier) || !def.unlock) return `ab ${tierName(def.unlockTier)}`
+  return `${Math.floor(residentsFromTier(state, def.unlock.tier))}/${def.unlock.residents} ${tierName(def.unlock.tier)}`
+}
 
 function Thumb({ def }: { def: BuildingDef }) {
   if (def.kind === 'road') return <Icon name="ui/cat_infrastructure" size={40} />
@@ -51,7 +58,7 @@ export function BuildItem({ def, state, tool, count }: { def: BuildingDef; state
         <span className="build-item-size">
           <Flow id={def.id} />
           {unavailable && blocker
-            ? blockerLabel(blocker, tierName(def.unlockTier))
+            ? blockerLabel(blocker, lockLabel(state, def))
             : def.kind === 'road'
               ? 'planen'
               : def.unlockTier !== 'pioneers'

@@ -76,3 +76,14 @@ export function hubReaches(state: IslandState, rect: Rect): boolean {
     return false
   })
 }
+
+/**
+ * Houses that a Kontor or market house supplies now but would not any more once the given buildings are gone.
+ * Shown before demolishing, because those residents then get no goods.
+ */
+export function housesLosingSupply(state: IslandState, removedIds: number[]): PlacedBuilding[] {
+  const removed = new Set(removedIds)
+  if (!state.buildings.some((b) => removed.has(b.id) && getBuilding(b.type).catchment !== undefined)) return []
+  const after = { ...state, buildings: state.buildings.filter((b) => !removed.has(b.id)) }
+  return state.buildings.filter((b) => b.house && !removed.has(b.id) && hubReaches(state, buildingRect(b)) && !hubReaches(after, buildingRect(b)))
+}

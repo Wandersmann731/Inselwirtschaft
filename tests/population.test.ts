@@ -4,8 +4,8 @@ import { checkPlacement, placeBuilding } from '../src/sim/build'
 import { runPopulation } from '../src/sim/population'
 import { createRng } from '../src/sim/rng'
 import type { IslandState } from '../src/sim/state'
-import { tickFlat as tick, cycleFlat } from './helpers'
-import { isBuildingUnlocked, residentsOfTier } from '../src/sim/tiers'
+import { tickFlat as tick, cycleFlat, placeUnlocked } from './helpers'
+import { isBuildingUnlocked, residentsFromTier, residentsOfTier } from '../src/sim/tiers'
 import { grassField, patchHouse } from './helpers'
 
 const rich = { coins: 1_000_000, stock: { tools: 500, wood: 500, bricks: 500, marble: 50 } }
@@ -175,7 +175,26 @@ describe('unlocking', () => {
 
   it('keeps the unlock when a house falls back', () => {
     const state = { ...oneHouse(), highestTier: 2 }
-    expect(isBuildingUnlocked(state, 'church')).toBe(true)
+    expect(isBuildingUnlocked(state, 'distillery')).toBe(true)
+  })
+
+  it('opens public buildings only from a resident threshold (chapel: pioneers)', () => {
+    const needed = getBuilding('chapel').unlock!.residents
+    const few = patchHouse(oneHouse(), 1, { residents: needed - 1 })
+    expect(isBuildingUnlocked(few, 'chapel')).toBe(false)
+    expect(checkPlacement(few, 'chapel', 2, 2, false)?.code).toBe('locked')
+    const many = patchHouse(oneHouse(), 1, { residents: needed })
+    expect(isBuildingUnlocked(many, 'chapel')).toBe(true)
+  })
+
+  it('counts residents of higher tiers towards a threshold, so rising houses do not lock it again', () => {
+    const needed = getBuilding('church').unlock!.residents
+    const settlers = { ...patchHouse(oneHouse(), 1, { tier: 'settlers', residents: needed }), highestTier: 2 }
+    expect(residentsFromTier(settlers, 'settlers')).toBe(needed)
+    expect(isBuildingUnlocked(settlers, 'church')).toBe(true)
+    const citizens = patchHouse(settlers, 1, { tier: 'citizens' })
+    expect(isBuildingUnlocked(citizens, 'church')).toBe(true)
+    expect(isBuildingUnlocked(patchHouse(settlers, 1, { residents: needed - 1 }), 'church')).toBe(false)
   })
 
   it('allows aristocrat houses only with 1900 merchant residents', () => {
@@ -215,7 +234,7 @@ describe('economy cycle in the tick', () => {
     let state = grassField(50, 30, rich)
     state = placeBuilding(state, 'house_pioneers', 10, 10, false)
     state = placeBuilding(state, 'market_house', 14, 10, false)
-    state = placeBuilding(state, 'chapel', 20, 10, false)
+    state = placeUnlocked(state, 'chapel', 20, 10, false)
     state = { ...state, stock: { ...state.stock, food: 1000, cloth: 1000 } }
     state = { ...state, highestTier: 0 }
     for (let i = 0; i < config.economyCycleTicks * 6; i++) state = tick(state, createRng(state.rngState))
@@ -243,5 +262,19 @@ describe('stopping upgrades at the market house', () => {
     const allowed = cycles(setUpgradeStop(stopped, 'settlers', false), upgradeCycles)
     expect(house(allowed).tier).toBe('settlers')
     expect(setUpgradeStop(ready, 'settlers', false)).toBe(ready)
+  })
+})
+
+describe('needs only for rising', () => {
+  it('keeps pioneers without a chapel (they only need it to rise), but does not let them rise', () => {
+    const met = { ...ALL_MET, chapel: 0 }
+    const after = cycles(patchHouse(oneHouse(), 1, { needs: met, residents: 8 }), upgradeCycles + 2)
+    expect(house(after).residents).toBe(8)
+    expect(house(after).tier).toBe('pioneers')
+  })
+
+  it('still lets pioneers move out when food is missing', () => {
+    const after = cycles(patchHouse(oneHouse(), 1, { needs: { ...ALL_MET, food: 0 }, residents: 8 }), 1)
+    expect(house(after).residents).toBeLessThan(8)
   })
 })

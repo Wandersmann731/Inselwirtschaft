@@ -58,6 +58,21 @@ export function isTierUnlocked(state: GameState | IslandState, tierId: string): 
   return tierIndex(tierId) <= state.highestTier
 }
 
+/** Residents of the realm living in houses of this tier or any higher one. Rising houses keep counting. */
+export function residentsFromTier(state: GameState | IslandState, tierId: string): number {
+  const from = tierIndex(tierId)
+  return islandsOf(state)
+    .filter((island) => island.owned)
+    .flatMap((island) => island.buildings)
+    .reduce((sum, building) => {
+      const house = building.house
+      return house && !house.ruin && tierIndex(house.tier) >= from ? sum + house.residents : sum
+    }, 0)
+}
+
+/** True if the building may be built: its tier was reached and, if it has one, the resident threshold is met. */
 export function isBuildingUnlocked(state: GameState | IslandState, buildingId: string): boolean {
-  return isTierUnlocked(state, getBuilding(buildingId).unlockTier)
+  const def = getBuilding(buildingId)
+  if (!isTierUnlocked(state, def.unlockTier)) return false
+  return !def.unlock || residentsFromTier(state, def.unlock.tier) >= def.unlock.residents
 }

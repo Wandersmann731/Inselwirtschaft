@@ -3,6 +3,7 @@ import type { BuildingCost } from '../data'
 import type { BuildController, ToolSnapshot } from '../game/buildController'
 import { demolishPreview, missingResource } from '../sim/build'
 import type { IslandState } from '../sim/state'
+import { LostSupply } from './BuildingPanel'
 import { Cost } from './Icon'
 import { resourceName } from './messages'
 
@@ -38,6 +39,7 @@ export function DrawBar({ tool, snapshot, state }: { tool: BuildController; snap
               '50 % der Baukosten zurück'
             )}
           </span>
+          <LostSupply state={state} ids={preview.buildings} />
           <span className="place-hint">
             {marked > 0
               ? 'Weitere antippen oder darüberziehen, dann „Abreißen“. Zwei Finger bewegen die Karte.'

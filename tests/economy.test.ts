@@ -7,7 +7,7 @@ import { processProduction, setBuildingActive } from '../src/sim/production'
 import { createRng } from '../src/sim/rng'
 import { emptyLedger } from '../src/sim/ledger'
 import { createInitialState, type IslandState } from '../src/sim/state'
-import { tickFlat as tick, cycleFlat } from './helpers'
+import { tickFlat as tick, cycleFlat, placeUnlocked } from './helpers'
 import { findShortages, WARNING_CYCLES } from '../src/sim/warnings'
 import { grassField, patchHouse } from './helpers'
 
@@ -24,7 +24,7 @@ function run(state: IslandState, ticks: number): IslandState {
 describe('settling a cycle', () => {
   it('pays the upkeep of every building and records income, upkeep and balance', () => {
     let state = grassField(50, 30, { ...rich, coins: 1000 })
-    state = placeBuilding(state, 'chapel', 5, 5, false)
+    state = placeUnlocked(state, 'chapel', 5, 5, false)
     state = placeBuilding(state, 'forester', 12, 5, false)
     state = { ...state, coins: 1000, economy: { ...state.economy, current: { ...state.economy.current, income: 40 } } }
     const settled = settleCycle(state)
@@ -42,7 +42,7 @@ describe('settling a cycle', () => {
 
   it('charges less for shut down buildings', () => {
     let state = grassField(50, 30, rich)
-    state = placeBuilding(state, 'chapel', 5, 5, false)
+    state = placeUnlocked(state, 'chapel', 5, 5, false)
     const off = setBuildingActive(state, state.buildings[0].id, false)
     expect(totalUpkeep(off)).toBe(getBuilding('chapel').upkeep.idle)
     expect(totalUpkeep(off)).toBeLessThan(totalUpkeep(state))
@@ -56,7 +56,7 @@ describe('settling a cycle', () => {
     let state = grassField(50, 30, rich)
     state = placeBuilding(state, 'house_pioneers', 10, 10, false)
     state = placeBuilding(state, 'market_house', 14, 10, false)
-    state = placeBuilding(state, 'chapel', 20, 10, false)
+    state = placeUnlocked(state, 'chapel', 20, 10, false)
     state = patchHouse(state, 1, { residents: 8 })
     state = { ...state, stock: { ...state.stock, food: 100 } }
     const coins = state.coins
@@ -70,7 +70,7 @@ describe('settling a cycle', () => {
 
   it('lets coins go negative', () => {
     let state = grassField(50, 30, rich)
-    state = placeBuilding(state, 'chapel', 5, 5, false)
+    state = placeUnlocked(state, 'chapel', 5, 5, false)
     expect(settleCycle({ ...state, coins: 3 }).coins).toBeLessThan(0)
   })
 })
@@ -98,13 +98,13 @@ describe('goods ledger', () => {
   })
 
   it('counts the materials used for building', () => {
-    const state = placeBuilding(grassField(30, 30, rich), 'chapel', 5, 5, false)
+    const state = placeUnlocked(grassField(30, 30, rich), 'chapel', 5, 5, false)
     expect(state.economy.current.consumed.wood).toBe(getBuilding('chapel').cost.wood)
     expect(state.economy.current.consumed.tools).toBe(getBuilding('chapel').cost.tools)
   })
 
   it('does not count refunds', () => {
-    const built = placeBuilding(grassField(30, 30, rich), 'chapel', 5, 5, false)
+    const built = placeUnlocked(grassField(30, 30, rich), 'chapel', 5, 5, false)
     expect(demolishAt(built, 5, 5).economy.current).toEqual(built.economy.current)
   })
 })
@@ -139,7 +139,7 @@ describe('debt blocks new construction', () => {
   })
 
   it('still allows demolition and building again once coins are positive', () => {
-    let state = placeBuilding(grassField(30, 30, rich), 'chapel', 5, 5, false)
+    let state = placeUnlocked(grassField(30, 30, rich), 'chapel', 5, 5, false)
     state = { ...state, coins: -50 }
     expect(demolishAt(state, 5, 5).buildings).toHaveLength(0)
     expect(checkPlacement({ ...state, coins: 5000 }, 'house_pioneers', 15, 15, false)).toBeNull()

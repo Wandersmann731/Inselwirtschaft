@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildingRect, hubReaches, inRadius, suppliedHouses, tilesInRadius } from '../src/sim/coverage'
+import { buildingRect, housesLosingSupply, hubReaches, inRadius, suppliedHouses, tilesInRadius } from '../src/sim/coverage'
 import { placeBuilding } from '../src/sim/build'
 import { grassField, patchBuilding, testIsland } from './helpers'
 
@@ -59,5 +59,17 @@ describe('hubReaches', () => {
     expect(hubReaches(state, { x: 20, y: 10, w: 2, h: 2 })).toBe(true)
     expect(hubReaches(state, { x: 40, y: 10, w: 2, h: 2 })).toBe(false)
     expect(hubReaches(patchBuilding(state, 1, { active: false }), { x: 20, y: 10, w: 2, h: 2 })).toBe(false)
+  })
+})
+
+describe('houses losing supply', () => {
+  it('names the houses only the demolished market house reached', () => {
+    let state = grassField(80, 30, { coins: 100_000, stock: { tools: 500, wood: 500, bricks: 500, marble: 50 } })
+    state = placeBuilding(state, 'market_house', 5, 5, false) // id 1
+    state = placeBuilding(state, 'house_pioneers', 8, 5, false) // id 2, only market 1
+    state = placeBuilding(state, 'market_house', 60, 5, false) // id 3
+    state = placeBuilding(state, 'house_pioneers', 62, 8, false) // id 4, only market 3
+    expect(housesLosingSupply(state, [1]).map((b) => b.id)).toEqual([2])
+    expect(housesLosingSupply(state, [2])).toEqual([])
   })
 })

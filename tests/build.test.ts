@@ -1,3 +1,4 @@
+import { createHouse } from '../src/sim/tiers'
 import { describe, expect, it } from 'vitest'
 import { config, getBuilding } from '../src/data'
 import {
@@ -9,7 +10,7 @@ import {
   placeBuilding,
   placeRoads,
 } from '../src/sim/build'
-import { testIsland } from './helpers'
+import { testIsland, placeUnlocked } from './helpers'
 
 describe('footprint', () => {
   it('swaps width and height when rotated', () => {
@@ -82,8 +83,8 @@ describe('placement rules', () => {
   it('respects rotation for the footprint', () => {
     const state = testIsland()
     // chapel 2x3 at y=11 would reach y=13 (water row); rotated 3x2 fits
-    expect(checkPlacement(state, 'chapel', 8, 11, false)?.code).toBe('water')
-    expect(checkPlacement(state, 'chapel', 8, 11, true)).toBeNull()
+    expect(placeUnlocked(state, 'chapel', 8, 11, false).buildings).toHaveLength(0)
+    expect(placeUnlocked(state, 'chapel', 8, 11, true).buildings).toHaveLength(1)
   })
 })
 
@@ -91,7 +92,7 @@ describe('costs', () => {
   it('pays coins and goods when building', () => {
     const state = testIsland({ coins: 1000, stock: { tools: 10, wood: 20, bricks: 0, marble: 0 } })
     const chapel = getBuilding('chapel')
-    const next = placeBuilding(state, 'chapel', 3, 3, false)
+    const next = placeUnlocked(state, 'chapel', 3, 3, false)
     expect(next.coins).toBe(1000 - chapel.cost.coins)
     expect(next.stock.tools).toBe(10 - chapel.cost.tools)
     expect(next.stock.wood).toBe(20 - chapel.cost.wood)
@@ -100,7 +101,8 @@ describe('costs', () => {
   })
 
   it('refuses to build without enough goods and reports what is missing', () => {
-    const state = testIsland({ coins: 20000, stock: { tools: 50, wood: 100, bricks: 100, marble: 5 } })
+    const nobles = { id: 99, type: 'house_aristocrats', x: 30, y: 30, rotated: false, active: true, house: { ...createHouse('aristocrats'), residents: 600 } }
+    const state = testIsland({ coins: 20000, stock: { tools: 50, wood: 100, bricks: 100, marble: 5 }, highestTier: 4, buildings: [nobles] })
     expect(checkPlacement(state, 'cathedral', 3, 3, false)).toEqual({ code: 'funds', missing: 'marble' })
     expect(placeBuilding(state, 'cathedral', 3, 3, false)).toBe(state)
   })
@@ -151,7 +153,7 @@ describe('roads', () => {
 describe('demolition', () => {
   it('removes a building and pays back half of its cost, rounded down', () => {
     const chapel = getBuilding('chapel')
-    const built = placeBuilding(testIsland(), 'chapel', 3, 3, false)
+    const built = placeUnlocked(testIsland(), 'chapel', 3, 3, false)
     const razed = demolishAt(built, 4, 5) // any tile of the footprint
     expect(razed.buildings).toHaveLength(0)
     expect(razed.occupancy.every((v) => v === 0)).toBe(true)
@@ -161,7 +163,7 @@ describe('demolition', () => {
   })
 
   it('pays back exactly 50 percent of an even cost', () => {
-    const built = placeBuilding(testIsland(), 'chapel', 3, 3, false) // 700 coins, 6 tools, 10 wood
+    const built = placeUnlocked(testIsland(), 'chapel', 3, 3, false) // 700 coins, 6 tools, 10 wood
     const razed = demolishAt(built, 3, 3)
     expect(razed.coins - built.coins).toBe(350)
     expect(razed.stock.tools - built.stock.tools).toBe(3)

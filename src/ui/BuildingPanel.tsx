@@ -5,7 +5,9 @@ import { cumulativeNeeds, getTier } from '../sim/tiers'
 import type { BuildController } from '../game/buildController'
 import { upkeepOf } from '../sim/production'
 import { taxOf } from '../sim/market'
-import type { IslandState } from '../sim/state'
+import type { HouseState, IslandState } from '../sim/state'
+import { housesLosingSupply } from '../sim/coverage'
+import { hubCount, stockCapacity } from '../sim/storage'
 import { formatCost, formatWhole, needLabel, resourceName, statusText } from './messages'
 import { Icon } from './Icon'
 import { STATUS_ICONS } from './statusIcons'
@@ -84,6 +86,11 @@ export function BuildingPanel({
       <div className="panel-line">
         Unterhalt: {upkeepOf(building)} Münzen pro Zyklus{building.active ? '' : ' (stillgelegt)'}
       </div>
+      {def.catchment !== undefined && (
+        <div className="panel-line">
+          Lager: bis {stockCapacity(state)} je Ware ({hubCount(state)} {hubCount(state) === 1 ? 'Kontor oder Markthaus' : 'Kontore und Markthäuser'}, jedes weitere gibt mehr Platz)
+        </div>
+      )}
       {(building.type === 'kontor' || building.type === 'market_house') && <UpgradeStops tool={tool} state={state} />}
       {building.type === 'kontor' && (
         <button type="button" className="action-button panel-toggle" onClick={onOpenKontor}>
@@ -99,6 +106,7 @@ export function BuildingPanel({
         (confirming === building.id ? (
           <div className="panel-confirm" ref={confirmRef}>
             <span>Abreißen? Zurück: {formatCost(refundOf(def.cost))}</span>
+            <LostSupply state={state} ids={[building.id]} />
             <button type="button" className="action-button danger" onClick={() => tool.demolish(building.id)}>
               Ja, abreißen
             </button>
@@ -135,7 +143,11 @@ function HousePanel({ house, stopped }: { house: NonNullable<IslandState['buildi
     <>
       <div className="panel-status">
         {tier.name}: {Math.floor(house.residents)} / {tier.residents} Einwohner
+        <span className="mood" title={moodOf(house).text}>
+          {moodOf(house).face}
+        </span>
       </div>
+      <div className="panel-line">{moodOf(house).text}</div>
       {cumulativeNeeds(house.tier).map((need) => {
         const percent = Math.round(house.needs[need.id] ?? 0)
         return (
@@ -143,6 +155,7 @@ function HousePanel({ house, stopped }: { house: NonNullable<IslandState['buildi
             <span className="need-name">
               {needLabel(need)}
               {need.optional && <small> (Bonus)</small>}
+              {need.forRise && <small title="Nur für den Aufstieg nötig"> ↑</small>}
             </span>
             <span className="panel-bar need-bar">
               <span className="panel-bar-fill" style={{ width: `${percent}%`, background: needColor(percent) }} />
@@ -187,6 +200,17 @@ function UpgradeStops({ tool, state }: { tool: BuildController; state: IslandSta
   )
 }
 
+/** The face of the residents, as in the original house window: unhappy, content or happy. */
+function moodOf(house: HouseState): { face: string; text: string } {
+  const needs = cumulativeNeeds(house.tier).filter((need) => !need.optional)
+  const percent = (id: string): number => house.needs[id] ?? 0
+  if (needs.some((need) => !need.forRise && percent(need.id) < config.population.shortageBelow)) {
+    return { face: '☹️', text: 'Unzufrieden: Es fehlt etwas Wichtiges, Bewohner ziehen aus.' }
+  }
+  if (needs.every((need) => percent(need.id) >= 100)) return { face: '😊', text: 'Glücklich: Alles da, das Haus kann aufsteigen.' }
+  return { face: '🙂', text: 'Zufrieden: Sie bleiben, für den Aufstieg fehlt noch etwas.' }
+}
+
 function refundOf(cost: BuildingCost): BuildingCost {
   const back = (value: number): number => Math.floor(value * config.refundRate)
   return { coins: back(cost.coins), tools: back(cost.tools), wood: back(cost.wood), bricks: back(cost.bricks), marble: back(cost.marble) }
@@ -195,4 +219,15 @@ function refundOf(cost: BuildingCost): BuildingCost {
 function needColor(percent: number): string {
   if (percent >= 100) return '#4cd964'
   return percent < config.population.shortageBelow ? '#ff4d4d' : '#ffd23f'
+}
+
+/** Warning before demolishing a Kontor or market house: these houses would get no goods any more. */
+export function LostSupply({ state, ids }: { state: IslandState; ids: number[] }) {
+  const lost = housesLosingSupply(state, ids)
+  if (lost.length === 0) return null
+  return (
+    <span className="place-hint invalid">
+      Achtung: {lost.length} {lost.length === 1 ? 'Haus bekommt' : 'Häuser bekommen'} danach keine Waren mehr.
+    </span>
+  )
 }

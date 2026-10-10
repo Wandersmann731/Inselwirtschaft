@@ -42,8 +42,10 @@ export interface GameConfig {
     outputBufferAmount: number
     /** Delivery time per road tile between producer and market house or Kontor. */
     ticksPerRoadTile: number
-    /** Most of one good the island store accepts from producers. */
+    /** Most of one good the island store holds with one Kontor or market house. */
     stockCapacity: number
+    /** Room added by each further Kontor or market house: the listed steps, then `then` each, up to `max`. */
+    stockGrowth: { steps: number[]; then: number; max: number }
   }
 }
 
@@ -83,6 +85,8 @@ export interface BuildingDef {
   cost: BuildingCost
   upkeep: { active: number; idle: number }
   unlockTier: string
+  /** Also needs this many residents in houses of `tier` or a higher tier across the realm (original thresholds). */
+  unlock?: { tier: string; residents: number }
   placement: PlacementRule
   /** Placeholder colour until real sprites exist. */
   color: string
@@ -127,6 +131,8 @@ export interface TierNeed {
   building?: string
   /** A bonus: it raises the tax but is not needed to stay or to rise (jewelry and wine for aristocrats). */
   optional?: boolean
+  /** Only needed to rise into the next tier: missing it does not make residents move out (chapel for pioneers). */
+  forRise?: boolean
 }
 
 export interface TierDef {

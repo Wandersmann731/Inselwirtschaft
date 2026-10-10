@@ -3,7 +3,7 @@ import type { BuildingCost, BuildingDef } from '../data'
 import { Terrain } from '../world/terrain'
 import { addTo, cloneLedger } from './ledger'
 import { createProduction } from './productionState'
-import { createHouse, isTierUnlocked } from './tiers'
+import { createHouse, isBuildingUnlocked } from './tiers'
 import type { IslandState, PlacedBuilding } from './state'
 
 export type PlacementErrorCode =
@@ -82,7 +82,7 @@ function touchesWater(state: IslandState, x: number, y: number, w: number, h: nu
 export function buildingBlocker(state: IslandState, def: BuildingDef): PlacementError | null {
   if (!state.owned) return { code: 'notOwned' }
   if (state.coins < 0) return { code: 'debt' }
-  if (!isTierUnlocked(state, def.unlockTier)) return { code: 'locked' }
+  if (!isBuildingUnlocked(state, def.id)) return { code: 'locked' }
   if (def.requiresFertility && !state.fertilities.includes(def.requiresFertility)) {
     return { code: 'noFertility', missing: def.requiresFertility }
   }
