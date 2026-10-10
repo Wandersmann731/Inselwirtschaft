@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { BuildController } from '../src/game/buildController'
 import { GameLoop } from '../src/game/gameLoop'
 import { liftIsland } from '../src/sim/islands'
-import { planSettlement } from '../src/sim/settlementPlanner'
+import { blocksAlong, buildSettlement, planSettlement } from '../src/sim/settlementPlanner'
 import { yardAt, yardField } from '../src/world/settlement'
 import { grassField, testIsland } from './helpers'
 
@@ -27,12 +27,36 @@ describe('settlement planner', () => {
     }
   })
 
-  it('looks grown: the houses do not all sit on one regular grid', () => {
-    const state = grassField(30, 30, rich)
-    const plan = planSettlement(state, 'house_pioneers', { x: 2, y: 2 }, { x: 25, y: 20 })
-    const columns = new Set(plan.origins.map((o) => o.x % 2))
-    const rows = new Set(plan.origins.map((o) => o.y % 2))
-    expect(columns.size + rows.size).toBeGreaterThan(2)
+  it('splits a length into blocks of two or three houses with one lane between them', () => {
+    expect(blocksAlong(9, 2, 3, 1)).toEqual([[0, 2], [5, 2]])
+    expect(blocksAlong(6, 2, 3, 1)).toEqual([[0, 3]])
+    expect(blocksAlong(3, 2, 3, 1)).toEqual([[0, 1]])
+    expect(blocksAlong(1, 2, 3, 1)).toEqual([])
+  })
+
+  it('puts the houses of a block side by side and keeps the same one-tile lane between blocks', () => {
+    const state = grassField(40, 30, rich)
+    const plan = planSettlement(state, 'house_pioneers', { x: 2, y: 2 }, { x: 20, y: 10 })
+    const xs = [...new Set(plan.origins.map((o) => o.x))].sort((p, q) => p - q)
+    const steps = new Set(xs.slice(1).map((x, i) => x - xs[i]))
+    // 2 within a block (houses touch), 3 across a lane
+    expect([...steps].every((step) => step === 2 || step === 3)).toBe(true)
+    expect(steps.has(3)).toBe(true)
+  })
+
+  it('gives the houses of one block the same quarter, the id of its first house', () => {
+    const state = grassField(40, 30, rich)
+    const plan = planSettlement(state, 'house_pioneers', { x: 2, y: 2 }, { x: 14, y: 6 })
+    const houses = plan.result.buildings.filter((b) => b.house)
+    expect(houses.every((b) => b.quarter !== undefined)).toBe(true)
+    for (const block of new Set(plan.blocks)) {
+      const members = houses.filter((_, i) => plan.blocks[i] === block)
+      expect(new Set(members.map((b) => b.quarter)).size).toBe(1)
+      expect(members[0].quarter).toBe(members[0].id)
+    }
+    expect(new Set(houses.map((b) => b.quarter)).size).toBe(new Set(plan.blocks).size)
+    const built = buildSettlement(state, 'house_pioneers', plan.origins, plan.blocks)
+    expect(built.buildings.map((b) => b.quarter)).toEqual(houses.map((b) => b.quarter))
   })
 
   it('gives the same layout twice and stops when the money runs out', () => {

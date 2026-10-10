@@ -10,7 +10,8 @@ import { drawDecor } from './decorDraw'
 import { frontDecorIn, type FrontItem } from './frontDecor'
 import { sprites } from './sprites'
 import { drawPlacedSprite, placeSprite, type SpritePlacement } from './spriteDraw'
-import { roadKey, smokeKey } from './spriteKeys'
+import { buildingKey, roadKey, smokeKey } from './spriteKeys'
+import { quarterBlocks } from './quarterRenderer'
 
 export interface TileRange {
   minI: number
@@ -58,6 +59,7 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
   }
   for (const decor of frontDecorIn(state, range)) entries.push({ depth: decor.depth, decor })
   entries.sort((a, b) => a.depth - b.depth)
+  const blocks = quarterBlocks(state)
 
   for (const entry of entries) {
     if (entry.decor) {
@@ -68,7 +70,8 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
     if (!building || !rect) continue
     const def = getBuilding(building.type)
     const house = building.house
-    const placed = placeSprite(building)
+    const block = building.quarter !== undefined ? (blocks.get(building.quarter) ?? null) : null
+    const placed = placeSprite(building, buildingKey(building, block))
     let dotHeight: number
     if (placed) {
       drawPlacedSprite(ctx, placed)

@@ -204,12 +204,10 @@ export interface WorldConfig {
   }
   /** How the area tool lays out houses so they look grown, not set out on a grid. */
   settlementPlanner: {
-    /** Chance of a one tile gap after a house. */
-    gapChance: number
-    /** Chance that a house is pushed one tile back, so the row front is ragged. */
-    jitterChance: number
-    /** Rows of houses between two lanes (a free row). */
-    rowsPerLane: number
+    /** Most houses side by side in one block (one shared yard), across and down. */
+    blockHouses: number
+    /** Free tiles between two blocks. */
+    laneTiles: number
     /** Most houses one drag may place. */
     maxHouses: number
   }

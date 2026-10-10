@@ -43,7 +43,7 @@ export interface ToolSnapshot {
   /** Placing houses: drag an area and let the game lay out a village in it. */
   areaMode: boolean
   /** The dragged area (both corners) and the houses planned in it. */
-  area: { a: Tile; b: Tile; origins: Tile[]; outOfMoney: boolean } | null
+  area: { a: Tile; b: Tile; origins: Tile[]; blocks: number[]; outOfMoney: boolean } | null
   /** Road mode: draw by hand instead of planning a route between two points. */
   freehand: boolean
   /** Road mode: the planned route. */
@@ -188,7 +188,7 @@ export class BuildController {
     if (area) {
       if (area.origins.length === 0) return
       const count = area.origins.length
-      this.track(`${count} ${count === 1 ? 'Haus' : 'Häuser'}`, typeId, () => this.loop.dispatchIsland((state) => buildSettlement(state, typeId, area.origins)))
+      this.track(`${count} ${count === 1 ? 'Haus' : 'Häuser'}`, typeId, () => this.loop.dispatchIsland((state) => buildSettlement(state, typeId, area.origins, area.blocks)))
       haptic()
       this.set({ ...this.snapshot, area: null })
       return
@@ -311,7 +311,7 @@ export class BuildController {
     const typeId = this.snapshot.typeId
     if (!typeId) return
     const plan = planSettlement(this.loop.getIslandState(), typeId, a, b)
-    this.set({ ...this.snapshot, area: { a, b, origins: plan.origins, outOfMoney: plan.outOfMoney } })
+    this.set({ ...this.snapshot, area: { a, b, origins: plan.origins, blocks: plan.blocks, outOfMoney: plan.outOfMoney } })
   }
 
   private setRoute(route: RouteDraft): void {
