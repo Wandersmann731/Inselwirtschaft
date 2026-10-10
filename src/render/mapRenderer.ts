@@ -15,6 +15,7 @@ import {
 import { mapBounds, tileToWorld, worldToTile, type Bounds, type Point } from './iso'
 import { yardField } from '../world/settlement'
 import { drawBuildings, drawRoads, type TileRange } from './buildingRenderer'
+import { drawYards } from './quarterRenderer'
 import { drawShips } from './shipRenderer'
 import { OverlayRenderer } from './overlayRenderer'
 import { getSettings } from '../save/settings'
@@ -192,6 +193,7 @@ export class MapRenderer {
     this.drawWater(settings.waterAnimation ? now : 0)
     const state = this.getState()
     this.drawTerrain(map, state)
+    drawYards(ctx, state, range)
     drawRoads(ctx, state, range)
     drawBuildings(ctx, state, range, now, settings.smoke)
     drawShips(ctx, state, now)

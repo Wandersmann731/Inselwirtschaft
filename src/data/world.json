@@ -7,7 +7,7 @@
   "maxZoom": 2,
   "input": { "tapSlopPx": 10, "tapMaxMs": 500, "wheelZoomSpeed": 0.0015, "longPressMs": 550, "doubleTapMs": 350 },
   "settlement": { "color": [158, 128, 84], "strength": 0.62, "radius": 2, "falloff": [1, 0.85, 0.4], "decorHideAbove": 0.5 },
-  "settlementPlanner": { "gapChance": 0.35, "jitterChance": 0.25, "rowsPerLane": 2, "maxHouses": 40 },
+  "settlementPlanner": { "blockHouses": 3, "laneTiles": 1, "maxHouses": 40 },
   "roadPlanner": { "newTileCost": 1, "roadTileCost": 0.15, "forestExtraCost": 0.6, "turnPenalty": 0.45, "grabRadius": 1 },
   "island": {
     "minSize": 100,

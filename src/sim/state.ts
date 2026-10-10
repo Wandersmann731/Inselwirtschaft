@@ -89,6 +89,8 @@ export interface PlacedBuilding {
   production?: ProductionState
   /** Only for housing. */
   house?: HouseState
+  /** Houses built together as one block of a quarter share this number (the id of the block's first house) and one yard. */
+  quarter?: number
 }
 
 /** What the Kontor of an island does with a good when the trader visits. Missing or 0 means off. */

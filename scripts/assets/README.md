@@ -56,6 +56,17 @@ Weitere Optionen: `--parallel 5`, `--provider flux-2-pro` (je nach Anbieter und 
 - Alle Varianten sind erzeugt: 16 je Wohnhausstufe, 4 Ruinen, je 4 für Farmen, Forsthaus, Fischerei und Minen.
 - Auch die Werkstätten (Weberei, Bäckerei, Mühle, Steinmetz, Schmelze, Werkzeugmacher, Brennerei, Gerberei, Tabakmanufaktur, Färberei, Trankocherei, Kelterei, Goldschmied) und das Markthaus stehen auf einem Grundstück (Werkhof aus Erde und Pflaster). Die Schornsteinpositionen für den Rauch stehen in `buildings.json` (`smoke`) und müssen nach dem Neuerzeugen eines Bildes geprüft werden.
 
+## Viertel (Höfe und Häuser ohne Parzelle)
+- `node scripts/assets/quarters.mjs` erzeugt ohne Bildkosten, nur aus vorhandenen Grafiken:
+  - `art/buildings/house_<stufe>_q_<n>.png`: jedes Wohnhaus und jede Ruine ohne eigene Parzelle. Die Vorlage (`*_guide.png`) zeigt,
+    wo das Haus steht; ringsum bleibt ein schmaler Streifen, der Rest des Grundstücks blendet aus.
+  - `art/quarters/yard_<village|town>_<a>x<b>_<v>.png`: der gemeinsame Hof eines Blocks aus a × b Häusern (1×2 bis 3×3).
+    Dorf: Gras und Erde aus `art/ground` mit Weg am Rand. Stadt (ab Bürgern): Pflaster aus `art/ground/paving.png`, das ist die Steintextur der Straßen.
+    Büsche, Blumen, Gras und Kiesel aus `art/decor` stehen in den Lücken zwischen den Häusern.
+  - `--preview` schreibt `art-raw/quarter_preview.png` zum Ansehen.
+- Danach `node scripts/assets/optimize.mjs`. Das Spiel zeichnet den Hof unter einem Block (`src/render/quarterRenderer.ts`) und nimmt für
+  dessen Häuser die Bilder ohne Parzelle, jedes Haus im Block ein anderes (`blockVariant` in `src/render/spriteKeys.ts`).
+
 ## Ton
 - `sound.mjs` erzeugt Geräusche und Schleifen aus `docs/ton.csv` mit der **ElevenLabs Sound-Effects-API** (Schlüssel nur aus der Umgebung: `ELEVENLABS_API_KEY`, wird nie in eine Datei geschrieben). Schleifen nutzen `loop: true`. Die Dauer steht in der CSV (0,5 bis 30 s). Höchstens 4 gleichzeitige Anfragen.
 - `music.mjs` erzeugt die Musikstücke mit **Google Lyria 3 Pro** über OpenRouter (`OPENROUTER_API_KEY`), etwa 0,08 USD je Stück. Der verwendete ElevenLabs-Schlüssel hatte keine Berechtigung für Musik.
