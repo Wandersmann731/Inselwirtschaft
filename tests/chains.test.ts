@@ -54,10 +54,11 @@ describe('byproducts', () => {
     expect(noGame.buildings).toHaveLength(1) // only the market house
   })
 
-  it('stops with a full byproduct buffer when the store is full of hides', () => {
+  it('goes on making food when the store is full of hides: the extra hides are left behind', () => {
     const state = run(line(['butcher'], { cattle: 500, hides: config.production.stockCapacity, food: 0 }), 400)
     const butcher = state.buildings.find((b) => b.type === 'butcher')!
-    expect(butcher.production!.status.kind).toBe('outputFull')
+    expect(butcher.production!.status.kind).not.toBe('outputFull')
+    expect(state.stock.food).toBeGreaterThan(0)
     expect(state.stock.hides).toBe(config.production.stockCapacity)
   })
 

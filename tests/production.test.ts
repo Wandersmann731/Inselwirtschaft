@@ -247,3 +247,19 @@ describe('store capacity with several producers', () => {
     expect(highest).toBe(config.production.stockCapacity)
   })
 })
+
+describe('byproducts', () => {
+  it('keeps the butcher making food when the store is full of hides (no tannery takes them)', () => {
+    const cap = config.production.stockCapacity
+    const start = connected('butcher', { hides: cap, cattle: 100, food: 0 })
+    const result = run(start, 600)
+    expect(find(result, 'butcher').production!.status.kind).not.toBe('outputFull')
+    expect(result.stock.food).toBeGreaterThan(0)
+    expect(result.stock.hides).toBe(cap)
+  })
+
+  it('still delivers hides while the store has room', () => {
+    const start = connected('butcher', { hides: 0, cattle: 100, food: 0 })
+    expect(run(start, 600).stock.hides).toBeGreaterThan(0)
+  })
+})
