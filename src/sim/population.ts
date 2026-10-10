@@ -7,15 +7,18 @@ import { cumulativeNeeds, getTier, nextTier, previousTier, tierIndex } from './t
 
 const FULL = 100 - 1e-6
 
-/** The needs that count for staying and rising: optional ones (a bonus for the tax) are left out. */
-function required(house: HouseState): number[] {
-  const optional = new Set(cumulativeNeeds(house.tier).filter((need) => need.optional).map((need) => need.id))
+/**
+ * The needs that count for rising, or with `toStay` for staying: optional ones (a bonus for the tax) never count,
+ * needs only for rising (the chapel of the pioneers) do not count for staying.
+ */
+function required(house: HouseState, toStay = false): number[] {
+  const skipped = new Set(cumulativeNeeds(house.tier).filter((need) => need.optional || (toStay && need.forRise)).map((need) => need.id))
   return Object.entries(house.needs)
-    .filter(([id]) => !optional.has(id))
+    .filter(([id]) => !skipped.has(id))
     .map(([, percent]) => percent)
 }
 
-const shortage = (house: HouseState): boolean => required(house).some((percent) => percent < config.population.shortageBelow)
+const shortage = (house: HouseState): boolean => required(house, true).some((percent) => percent < config.population.shortageBelow)
 
 const allMet = (house: HouseState): boolean => required(house).every((percent) => percent >= FULL)
 

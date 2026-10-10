@@ -1,5 +1,6 @@
-import { config, getBuilding, goods, trade } from '../data'
+import { getBuilding, goods, trade } from '../data'
 import type { IslandState, TradeLimit } from './state'
+import { stockCapacity } from './storage'
 
 const goodMap = new Map(goods.map((good) => [good.id, good]))
 
@@ -55,7 +56,7 @@ export function runKontorTrade(state: IslandState): IslandState {
       coins += amount * traderBuyPrice(good)
     } else if (limit.buyBelow !== undefined && have < limit.buyBelow && traderSells(good)) {
       const price = traderSellPrice(good)
-      const room = config.production.stockCapacity - have
+      const room = stockCapacity(state) - have
       const affordable = price > 0 ? Math.floor(Math.max(0, coins) / price) : 0
       const amount = Math.min(limit.buyBelow - have, trade.trader.visitCapacity, room, affordable)
       if (amount > 0) {

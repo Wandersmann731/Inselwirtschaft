@@ -1,4 +1,6 @@
-import { config, landNames } from '../src/data'
+import { config, landNames, tiers } from '../src/data'
+import { placeBuilding } from '../src/sim/build'
+import { createHouse } from '../src/sim/tiers'
 import { liftIsland, toIslandState } from '../src/sim/islands'
 import { emptyLedger } from '../src/sim/ledger'
 import type { Rng } from '../src/sim/rng'
@@ -92,4 +94,15 @@ export function patchBuilding(state: IslandState, buildingId: number, patch: Par
 /** One economy cycle for a single island state. */
 export function cycleFlat(state: IslandState): IslandState {
   return toIslandState(runCycle(liftIsland(state)), state.id)
+}
+
+/**
+ * placeBuilding without the resident thresholds of public buildings (chapel from 125 pioneers ...): a phantom
+ * aristocrat house with plenty of residents exists only while the building is placed.
+ */
+export function placeUnlocked(state: IslandState, typeId: string, x: number, y: number, rotated = false): IslandState {
+  const phantom = { id: -1, type: 'house_aristocrats', x: -10, y: -10, rotated: false, active: true, house: { ...createHouse('aristocrats'), residents: 100000 } }
+  const placed = placeBuilding({ ...state, highestTier: Math.max(state.highestTier, tiers.length - 1), buildings: [...state.buildings, phantom] }, typeId, x, y, rotated)
+  if (placed.buildings.length === state.buildings.length + 1) return { ...state, coins: placed.coins, stock: placed.stock, economy: placed.economy }
+  return { ...placed, highestTier: state.highestTier, buildings: placed.buildings.filter((b) => b.id !== -1) }
 }

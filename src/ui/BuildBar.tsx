@@ -5,6 +5,7 @@ import { BuildingPanel } from './BuildingPanel'
 import { BuildMenu } from './BuildMenu'
 import { DrawBar } from './DrawBar'
 import { PlaceBar } from './PlaceBar'
+import { UndoChip } from './UndoChip'
 
 interface BuildBarProps {
   tool: BuildController
@@ -19,10 +20,26 @@ interface BuildBarProps {
 export function BuildBar({ tool, island, onOpenStats, onOpenWorld, onOpenTrade, onOpenKontor }: BuildBarProps) {
   const snapshot = useSyncExternalStore(tool.subscribe, tool.getSnapshot)
   if (!island.owned) return <ForeignBar />
-  if (snapshot.mode === 'place') return <PlaceBar tool={tool} snapshot={snapshot} state={island} />
-  if (snapshot.mode === 'road' || snapshot.mode === 'demolish') return <DrawBar tool={tool} snapshot={snapshot} state={island} />
+  const undo = snapshot.undo && snapshot.undo.islandId === island.id && snapshot.mode !== 'demolish' ? <UndoChip key={snapshot.undo.at} tool={tool} entry={snapshot.undo} /> : null
+  if (snapshot.mode === 'place') {
+    return (
+      <>
+        {undo}
+        <PlaceBar tool={tool} snapshot={snapshot} state={island} />
+      </>
+    )
+  }
+  if (snapshot.mode === 'road' || snapshot.mode === 'demolish') {
+    return (
+      <>
+        {undo}
+        <DrawBar tool={tool} snapshot={snapshot} state={island} />
+      </>
+    )
+  }
   return (
     <>
+      {undo}
       {snapshot.selectedBuildingId !== null && (
         <BuildingPanel tool={tool} state={island} buildingId={snapshot.selectedBuildingId} onOpenKontor={onOpenKontor} />
       )}

@@ -2,6 +2,7 @@ import { config, getBuilding } from '../data'
 import type { BuildingDef } from '../data'
 import { addTo, cloneLedger } from './ledger'
 import { getLinks, type Link } from './logistics'
+import { stockCapacity } from './storage'
 import type { CycleLedger, IslandState, PlacedBuilding, ProductionState, ProductionStatus } from './state'
 
 type Stock = Record<string, number>
@@ -26,11 +27,12 @@ export function processProduction(state: IslandState): IslandState {
       if (shipment.kind === 'out' && shipment.arrive > state.tick) underway[shipment.good] = (underway[shipment.good] ?? 0) + shipment.amount
     }
   }
+  const capacity = stockCapacity(state)
   const buildings = state.buildings.map((building) => {
     if (!building.production) return building
     return {
       ...building,
-      production: stepBuilding(building, building.production, links.get(building.id), stock, underway, state.tick, ledger),
+      production: stepBuilding(building, building.production, links.get(building.id), stock, underway, state.tick, ledger, capacity),
     }
   })
   return { ...state, stock, buildings, economy: { ...state.economy, current: ledger } }
@@ -44,6 +46,7 @@ function stepBuilding(
   underway: Stock,
   now: number,
   ledger: CycleLedger,
+  capacity: number,
 ): ProductionState {
   const def = getBuilding(building.type)
   const output = def.output
@@ -56,7 +59,7 @@ function stepBuilding(
   if (!link || link.kind !== 'ok') return { ...p, status: { kind: link?.kind ?? 'noRoad' } }
 
   orderInputs(def, p, stock, now, link.delay)
-  shipOutput(def, p, stock, underway, now, link.delay)
+  shipOutput(def, p, stock, underway, now, link.delay, capacity)
   p.status = produce(def, p, ledger)
   if (p.status.kind === 'producing') p.busyTicks += 1
   return p
@@ -99,11 +102,11 @@ function orderInputs(def: BuildingDef, p: ProductionState, stock: Stock, now: nu
  * Sends finished goods and byproducts to the island store, as far as the store has room. Goods that other producers
  * already have on the way count as taken.
  */
-function shipOutput(def: BuildingDef, p: ProductionState, stock: Stock, underway: Stock, now: number, delay: number): void {
+function shipOutput(def: BuildingDef, p: ProductionState, stock: Stock, underway: Stock, now: number, delay: number, capacity: number): void {
   const output = def.output
   if (!output) return
   const send = (good: string, waiting: number): number => {
-    const room = config.production.stockCapacity - (stock[good] ?? 0) - (underway[good] ?? 0)
+    const room = capacity - (stock[good] ?? 0) - (underway[good] ?? 0)
     const amount = Math.min(waiting, room)
     if (amount <= 0) return 0
     underway[good] = (underway[good] ?? 0) + amount

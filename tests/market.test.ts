@@ -4,7 +4,7 @@ import { placeBuilding } from '../src/sim/build'
 import { MIGRATIONS, migrateState } from '../src/sim/migrations'
 import { runMarket } from '../src/sim/market'
 import { createInitialState, CURRENT_SAVE_VERSION, type IslandState } from '../src/sim/state'
-import { grassField, patchBuilding, patchHouse } from './helpers'
+import { grassField, patchBuilding, patchHouse, placeUnlocked } from './helpers'
 
 const rich = { coins: 1_000_000, stock: { tools: 500, wood: 500, bricks: 500, marble: 50 } }
 const tax = (tier: string): number => tiers.find((t) => t.id === tier)!.tax
@@ -14,7 +14,7 @@ function village(residents: number, stock: Record<string, number> = {}): IslandS
   let state = grassField(60, 30, { ...rich })
   state = placeBuilding(state, 'house_pioneers', 10, 10, false)
   state = placeBuilding(state, 'market_house', 14, 10, false)
-  state = placeBuilding(state, 'chapel', 20, 10, false)
+  state = placeUnlocked(state, 'chapel', 20, 10, false)
   state = patchHouse(state, 1, { residents })
   return { ...state, coins: 1000, stock: { food: 100, cloth: 100, ...stock } }
 }

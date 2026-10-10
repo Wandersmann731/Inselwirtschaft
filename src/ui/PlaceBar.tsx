@@ -4,6 +4,7 @@ import type { BuildController, ToolSnapshot } from '../game/buildController'
 import { checkPlacement, footprint } from '../sim/build'
 import { hubReaches, suppliedHouses } from '../sim/coverage'
 import type { IslandState } from '../sim/state'
+import { stockCapacity } from '../sim/storage'
 import { formatStock, placementMessage } from './messages'
 import { Cost } from './Icon'
 
@@ -42,7 +43,8 @@ export function PlaceBar({ tool, snapshot, state }: PlaceBarProps) {
     } else if (def.catchment !== undefined) {
       const { w, h } = footprint(def, rotated)
       const count = suppliedHouses(state, { x: origin.x, y: origin.y, w, h }, def.catchment).length
-      hint = `Einzugsgebiet ${def.catchment} Kacheln · versorgt ${count} ${count === 1 ? 'Haus' : 'Häuser'} und die Betriebe darin`
+      const extra = stockCapacity({ buildings: [...state.buildings, { id: -1, type: typeId, x: 0, y: 0, rotated: false, active: true }] }) - stockCapacity(state)
+      hint = `Einzugsgebiet ${def.catchment} Kacheln · versorgt ${count} ${count === 1 ? 'Haus' : 'Häuser'}${extra > 0 ? ` · Lager +${extra} je Ware` : ''}`
     } else if ((def.houseTier || def.output) && !hubReaches(state, { x: origin.x, y: origin.y, ...footprint(def, rotated) })) {
       hint = def.houseTier
         ? 'Außerhalb von Kontor und Markthaus: die Bewohner bekommen keine Waren'

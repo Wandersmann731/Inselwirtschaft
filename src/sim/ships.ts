@@ -1,9 +1,10 @@
-import { config, trade } from '../data'
+import { trade } from '../data'
 import { findSeaPath, portCell } from '../world/seaPath'
 import { checkPlacement, missingResource, pay, placeBuilding } from './build'
 import { fromIslandState, getIsland, onIsland, toIslandState } from './islands'
 import { traderBuyPrice, traderSellPrice, kontorKit } from './trade'
 import type { GameState, IslandState, RouteOrder, Ship } from './state'
+import { stockCapacity } from './storage'
 
 export function cargoTotal(ship: Ship): number {
   return Object.values(ship.cargo).reduce((sum, amount) => sum + amount, 0)
@@ -141,7 +142,7 @@ function applyOrder(state: GameState, shipId: number, order: RouteOrder): GameSt
   if (island.owned) {
     const stock = island.stock[order.good] ?? 0
     // What does not fit into the store stays on board.
-    const room = Math.max(0, config.production.stockCapacity - stock)
+    const room = Math.max(0, stockCapacity(island) - stock)
     const amount = order.mode === 'load' ? Math.min(order.amount, stock, free) : Math.min(order.amount, have, room)
     if (amount <= 0) return state
     const sign = order.mode === 'load' ? 1 : -1
@@ -178,7 +179,7 @@ export function unloadAll(state: GameState, shipId: number): GameState {
   const moved = onIsland(state, ship.island, (flat) => {
     const stock = { ...flat.stock }
     for (const [good, amount] of Object.entries(ship.cargo)) {
-      const taken = Math.min(amount, Math.max(0, config.production.stockCapacity - (stock[good] ?? 0)))
+      const taken = Math.min(amount, Math.max(0, stockCapacity(flat) - (stock[good] ?? 0)))
       stock[good] = (stock[good] ?? 0) + taken
       if (amount - taken > 0) cargo[good] = amount - taken
     }

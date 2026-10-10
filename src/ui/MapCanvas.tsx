@@ -25,36 +25,39 @@ export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
     const renderer = new MapRenderer(canvas, getState, tool.getSnapshot, () => getSettings().debug)
     renderer.start()
     onRenderer?.(renderer)
+    let grabStart = { x: 0, y: 0 }
+    tool.setViewCenter(() => renderer.tileAt(canvas.clientWidth / 2, canvas.clientHeight * 0.42))
+    const handleTap = (x: number, y: number): void => {
+      const { mode, freehand } = tool.getSnapshot()
+      if (mode === 'place') {
+        const tile = renderer.tileAt(x, y)
+        if (!tile) return
+        // a second tap on the same spot builds
+        const last = lastTap
+        lastTap = { tile, time: performance.now() }
+        if (last && lastTap.time - last.time < world.input.doubleTapMs && Math.abs(last.tile.x - tile.x) <= 1 && Math.abs(last.tile.y - tile.y) <= 1) {
+          tool.setCenter(tile)
+          tool.confirm()
+          lastTap = null
+        } else {
+          tool.setCenter(tile)
+        }
+      } else if (mode === 'road' && !freehand) {
+        const tile = renderer.tileAt(x, y)
+        if (tile) tool.routeTap(tile)
+      } else {
+        const tile = renderer.tileAt(x, y)
+        const state = getState()
+        const id = tile ? state.occupancy[tile.y * state.map.width + tile.x] : 0
+        if (id) renderer.selectAt(x, y)
+        else renderer.clearSelection()
+        tool.selectBuilding(id || null)
+      }
+    }
     const input = new MapInput(canvas, {
       onPan: (dx, dy) => renderer.panBy(dx, dy),
       onZoom: (factor, x, y) => renderer.zoomAt(factor, x, y),
-      onTap: (x, y) => {
-        const { mode, freehand } = tool.getSnapshot()
-        if (mode === 'place') {
-          const tile = renderer.tileAt(x, y)
-          if (!tile) return
-          // a second tap on the same spot builds
-          const last = lastTap
-          lastTap = { tile, time: performance.now() }
-          if (last && lastTap.time - last.time < world.input.doubleTapMs && Math.abs(last.tile.x - tile.x) <= 1 && Math.abs(last.tile.y - tile.y) <= 1) {
-            tool.setCenter(tile)
-            tool.confirm()
-            lastTap = null
-          } else {
-            tool.setCenter(tile)
-          }
-        } else if (mode === 'road' && !freehand) {
-          const tile = renderer.tileAt(x, y)
-          if (tile) tool.routeTap(tile)
-        } else {
-          const tile = renderer.tileAt(x, y)
-          const state = getState()
-          const id = tile ? state.occupancy[tile.y * state.map.width + tile.x] : 0
-          if (id) renderer.selectAt(x, y)
-          else renderer.clearSelection()
-          tool.selectBuilding(id || null)
-        }
-      },
+      onTap: (x, y) => handleTap(x, y),
       onLongPress: (x, y) => {
         const tile = renderer.tileAt(x, y)
         const state = getState()
@@ -66,7 +69,8 @@ export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
       },
       onGrab: (x, y) => {
         const tile = renderer.tileAt(x, y)
-        return tile ? tool.routeGrab(tile) : false
+        grabStart = { x, y }
+        return tile ? tool.grab(tile) : false
       },
       onStrokeStart: (x, y) => {
         const tile = renderer.tileAt(x, y)
@@ -75,11 +79,15 @@ export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
       onStrokeMove: (x, y) => {
         const tile = renderer.tileAt(x, y)
         if (!tile) return
-        if (tool.grabbing) tool.routeMove(tile)
+        if (tool.grabbing) tool.grabMove(tile)
         else tool.strokeMove(tile)
       },
-      onStrokeEnd: () => (tool.grabbing ? tool.routeRelease() : tool.strokeEnd()),
-      onStrokeCancel: () => (tool.grabbing ? tool.routeRelease() : tool.strokeCancel()),
+      onStrokeEnd: () => {
+        if (!tool.grabbing) return tool.strokeEnd()
+        // a touch on the ghost building that did not move it counts as a tap (a second tap there builds)
+        if (!tool.grabRelease() && tool.getSnapshot().mode === 'place') handleTap(grabStart.x, grabStart.y)
+      },
+      onStrokeCancel: () => (tool.grabbing ? void tool.grabRelease() : tool.strokeCancel()),
     })
     input.setMode(tool.inputMode)
     const unsubscribe = tool.subscribe(() => {

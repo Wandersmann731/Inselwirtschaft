@@ -11,7 +11,7 @@
   "startStock": { "tools": 80, "wood": 150, "bricks": 80, "marble": 20 },
   "refundRate": 0.5,
   "tax": { "base": 0.35 },
-  "production": { "inputBufferCycles": 2, "outputBufferAmount": 5, "ticksPerRoadTile": 1, "stockCapacity": 200 },
+  "production": { "inputBufferCycles": 2, "outputBufferAmount": 5, "ticksPerRoadTile": 1, "stockCapacity": 200, "stockGrowth": { "steps": [40, 40, 40, 40, 40], "then": 20, "max": 760 } },
   "population": { "moveInPerCycle": 4, "moveOutPerCycle": 1, "upgradeCycles": 2, "downgradeCycles": 5, "ruinCycles": 2, "shortageBelow": 50 },
   "startCoinOptions": [5000, 10000, 25000, 100000],
   "debugSpeeds": [16, 64],

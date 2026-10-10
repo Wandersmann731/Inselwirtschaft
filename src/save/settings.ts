@@ -16,6 +16,8 @@ export interface Settings {
   autoFullscreen: boolean
   /** Short vibration as feedback when something is built or demolished. */
   vibration: boolean
+  /** Keeps the screen on while the game is open (Screen Wake Lock, where the browser has it). */
+  keepAwake: boolean
 }
 
 const KEY = 'inselwirtschaft:settings'
@@ -29,6 +31,7 @@ const DEFAULTS: Settings = {
   muted: false,
   autoFullscreen: true,
   vibration: true,
+  keepAwake: true,
 }
 
 function load(): Settings {

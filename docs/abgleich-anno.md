@@ -31,6 +31,13 @@ Verglichen wurde unser Spiel (Stand 10.10.2026) mit `docs/anno1503-recherche.md`
 
 Folgen: Die Heimatinsel (Nord) kann jetzt Wein und Marmor selbst machen, aber weiter keinen Tabak, keine Gewürze, keine Seide und kein Lampenöl. Die Bürger kommen im Bot-Test nach 24 bis 32 statt 11 bis 13 Minuten, weil Werkzeug und Ziegel jetzt mehr kosten wie im Original.
 
+### Nachtrag 10.10.2026 (siehe `recherche-mobil.md`)
+| Bereich | Vorher | Jetzt |
+|---|---|---|
+| Kapelle und Kirche | Pflicht zum Bleiben | nur für den Aufstieg nötig (Original: Pioniere bleiben mit Nahrung) |
+| Freischaltung | nur nach Stufe | Kapelle ab 64 Pionieren (Original 125, halbiert für unser kürzeres Spiel), Kirche ab 240 Siedlern, Theater ab 1500 Kaufleuten, Kathedrale ab 600 Aristokraten. Gezählt werden Bewohner dieser Stufe und darüber. |
+| Lager | fest 200 je Ware | 200 mit dem ersten Kontor/Markthaus, je weiteres +40 (fünfmal), dann +20, höchstens 760 (Verhältnis wie im Original 50 → 190) |
+
 ## 3. Bewusst anders (Projektentscheidung)
 - **Steuer.** Original: keine Steuern, Einnahmen nur über Marktstände. Bei uns Grundsteuer ab dem ersten Bewohner, mehr bei besserer Versorgung. Marktstände gibt es nicht mehr.
 - **Wohnhaus 2x2** statt 4x4, Betriebe und Markthaus ebenfalls 2x2, öffentliche Gebäude kleiner (Kapelle 2x3, Kirche 4x5 ...). Der Einzugsbereich der Wohnhäuser (22) wird durch den Einzugsbereich von Kontor und Markthaus ersetzt.
@@ -41,9 +48,9 @@ Folgen: Die Heimatinsel (Nord) kann jetzt Wein und Marmor selbst machen, aber we
 ## 4. Was fehlt oder noch abweicht (Vorschläge, nicht umgesetzt)
 1. **Wahlregeln der Bedürfnisse** (Recherche 2.2): Zwei von drei Waren für Pioniere, drei von fünf für Siedler, fünf von sechs für Bürger, vier von sechs für Kaufleute. Das macht die Versorgung flexibler (Salz und Leder als Ersatz) und wäre der größte Hebel für die Nähe zum Original. Aufwand: mittel (Bedürfnisse bekommen Gruppen mit „n aus m“), die Tests und der Bot müssen angepasst werden.
 2. **Schule, Universität, Kirche statt Kapelle** als Pflicht für Siedler und Bürger. Schule und Universität fehlen komplett, Kirche ersetzt bei uns die Kapelle nicht (Kumulation der Bedürfnisse).
-3. **Freischaltung nach Einwohnerzahl** (Recherche 2.3 und Gebäudedaten 6): Bei uns schaltet die Stufe frei. Das Original schaltet z. B. die Kapelle bei 125 Pionieren, die Kirche bei 240 Siedlern frei.
-4. **Markthaus und Kontor mit drei Ausbaustufen**, Karrenfahrer (1 bis 2, je 5 t) und Lager je Ware (50 t, wachsend bis 190 oder 900 t). Bei uns gibt es eine Stufe und ein Lagerlimit von 200.
-5. **Gebäude verfallen**, wenn ihr Einzugsbereich wegfällt (Markthaus abgerissen). Bei uns bleiben sie stehen, nur die Versorgung fällt aus.
+3. **Freischaltung nach Einwohnerzahl**: für öffentliche Gebäude umgesetzt (siehe Nachtrag). Betriebe schalten weiter nach Stufe frei.
+4. **Markthaus und Kontor mit drei Ausbaustufen** und Karrenfahrer (1 bis 2, je 5 t): fehlen. Das wachsende Lager ist umgesetzt (siehe Nachtrag).
+5. **Gebäude verfallen**, wenn ihr Einzugsbereich wegfällt (Markthaus abgerissen). Bei uns bleiben sie stehen, nur die Versorgung fällt aus. Beim Abriss warnt das Spiel jetzt, wie viele Häuser betroffen sind.
 6. **Pavillon, Schule, Universität, Bibliothek, Feuerwehr, Medikus, Amtsgericht, Brunnen**: fehlen. Forschung und Wissenspunkte ebenfalls.
 7. **Kleidung** (Schneiderei mit Stoff und Pelzen), **Hanf und Seile**, **Köhlerei** und große Erzmine und -schmelze: fehlen (Pelztiere haben wir entfernt).
 8. **Katastrophen**: Feuer bei Pionier- und Siedlerhäusern, Pest ab etwa 1500 Einwohnern. Die Architektur bleibt offen, gebaut wird es nach dem MVP.

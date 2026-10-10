@@ -27,14 +27,16 @@ describe('BuildController', () => {
     expect(loop.getIslandState().buildings).toHaveLength(0)
   })
 
-  it('builds on confirm, stays in placing mode and clears the ghost', () => {
+  it('builds on confirm, stays in placing mode and moves the ghost to the next free spot', () => {
     const { loop, tool } = setup()
     tool.startPlacing('house_pioneers')
     tool.setCenter({ x: 5, y: 5 })
     tool.confirm()
     expect(loop.getIslandState().buildings).toHaveLength(1)
     expect(tool.getSnapshot().mode).toBe('place')
-    expect(tool.getSnapshot().origin).toBeNull()
+    expect(tool.getSnapshot().center).not.toEqual({ x: 5, y: 5 })
+    tool.confirm()
+    expect(loop.getIslandState().buildings).toHaveLength(2)
   })
 
   it('does not build on an invalid spot', () => {
