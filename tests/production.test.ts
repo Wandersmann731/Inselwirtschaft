@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { config, getBuilding } from '../src/data'
 import { placeBuilding, placeRoads } from '../src/sim/build'
-import { processProduction, setBuildingActive, upkeepOf } from '../src/sim/production'
+import { inputTarget, processProduction, setBuildingActive, upkeepOf } from '../src/sim/production'
 import { createRng } from '../src/sim/rng'
 import type { IslandState } from '../src/sim/state'
 import { grassField, tickFlat as tick } from './helpers'
@@ -261,5 +261,49 @@ describe('byproducts', () => {
   it('still delivers hides while the store has room', () => {
     const start = connected('butcher', { hides: 0, cattle: 100, food: 0 })
     expect(run(start, 600).stock.hides).toBeGreaterThan(0)
+  })
+})
+
+describe('long roads', () => {
+  it('keeps a fast producer at the end of a long, winding road busy: inputs are ordered early enough', () => {
+    let state = grassField(70, 14, rich)
+    state = placeBuilding(state, 'market_house', 2, 2, false)
+    state = placeBuilding(state, 'bakery', 14, 8, false)
+    // a detour: out to x 40 and back, about 65 tiles of road between bakery and market house
+    const tiles = []
+    for (let x = 4; x <= 40; x++) tiles.push({ x, y: 3 })
+    for (let y = 4; y <= 9; y++) tiles.push({ x: 40, y })
+    for (let x = 16; x < 40; x++) tiles.push({ x, y: 9 })
+    state = placeRoads(state, tiles)
+    state = { ...state, stock: { ...state.stock, flour: 200, food: 0 } }
+    const warm = run(state, 300)
+    const after = run({ ...warm, stock: { ...warm.stock, flour: 200 } }, 400)
+    // one bread every 10 ticks at full speed: 40 in 400 ticks
+    expect(after.stock.food - warm.stock.food).toBeGreaterThanOrEqual(36)
+  })
+})
+
+describe('input alternatives', () => {
+  it('makes one batch from mixed alternatives (wool and cotton) when the recipe needs more than one', () => {
+    const weaver = getBuilding('weaver')
+    const input = weaver.inputs![0]
+    const original = input.amount
+    input.amount = 2
+    try {
+      let state = connected('weaver', { wool: 0, cotton: 0, cloth: 0 })
+      const id = find(state, 'weaver').id
+      state = { ...state, buildings: state.buildings.map((b) => (b.id === id ? { ...b, production: { ...b.production!, inputs: { wool: 1, cotton: 1 } } } : b)) }
+      const after = run(state, weaver.cycleTicks! + 40)
+      expect(after.stock.cloth).toBeGreaterThan(0)
+    } finally {
+      input.amount = original
+    }
+  })
+
+  it('orders more for a longer road: the buffer covers the travel time', () => {
+    const bakery = getBuilding('bakery')
+    const flour = bakery.inputs![0]
+    expect(inputTarget(bakery, flour, 0)).toBe(flour.amount * config.production.inputBufferCycles)
+    expect(inputTarget(bakery, flour, bakery.cycleTicks! * 3)).toBe(flour.amount * (config.production.inputBufferCycles + 3))
   })
 })
