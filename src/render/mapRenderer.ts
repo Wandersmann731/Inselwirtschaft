@@ -193,7 +193,7 @@ export class MapRenderer {
     ctx.setTransform(k, 0, 0, k, dpr * (viewport.width / 2 - this.camera.x * zoom), dpr * (viewport.height / 2 - this.camera.y * zoom))
     const range = this.visibleTileRange(map)
     this.drawWater(now, settings.waterAnimation)
-    this.surf.draw(this.ctx, map, range, now, settings.waterAnimation)
+    this.surf.draw(this.ctx, map, this.getState().id, range, now, settings.waterAnimation)
     const state = this.getState()
     this.drawTerrain(map, state)
     drawYards(ctx, state, range)

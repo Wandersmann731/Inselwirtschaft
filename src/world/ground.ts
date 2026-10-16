@@ -79,34 +79,81 @@ const color1 = [0, 0, 0]
 const color2 = [0, 0, 0]
 
 /**
- * Writes the ground colour at a world position (RGBA into `out` at `offset`). The tile borders are wobbled by noise,
- * so coasts, forests and mountains have natural outlines and soft transitions. Land next to the sea gets a foam rim,
- * sea next to land a shallow rim. Sea far from land is transparent (the animated water shows through).
+ * Share of land at a fractional tile position: the land flags (1 land, 0 sea) of the four nearest tile centres,
+ * blended bilinearly. The coast is where it is 0.5, so a staircase of tiles becomes a straight, rounded line.
+ */
+export function landField(map: GameMap, u: number, v: number): number {
+  const fu = u - 0.5
+  const fv = v - 0.5
+  const x0 = Math.floor(fu)
+  const y0 = Math.floor(fv)
+  const tx = fu - x0
+  const ty = fv - y0
+  const land = (x: number, y: number): number => (terrainAt(map, x, y) === Terrain.Water ? 0 : 1)
+  return (land(x0, y0) * (1 - tx) + land(x0 + 1, y0) * tx) * (1 - ty) + (land(x0, y0 + 1) * (1 - tx) + land(x0 + 1, y0 + 1) * tx) * ty
+}
+
+/** The land terrain closest to a position that is land by `landField` but lies over a sea tile (the rounded corners). */
+function nearestLand(map: GameMap, u: number, v: number): number {
+  const fu = u - 0.5
+  const fv = v - 0.5
+  const x0 = Math.floor(fu)
+  const y0 = Math.floor(fv)
+  const tx = fu - x0
+  const ty = fv - y0
+  let best: number = Terrain.Beach
+  let bestWeight = -1
+  for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {
+    const terrain = terrainAt(map, x0 + dx, y0 + dy)
+    if (terrain === Terrain.Water) continue
+    const weight = (dx ? tx : 1 - tx) * (dy ? ty : 1 - ty)
+    if (weight > bestWeight) {
+      best = terrain
+      bestWeight = weight
+    }
+  }
+  return best
+}
+
+/** How far noise pushes a position before the coast is looked up, in tiles: a big slow swing plus a finer wobble. */
+export function coastWarp(u: number, v: number, seed: number): [number, number] {
+  const du = (fbm(u * 0.4, v * 0.4, seed + 21, 2) - 0.5) * 1 + (fbm(u * 1.3, v * 1.3, seed + 23, 2) - 0.5) * 0.45
+  const dv = (fbm(u * 0.4 + 17, v * 0.4 + 9, seed + 22, 2) - 0.5) * 1 + (fbm(u * 1.3 + 7, v * 1.3 + 3, seed + 24, 2) - 0.5) * 0.45
+  return [du, dv]
+}
+
+const SHALLOW_FROM = 0.2
+const FOAM_TO = 0.74
+
+/**
+ * Writes the ground colour at a world position (RGBA into `out` at `offset`). The coast is the 0.5 line of a smooth
+ * land field (see landField), wobbled by noise, so it is rounded and natural instead of a staircase of tiles. Land
+ * next to the sea gets a foam rim, sea next to land a shallow rim. Sea far from land is transparent (the animated
+ * water shows through).
  */
 export function groundPixel(map: GameMap, tex: GroundTextures, seed: number, wx: number, wy: number, out: Uint8ClampedArray, offset: number): void {
   const u = (wy / HALF_H + wx / HALF_W) / 2
   const v = (wy / HALF_H - wx / HALF_W) / 2
-  const ut = u + (fbm(u * 0.4, v * 0.4, seed + 21, 2) - 0.5) * 1.3
-  const vt = v + (fbm(u * 0.4 + 17, v * 0.4 + 9, seed + 22, 2) - 0.5) * 1.3
-  const t0 = terrainAt(map, ut, vt)
+  const [du, dv] = coastWarp(u, v, seed)
+  const ut = u + du
+  const vt = v + dv
+  const share = landField(map, ut, vt)
 
-  if (t0 === Terrain.Water) {
-    const near =
-      terrainAt(map, ut + 0.42, vt) !== Terrain.Water ||
-      terrainAt(map, ut - 0.42, vt) !== Terrain.Water ||
-      terrainAt(map, ut, vt + 0.42) !== Terrain.Water ||
-      terrainAt(map, ut, vt - 0.42) !== Terrain.Water
-    if (!near) {
+  if (share < 0.5) {
+    if (share < SHALLOW_FROM) {
       out[offset + 3] = 0
       return
     }
+    const k = (share - SHALLOW_FROM) / (0.5 - SHALLOW_FROM)
     out[offset] = SHALLOW[0]
     out[offset + 1] = SHALLOW[1]
     out[offset + 2] = SHALLOW[2]
-    out[offset + 3] = 105
+    out[offset + 3] = 105 * k * k * (3 - 2 * k)
     return
   }
 
+  let t0 = terrainAt(map, ut, vt)
+  if (t0 === Terrain.Water) t0 = nearestLand(map, ut, vt)
   landColor(t0, tex, u, v, seed, color)
   // soft transition to the neighbouring terrain
   const t1 = terrainAt(map, ut + 0.22, vt + 0.22)
@@ -133,13 +180,8 @@ export function groundPixel(map: GameMap, tex: GroundTextures, seed: number, wx:
   g /= wSelf
   b /= wSelf
 
-  const wet =
-    (terrainAt(map, ut + 0.3, vt) === Terrain.Water ? 1 : 0) +
-    (terrainAt(map, ut - 0.3, vt) === Terrain.Water ? 1 : 0) +
-    (terrainAt(map, ut, vt + 0.3) === Terrain.Water ? 1 : 0) +
-    (terrainAt(map, ut, vt - 0.3) === Terrain.Water ? 1 : 0)
-  if (wet > 0) {
-    const foam = Math.min(1, wet * 0.3)
+  if (share < FOAM_TO) {
+    const foam = ((FOAM_TO - share) / (FOAM_TO - 0.5)) * 0.55
     r += (FOAM[0] - r) * foam
     g += (FOAM[1] - g) * foam
     b += (FOAM[2] - b) * foam
