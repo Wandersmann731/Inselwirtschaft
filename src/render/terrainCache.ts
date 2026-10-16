@@ -1,12 +1,16 @@
 import type { GroundTextures } from '../world/ground'
 import type { GameMap } from '../world/terrain'
-import { CHUNK_H, CHUNK_W, chunkTiles, layoutSignature, renderChunk } from './terrainChunk'
+import { CHUNK_H, CHUNK_W, chunkDependencies, chunkTiles, layoutSignature, renderChunk } from './terrainChunk'
 
 interface Entry {
   tiles: number[]
+  /** Tiles whose buildings and roads change the picture (wider than `tiles`: the village yard reaches further). */
+  deps: number[]
   canvas: HTMLCanvasElement | null
   /** True once a picture was made (it may be null for rectangles without land). */
   ready: boolean
+  /** Picture scale the canvas was made at. An old-scale picture is still drawn until the new one is ready. */
+  scale: number
   signature: number
   queued: boolean
 }
@@ -21,9 +25,12 @@ export interface ChunkRequest {
   textures: GroundTextures
 }
 
+/** Pictures kept besides the ones on screen, per picture scale. */
+const KEEP = { low: 80, high: 28 }
+
 /**
  * Keeps the pictures of the terrain rectangles. They are made a few at a time, so the game does not stall when
- * you scroll or zoom out, and made again when a building or road changes on their tiles.
+ * you scroll or zoom out, and made again when a building or road changes on or near their tiles.
  */
 export class TerrainCache {
   private entries = new Map<string, Entry>()
@@ -31,15 +38,17 @@ export class TerrainCache {
   private map: GameMap | null = null
   private scale = 1
   private latest: ChunkRequest | null = null
+  /** Rectangles asked for since the last process(): they are never thrown away. */
+  private frameKeys = new Set<string>()
 
-  /** Drops everything if the map or the picture scale changed. */
+  /** Drops everything if the map changed. A new picture scale only makes the rectangles again, one by one. */
   prepare(map: GameMap, scale: number): void {
-    if (map !== this.map || scale !== this.scale) {
+    if (map !== this.map) {
       this.entries.clear()
       this.queue = []
       this.map = map
-      this.scale = scale
     }
+    this.scale = scale
   }
 
   /** Asks for a rectangle. Returns what can be drawn now (null while it is being made) and whether a picture exists. */
@@ -48,17 +57,19 @@ export class TerrainCache {
     const key = `${rx},${ry}`
     let entry = this.entries.get(key)
     if (!entry) {
-      entry = { tiles: chunkTiles(request.map, rx, ry), canvas: null, ready: false, signature: 0, queued: false }
+      const tiles = chunkTiles(request.map, rx, ry)
+      const deps = chunkDependencies(request.map, rx, ry)
+      entry = { tiles, deps, canvas: null, ready: false, scale: this.scale, signature: 0, queued: false }
     } else {
       this.entries.delete(key) // move to the end: most recently used
     }
     this.entries.set(key, entry)
-    const signature = layoutSignature(entry.tiles, request.occupancy, request.roads)
-    if ((!entry.ready || signature !== entry.signature) && !entry.queued) {
+    this.frameKeys.add(key)
+    const signature = layoutSignature(entry.deps, request.occupancy, request.roads)
+    if ((!entry.ready || signature !== entry.signature || entry.scale !== this.scale) && !entry.queued) {
       entry.queued = true
       this.queue.push({ rx, ry })
     }
-    this.evict()
     return { canvas: entry.canvas, ready: entry.ready, tiles: entry.tiles }
   }
 
@@ -68,8 +79,9 @@ export class TerrainCache {
     return entry ? { canvas: entry.canvas, ready: entry.ready, tiles: entry.tiles } : null
   }
 
-  /** Makes queued rectangles until the time budget is used up. */
+  /** Call once per frame after all requests: drops old pictures, then makes queued rectangles until the time budget is used up. */
   process(budgetMs: number): void {
+    this.evict()
     const started = performance.now()
     while (this.queue.length > 0 && performance.now() - started < budgetMs) {
       const job = this.queue.shift()!
@@ -77,7 +89,8 @@ export class TerrainCache {
       const request = this.latest
       if (!entry || !request) continue
       entry.canvas = renderChunk(job.rx, job.ry, entry.tiles, request, this.scale)
-      entry.signature = layoutSignature(entry.tiles, request.occupancy, request.roads)
+      entry.signature = layoutSignature(entry.deps, request.occupancy, request.roads)
+      entry.scale = this.scale
       entry.ready = true
       entry.queued = false
     }
@@ -88,12 +101,14 @@ export class TerrainCache {
     return this.queue.length
   }
 
+  /** Drops the least recently used pictures beyond the limit, but never one asked for in this frame. */
   private evict(): void {
-    const limit = this.scale > 1 ? 28 : 80
-    while (this.entries.size > limit) {
-      const oldest = this.entries.keys().next().value!
-      this.entries.delete(oldest)
+    const limit = Math.max(this.scale > 1 ? KEEP.high : KEEP.low, this.frameKeys.size)
+    for (const key of this.entries.keys()) {
+      if (this.entries.size <= limit) break
+      if (!this.frameKeys.has(key)) this.entries.delete(key)
     }
+    this.frameKeys.clear()
     this.queue = this.queue.filter((job) => this.entries.has(`${job.rx},${job.ry}`))
   }
 }

@@ -15,15 +15,18 @@ function toTexture(key: string): Texture | null {
   return { data: ctx.getImageData(0, 0, SIZE, SIZE).data, size: SIZE }
 }
 
-let cached: GroundTextures | null | undefined
+let cached: GroundTextures | null = null
+/** Sprite version of the last failed attempt: it is tried again once more pictures have arrived. */
+let missingAt = -1
 
 /** The four ground textures as pixel data, or null if one of them is missing (then the map is drawn in flat colours). */
 export function groundTextures(): GroundTextures | null {
-  if (cached !== undefined) return cached
+  if (cached || missingAt === sprites.version) return cached
   const grass = toTexture('ground/grass')
   const forest = toTexture('ground/forest')
   const sand = toTexture('ground/sand')
   const rock = toTexture('ground/rock')
   cached = grass && forest && sand && rock ? { grass, forest, sand, rock } : null
+  if (!cached) missingAt = sprites.version
   return cached
 }

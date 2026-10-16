@@ -34,10 +34,32 @@ export interface ChunkContext {
 export function chunkTiles(map: GameMap, rx: number, ry: number): number[] {
   const x0 = rx * CHUNK_W
   const y0 = ry * CHUNK_H
-  const minX = x0 - EXPAND_X
-  const maxX = x0 + CHUNK_W + EXPAND_X
-  const minY = y0 - EXPAND_DOWN
-  const maxY = y0 + CHUNK_H + EXPAND_UP
+  return tilesAnchoredIn(map, x0 - EXPAND_X, x0 + CHUNK_W + EXPAND_X, y0 - EXPAND_DOWN, y0 + CHUNK_H + EXPAND_UP)
+}
+
+/**
+ * Tiles whose buildings and roads change the picture of rectangle (rx, ry): those of chunkTiles plus every tile
+ * the village yard of a house reaches in from (settlement radius, one more for the smooth blending between tile
+ * centres and one for the ring of tiles next to a building).
+ */
+export function chunkDependencies(map: GameMap, rx: number, ry: number): number[] {
+  const reach = world.settlement.radius + 2
+  // a tile `reach` steps away lies at most reach * 2 * HALF_W sideways and reach * 2 * HALF_H up or down
+  const growX = reach * 2 * HALF_W
+  const growY = reach * 2 * HALF_H
+  const x0 = rx * CHUNK_W
+  const y0 = ry * CHUNK_H
+  return tilesAnchoredIn(
+    map,
+    x0 - EXPAND_X - growX,
+    x0 + CHUNK_W + EXPAND_X + growX,
+    y0 - EXPAND_DOWN - growY,
+    y0 + CHUNK_H + EXPAND_UP + growY,
+  )
+}
+
+/** Indices of the tiles whose bottom corner lies in the given world rectangle. */
+function tilesAnchoredIn(map: GameMap, minX: number, maxX: number, minY: number, maxY: number): number[] {
   const us: number[] = []
   const vs: number[] = []
   for (const [wx, wy] of [[minX, minY], [maxX, minY], [minX, maxY], [maxX, maxY]]) {
