@@ -22,6 +22,7 @@ import { getSettings } from '../save/settings'
 import { findStartSite } from '../world/startSite'
 import { sprites } from './sprites'
 import { WaterPattern } from './water'
+import { Surf } from './surf'
 import { groundTextures } from './groundTextures'
 import { CHUNK_H, CHUNK_W, TerrainCache } from './terrainCache'
 import { SEA_COLOR, diamondPath, paintTile } from './terrainStyle'
@@ -45,6 +46,7 @@ export class MapRenderer {
   private cache = new TerrainCache()
   private overlay = new OverlayRenderer()
   private water: WaterPattern | null = null
+  private surf = new Surf()
   private rafId = 0
   private dpr = 1
   private viewport: Viewport = { width: 1, height: 1 }
@@ -190,7 +192,8 @@ export class MapRenderer {
     const k = dpr * zoom
     ctx.setTransform(k, 0, 0, k, dpr * (viewport.width / 2 - this.camera.x * zoom), dpr * (viewport.height / 2 - this.camera.y * zoom))
     const range = this.visibleTileRange(map)
-    this.drawWater(settings.waterAnimation ? now : 0)
+    this.drawWater(now, settings.waterAnimation)
+    this.surf.draw(this.ctx, map, range, now, settings.waterAnimation)
     const state = this.getState()
     this.drawTerrain(map, state)
     drawYards(ctx, state, range)
@@ -205,14 +208,11 @@ export class MapRenderer {
   }
 
   /** The sea: an animated pattern over the visible part of the world. */
-  private drawWater(now: number): void {
+  private drawWater(now: number, animated: boolean): void {
     if (!sprites.ready) return
     this.water ??= new WaterPattern(this.ctx)
-    const pattern = this.water.at(now)
-    if (!pattern) return
     const rect = visibleWorldRect(this.camera, this.viewport)
-    this.ctx.fillStyle = pattern
-    this.ctx.fillRect(rect.minX - 2, rect.minY - 2, rect.maxX - rect.minX + 4, rect.maxY - rect.minY + 4)
+    this.water.fill(this.ctx, { x: rect.minX - 2, y: rect.minY - 2, w: rect.maxX - rect.minX + 4, h: rect.maxY - rect.minY + 4 }, now, animated)
   }
 
   private visibleTileRange(map: GameMap): TileRange {

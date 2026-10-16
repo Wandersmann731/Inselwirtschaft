@@ -2,8 +2,13 @@ import { world } from '../data'
 import { sprites } from './sprites'
 import { waterKey, WATER_FRAMES } from './spriteKeys'
 
-/** How long one picture of the water animation stays on screen. */
-const FRAME_MS = 200
+/** Two ripple pictures are laid over each other and drift apart: the light patterns of the sea keep changing. */
+const BASE_FRAME = 0
+const LIGHT_FRAME = 4
+/** How far the layers wander (world pixels), their speed (radians per second) and how strongly the light layer shows. */
+const DRIFT = 14
+const SPEED = 0.35
+const LIGHT_ALPHA = 0.3
 
 /**
  * The sea as a repeating pattern. All water tiles look the same and join without a seam, so one pattern of
@@ -42,10 +47,33 @@ export class WaterPattern {
     this.transform = new DOMMatrix().translate(-cellW / 2, 0).scale(cellW / (sprites.get(waterKey(0))?.width ?? cellW), cellH / (sprites.get(waterKey(0))?.height ?? cellH))
   }
 
-  /** The pattern for a point in time, or null if the sprites are missing. */
-  at(now: number): CanvasPattern | null {
-    const pattern = this.patterns[Math.floor(now / FRAME_MS) % WATER_FRAMES]
-    pattern?.setTransform(this.transform)
+  /** A pattern shifted by (dx, dy) in world pixels. */
+  private shifted(index: number, dx: number, dy: number): CanvasPattern | null {
+    const pattern = this.patterns[index]
+    pattern?.setTransform(new DOMMatrix().translate(dx, dy).multiply(this.transform))
     return pattern
+  }
+
+  /**
+   * Fills the area with the sea. Animated: a base layer and a light layer (blended with "screen") wander in
+   * opposite circles, so ripples cross and shimmer instead of switching between pictures. Still: one picture.
+   * Returns false if the sprites are missing.
+   */
+  fill(ctx: CanvasRenderingContext2D, area: { x: number; y: number; w: number; h: number }, now: number, animated: boolean): boolean {
+    const t = (animated ? now : 0) / 1000
+    const base = this.shifted(BASE_FRAME, Math.sin(t * SPEED) * DRIFT, (Math.cos(t * SPEED * 0.6) * DRIFT) / 2)
+    if (!base) return false
+    ctx.fillStyle = base
+    ctx.fillRect(area.x, area.y, area.w, area.h)
+    if (!animated) return true
+    const light = this.shifted(LIGHT_FRAME, Math.cos(t * SPEED * 0.8) * -DRIFT, (Math.sin(t * SPEED * 1.2) * -DRIFT) / 2)
+    if (!light) return true
+    ctx.save()
+    ctx.globalCompositeOperation = 'screen'
+    ctx.globalAlpha = LIGHT_ALPHA
+    ctx.fillStyle = light
+    ctx.fillRect(area.x, area.y, area.w, area.h)
+    ctx.restore()
+    return true
   }
 }
