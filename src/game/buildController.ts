@@ -87,6 +87,8 @@ export class BuildController {
   private viewCenter: () => Tile | null = () => null
   /** While the ghost building is dragged: where the finger holds it, relative to its centre. */
   private dragOffset: { x: number; y: number; moved: boolean } | null = null
+  /** Marks and area before the current drag began, so a drag cut short by a second finger can be undone. */
+  private strokeBase: Pick<ToolSnapshot, 'mode' | 'stroke' | 'area'> | null = null
 
   constructor(loop: GameLoop) {
     this.loop = loop
@@ -189,7 +191,9 @@ export class BuildController {
     if (area) {
       if (area.origins.length === 0) return
       const count = area.origins.length
-      this.track(t(`${count} ${count === 1 ? 'Haus' : 'Häuser'}`, `${count} ${count === 1 ? 'house' : 'houses'}`), typeId, () => this.loop.dispatchIsland((state) => buildSettlement(state, typeId, area.origins, area.blocks)))
+      const built = this.track(t(`${count} ${count === 1 ? 'Haus' : 'Häuser'}`, `${count} ${count === 1 ? 'house' : 'houses'}`), typeId, () => this.loop.dispatchIsland((state) => buildSettlement(state, typeId, area.origins, area.blocks)))
+      // nothing built (the island changed since the plan): plan the area again for what it can afford now
+      if (!built) return this.setArea(area.a, area.b)
       haptic()
       this.set({ ...this.snapshot, area: null })
       return
@@ -322,6 +326,7 @@ export class BuildController {
 
   strokeStart(tile: Tile): void {
     if (!this.drawing) return
+    this.strokeBase = { mode: this.snapshot.mode, stroke: this.snapshot.stroke, area: this.snapshot.area }
     if (this.snapshot.mode === 'place') {
       this.setArea(tile, tile)
       return
@@ -353,6 +358,7 @@ export class BuildController {
 
   /** Applies the dragged tiles: roads are laid or buildings and roads removed. */
   strokeEnd(): void {
+    this.strokeBase = null
     const { mode, stroke } = this.snapshot
     if (mode === 'place') return // the area stays until it is built or dragged again
     if (stroke.length === 0) return
@@ -392,9 +398,19 @@ export class BuildController {
   }
 
   strokeCancel(): void {
-    // a second finger came down: a road or area drag is dropped, marked demolish tiles stay
-    if (this.snapshot.mode === 'demolish') return
-    if (this.snapshot.stroke.length > 0) this.set({ ...this.snapshot, stroke: [] })
+    // a second finger came down: a road drag is dropped; the area and the demolish marks go back to how they were before it
+    const base = this.strokeBase?.mode === this.snapshot.mode ? this.strokeBase : null
+    this.strokeBase = null
+    const { mode, stroke } = this.snapshot
+    if (mode === 'place') {
+      if (base) return base.area ? this.setArea(base.area.a, base.area.b) : this.set({ ...this.snapshot, area: null })
+      return
+    }
+    if (mode === 'demolish') {
+      if (base && base.stroke !== stroke) this.set({ ...this.snapshot, stroke: base.stroke })
+      return
+    }
+    if (stroke.length > 0) this.set({ ...this.snapshot, stroke: [] })
   }
 
   private set(next: ToolSnapshot, recomputeOrigin = false): void {

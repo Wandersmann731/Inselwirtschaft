@@ -103,6 +103,51 @@ describe('area tool in the controller', () => {
     expect(tool.getSnapshot().mode).toBe('place')
   })
 
+  it('a pinch keeps the area dragged before it', () => {
+    const { tool } = setup()
+    tool.startPlacing('house_pioneers')
+    tool.setAreaMode(true)
+    tool.strokeStart({ x: 3, y: 3 })
+    tool.strokeMove({ x: 14, y: 10 })
+    tool.strokeEnd()
+    const planned = tool.getSnapshot().area!
+    // the first finger of a pinch lands elsewhere, then the second one cancels the drag
+    tool.strokeStart({ x: 20, y: 20 })
+    tool.strokeMove({ x: 21, y: 20 })
+    tool.strokeCancel()
+    const area = tool.getSnapshot().area!
+    expect(area.a).toEqual(planned.a)
+    expect(area.b).toEqual(planned.b)
+    expect(area.origins).toEqual(planned.origins)
+  })
+
+  it('a pinch before any area leaves no area', () => {
+    const { tool } = setup()
+    tool.startPlacing('house_pioneers')
+    tool.setAreaMode(true)
+    tool.strokeStart({ x: 3, y: 3 })
+    tool.strokeCancel()
+    expect(tool.getSnapshot().area).toBeNull()
+  })
+
+  it('keeps the plan when nothing could be built and plans it again', () => {
+    const { loop, tool } = setup()
+    tool.startPlacing('house_pioneers')
+    tool.setAreaMode(true)
+    tool.strokeStart({ x: 3, y: 3 })
+    tool.strokeMove({ x: 14, y: 10 })
+    tool.strokeEnd()
+    expect(tool.getSnapshot().area!.origins.length).toBeGreaterThan(0)
+    // the coins are spent after the plan was made
+    loop.dispatchIsland((state) => ({ ...state, coins: 0 }))
+    tool.confirm()
+    expect(loop.getIslandState().buildings).toHaveLength(0)
+    const area = tool.getSnapshot().area
+    expect(area).not.toBeNull()
+    expect(area!.outOfMoney).toBe(true)
+    expect(tool.getSnapshot().undo).toBeNull()
+  })
+
   it('is only for houses', () => {
     const { tool } = setup()
     tool.startPlacing('forester')

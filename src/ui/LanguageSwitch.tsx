@@ -5,7 +5,7 @@ const LANGUAGES: { id: Language; label: string }[] = [
   { id: 'en', label: 'English' },
 ]
 
-/** Two buttons to switch between German and English; the screens remount when the language changes. */
+/** Two buttons to switch between German and English; the screens render again when the language changes. */
 export function LanguageSwitch() {
   return (
     <span className="coin-options">

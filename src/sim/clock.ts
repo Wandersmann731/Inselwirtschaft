@@ -5,8 +5,9 @@ export interface TicksDue {
 
 /**
  * Fixed-timestep accumulator. Converts elapsed real time into whole ticks.
- * At speed 0 nothing accumulates. If more than maxTicks are due (e.g. after the tab
- * was in the background) the surplus is dropped instead of simulated.
+ * At speed 0 nothing accumulates. If more than maxTicks are due (e.g. after a long stall)
+ * the surplus is dropped instead of simulated. Time in the background is not counted at all
+ * (the game loop restarts its clock when the page comes back).
  */
 export function ticksDue(
   accumulatorMs: number,

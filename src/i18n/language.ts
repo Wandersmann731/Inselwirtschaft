@@ -32,7 +32,7 @@ export function setLanguage(language: Language): void {
   listeners.forEach((listener) => listener())
 }
 
-/** For useSyncExternalStore: the root remounts the screens when the language changes. */
+/** For useSyncExternalStore: the root renders the screens again when the language changes. */
 export function subscribeLanguage(listener: () => void): () => void {
   listeners.add(listener)
   return () => listeners.delete(listener)
