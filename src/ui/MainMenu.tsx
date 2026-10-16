@@ -8,6 +8,7 @@ import type { GameState } from '../sim/state'
 import { enterFullscreenOnPhone, toggleFullscreen, useFullscreen } from './fullscreen'
 import { Icon } from './Icon'
 import { formatWhole } from './messages'
+import { LanguageSwitch } from './LanguageSwitch'
 import { SettingsPanel } from './SettingsPanel'
 import { SlotList } from './SlotList'
 import { useSlots } from './slots'
@@ -89,6 +90,7 @@ export function MainMenu({ onStart }: MainMenuProps) {
                 {fullscreen.active ? t('Vollbild beenden', 'Exit full screen') : t('Vollbild', 'Full screen')}
               </button>
             )}
+            <LanguageSwitch />
           </div>
         )}
         {screen === 'new' && (

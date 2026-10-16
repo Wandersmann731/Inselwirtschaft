@@ -4,7 +4,8 @@ import { deleteAllSaves } from '../save/saveGame'
 import { audio } from '../audio/engine'
 import { getSettings, updateSettings, type Settings } from '../save/settings'
 import { applyWakeLock } from './wakeLock'
-import { getLanguage, setLanguage, t, type Language } from '../i18n/language'
+import { t } from '../i18n/language'
+import { LanguageSwitch } from './LanguageSwitch'
 
 interface Props {
   onClose: () => void
@@ -29,11 +30,6 @@ const OPTIONS: { key: Toggle; label: () => string; hint: () => string }[] = [
   { key: 'waterAnimation', label: () => t('Bewegtes Wasser', 'Moving water'), hint: () => t('Bei langsamen Handys ausschalten.', 'Switch off on slow phones.') },
   { key: 'smoke', label: () => t('Rauch über Schornsteinen', 'Smoke over chimneys'), hint: () => t('Bei langsamen Handys ausschalten.', 'Switch off on slow phones.') },
   { key: 'debug', label: () => t('Entwickleranzeige', 'Developer display'), hint: () => t('Zeigt Bilder pro Sekunde und das Balancing-Fenster.', 'Shows frames per second and the balancing window.') },
-]
-
-const LANGUAGES: { id: Language; label: string }[] = [
-  { id: 'de', label: 'Deutsch' },
-  { id: 'en', label: 'English' },
 ]
 
 export function SettingsPanel({ onClose, onDeleted }: Props) {
@@ -68,18 +64,7 @@ export function SettingsPanel({ onClose, onDeleted }: Props) {
               <strong>{t('Sprache', 'Language')}</strong>
               <span className="stats-note setting-hint">{t('Deutsch oder Englisch. Das laufende Spiel bleibt erhalten.', 'German or English. The running game is kept.')}</span>
             </span>
-            <span className="coin-options">
-              {LANGUAGES.map((entry) => (
-                <button
-                  key={entry.id}
-                  type="button"
-                  className={entry.id === getLanguage() ? 'category-button active' : 'category-button'}
-                  onClick={() => setLanguage(entry.id)}
-                >
-                  <span>{entry.label}</span>
-                </button>
-              ))}
-            </span>
+            <LanguageSwitch />
           </div>
           {VOLUMES.map((volume) => (
             <label key={volume.key} className="setting-row">
