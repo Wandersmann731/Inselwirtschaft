@@ -69,6 +69,9 @@ export function MainMenu({ onStart }: MainMenuProps) {
 
   return (
     <div className="menu-screen">
+      <div className="menu-lang">
+        <LanguageSwitch />
+      </div>
       <div className="menu-panel">
         <img className="menu-logo" src={`${import.meta.env.BASE_URL}sprites/app/logo.webp`} alt="Inselwirtschaft" />
         {screen === 'main' && (
@@ -90,7 +93,6 @@ export function MainMenu({ onStart }: MainMenuProps) {
                 {fullscreen.active ? t('Vollbild beenden', 'Exit full screen') : t('Vollbild', 'Full screen')}
               </button>
             )}
-            <LanguageSwitch />
           </div>
         )}
         {screen === 'new' && (

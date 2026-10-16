@@ -1094,3 +1094,11 @@ body,
   margin-left: 6px;
   font-size: 18px;
 }
+
+/* language switch in the corner of the start screen: always visible, even when the menu panel scrolls */
+.menu-lang {
+  position: absolute;
+  top: max(8px, env(safe-area-inset-top));
+  right: max(8px, env(safe-area-inset-right));
+  z-index: 2;
+}

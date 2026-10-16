@@ -22,6 +22,12 @@ export interface Settings {
   language: 'de' | 'en'
 }
 
+/** German if the browser is set to German, English otherwise. Used until the player picks a language. */
+function browserLanguage(): 'de' | 'en' {
+  const preferred = typeof navigator !== 'undefined' ? (navigator.languages?.[0] ?? navigator.language ?? '') : ''
+  return preferred.toLowerCase().startsWith('de') ? 'de' : 'en'
+}
+
 const KEY = 'inselwirtschaft:settings'
 const DEFAULTS: Settings = {
   debug: false,
@@ -34,7 +40,7 @@ const DEFAULTS: Settings = {
   autoFullscreen: true,
   vibration: true,
   keepAwake: true,
-  language: 'de',
+  language: browserLanguage(),
 }
 
 function load(): Settings {

@@ -11,6 +11,7 @@ afterEach(() => {
 
 describe('language', () => {
   it('picks the German or the English text', () => {
+    updateSettings({ language: 'de' })
     expect(t('Bauen', 'Build')).toBe('Bauen')
     updateSettings({ language: 'en' })
     expect(t('Bauen', 'Build')).toBe('Build')
