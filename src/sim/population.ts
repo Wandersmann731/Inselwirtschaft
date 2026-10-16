@@ -52,6 +52,8 @@ function stepHouse(previous: HouseState, stock: Record<string, number>, ledger: 
   const tier = getTier(house.tier)
 
   if (shortage(house)) {
+    // Nobody lives here yet: the empty house waits for its needs instead of counting down to a fall or a ruin.
+    if (previous.residents === 0) return { ...house, shortageTimer: 0, upgradeTimer: 0, missingMaterials: false }
     house.shortageTimer += 1
     house.upgradeTimer = 0
     house.missingMaterials = false

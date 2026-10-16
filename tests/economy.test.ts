@@ -8,7 +8,7 @@ import { createRng } from '../src/sim/rng'
 import { emptyLedger } from '../src/sim/ledger'
 import { createInitialState, type IslandState } from '../src/sim/state'
 import { tickFlat as tick, cycleFlat, placeUnlocked } from './helpers'
-import { findShortages, WARNING_CYCLES } from '../src/sim/warnings'
+import { findShortages } from '../src/sim/warnings'
 import { grassField, patchHouse } from './helpers'
 
 /** Food one pioneer eats per cycle, from the data. */
@@ -165,8 +165,14 @@ describe('shortage warnings', () => {
   })
 
   it('stays quiet at three cycles or more', () => {
-    expect(findShortages(withLast(10, 0, 10 * WARNING_CYCLES))).toEqual([])
+    expect(findShortages(withLast(10, 0, 10 * config.warnings.shortageCycles))).toEqual([])
     expect(findShortages(withLast(10, 0, 100))).toEqual([])
+  })
+
+  it('reads the warning threshold from the config', () => {
+    const limit = config.warnings.shortageCycles
+    expect(findShortages(withLast(10, 0, 10 * limit - 1))).toHaveLength(1)
+    expect(findShortages(withLast(10, 0, 10 * limit))).toEqual([])
   })
 
   it('uses the net consumption: production counts against it', () => {

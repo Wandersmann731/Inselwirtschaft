@@ -248,6 +248,35 @@ describe('store capacity with several producers', () => {
   })
 })
 
+describe('store capacity with shipments arriving this tick', () => {
+  it('lets goods arriving now land before an earlier producer ships, so the store never overflows', async () => {
+    const { stockCapacity } = await import('../src/sim/storage')
+    let state = placeBuilding(connected('forester'), 'forester', 20, 8, false)
+    const cap = stockCapacity(state)
+    const [first, second] = state.buildings.filter((b) => b.type === 'forester').map((b) => b.id)
+    state = {
+      ...state,
+      stock: { ...state.stock, wood: cap - 5 },
+      buildings: state.buildings.map((b) => {
+        if (b.id === first) return { ...b, production: { ...b.production!, output: 5 } }
+        if (b.id === second) return { ...b, production: { ...b.production!, shipments: [{ kind: 'out' as const, good: 'wood', amount: 5, arrive: state.tick }] } }
+        return b
+      }),
+    }
+    const next = processProduction(state)
+    expect(next.stock.wood).toBe(cap)
+    // the earlier forester saw the full store and kept its wood
+    expect(next.buildings.find((b) => b.id === first)!.production!.shipments.filter((s) => s.kind === 'out')).toEqual([])
+    let highest = next.stock.wood
+    let later = next
+    for (let i = 0; i < 30; i++) {
+      later = tick(later, createRng(i))
+      highest = Math.max(highest, later.stock.wood ?? 0)
+    }
+    expect(highest).toBeLessThanOrEqual(cap)
+  })
+})
+
 describe('byproducts', () => {
   it('keeps the butcher making food when the store is full of hides (no tannery takes them)', () => {
     const cap = config.production.stockCapacity

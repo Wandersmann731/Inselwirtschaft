@@ -20,15 +20,23 @@ export function processProduction(state: IslandState): IslandState {
   const links = getLinks(state)
   const stock: Stock = { ...state.stock }
   const ledger = cloneLedger(state.economy.current)
+  // Everything that has arrived lands first, before any producer ships: otherwise a producer earlier in the list
+  // would not see goods arriving later in the same tick and could ship into room that is already taken.
+  const delivered = state.buildings.map((building) => {
+    if (!building.production) return building
+    const p: ProductionState = { ...building.production, inputs: { ...building.production.inputs }, shipments: [...building.production.shipments] }
+    deliver(p, stock, state.tick)
+    return { ...building, production: p }
+  })
   // Goods of all producers on their way to the store: they count against its capacity, so it never overflows.
   const underway: Stock = {}
-  for (const building of state.buildings) {
+  for (const building of delivered) {
     for (const shipment of building.production?.shipments ?? []) {
-      if (shipment.kind === 'out' && shipment.arrive > state.tick) underway[shipment.good] = (underway[shipment.good] ?? 0) + shipment.amount
+      if (shipment.kind === 'out') underway[shipment.good] = (underway[shipment.good] ?? 0) + shipment.amount
     }
   }
   const capacity = stockCapacity(state)
-  const buildings = state.buildings.map((building) => {
+  const buildings = delivered.map((building) => {
     if (!building.production) return building
     return {
       ...building,
@@ -52,8 +60,6 @@ function stepBuilding(
   const output = def.output
   if (!output) return previous
   const p: ProductionState = { ...previous, inputs: { ...previous.inputs }, extra: { ...previous.extra }, shipments: [...previous.shipments] }
-
-  deliver(p, stock, now)
 
   if (!building.active) return { ...p, status: { kind: 'inactive' } }
   if (!link || link.kind !== 'ok') return { ...p, status: { kind: link?.kind ?? 'noRoad' } }

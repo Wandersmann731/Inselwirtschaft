@@ -151,6 +151,16 @@ describe('aristocrats', () => {
     expect(house(state).residents).toBe(30)
   })
 
+  it('lets a new, empty house wait for the theater instead of turning into a ruin', () => {
+    const empty = patchHouse(oneHouse(), 1, { tier: 'aristocrats', residents: 0, needs: { theater: 0 } })
+    const waited = cycles(empty, ruinCycles + 5)
+    expect(house(waited).ruin).toBe(false)
+    expect(house(waited).residents).toBe(0)
+    expect(house(waited).shortageTimer).toBe(0)
+    const covered = runPopulation(patchHouse(waited, 1, { needs: { theater: 100 } }))
+    expect(house(covered).residents).toBe(moveInPerCycle)
+  })
+
   it('stays a ruin and does not take residents', () => {
     let state = cycles(aristocrat({ theater: 0 }), ruinCycles)
     state = patchHouse(state, 1, { needs: { theater: 100 } })

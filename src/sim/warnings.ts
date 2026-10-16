@@ -1,4 +1,4 @@
-import { goods } from '../data'
+import { config, goods } from '../data'
 import type { IslandState } from './state'
 
 /** A good that will run out soon. */
@@ -8,12 +8,9 @@ export interface ShortageWarning {
   cycles: number
 }
 
-/** Warn if the store lasts fewer than this many economy cycles. */
-export const WARNING_CYCLES = 3
-
 /**
  * Goods that are used up faster than they are made and whose store lasts fewer than
- * WARNING_CYCLES cycles. Based on the last settled cycle, so nothing shows before the first one.
+ * config.warnings.shortageCycles cycles. Based on the last settled cycle, so nothing shows before the first one.
  */
 export function findShortages(state: IslandState): ShortageWarning[] {
   const last = state.economy.last
@@ -24,7 +21,7 @@ export function findShortages(state: IslandState): ShortageWarning[] {
     const net = consumed - (last.produced[good.id] ?? 0)
     if (consumed <= 0 || net <= 0) continue
     const cycles = (state.stock[good.id] ?? 0) / net
-    if (cycles < WARNING_CYCLES) warnings.push({ good: good.id, cycles })
+    if (cycles < config.warnings.shortageCycles) warnings.push({ good: good.id, cycles })
   }
   return warnings.sort((a, b) => a.cycles - b.cycles)
 }

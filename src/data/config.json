@@ -16,5 +16,6 @@
   "startCoinOptions": [5000, 10000, 25000, 100000],
   "debugSpeeds": [16, 64],
   "saveSlots": 3,
-  "startSite": { "size": 8, "maxCoastDistance": 14 }
+  "startSite": { "size": 8, "maxCoastDistance": 14 },
+  "warnings": { "shortageCycles": 3 }
 }

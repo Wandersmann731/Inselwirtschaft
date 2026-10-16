@@ -17,6 +17,8 @@ export interface GameConfig {
   saveSlots: number
   /** The start view looks for a grass area of size x size tiles, at most this far from the sea. */
   startSite: { size: number; maxCoastDistance: number }
+  /** Warn about a good if the store lasts fewer than this many economy cycles. */
+  warnings: { shortageCycles: number }
   autosaveSeconds: number
   startStock: Record<string, number>
   /** Share of the building cost paid back on demolition. */
