@@ -8,7 +8,6 @@ import type { GameState } from '../sim/state'
 import { enterFullscreenOnPhone, toggleFullscreen, useFullscreen } from './fullscreen'
 import { Icon } from './Icon'
 import { formatWhole } from './messages'
-import { LanguageSwitch } from './LanguageSwitch'
 import { SettingsPanel } from './SettingsPanel'
 import { SlotList } from './SlotList'
 import { useSlots } from './slots'
@@ -69,9 +68,6 @@ export function MainMenu({ onStart }: MainMenuProps) {
 
   return (
     <div className="menu-screen">
-      <div className="menu-lang">
-        <LanguageSwitch />
-      </div>
       <div className="menu-panel">
         <img className="menu-logo" src={`${import.meta.env.BASE_URL}sprites/app/logo.webp`} alt="Inselwirtschaft" />
         {screen === 'main' && (
