@@ -1,4 +1,5 @@
 import { AUTOSAVE_SLOT } from '../save/saveGame'
+import { t } from '../i18n/language'
 import { describe, type SlotEntry } from './slots'
 
 interface SlotListProps {
@@ -11,12 +12,12 @@ interface SlotListProps {
 }
 
 export function SlotList({ entries, action, allowAutosave, onChoose }: SlotListProps) {
-  if (!entries) return <p className="stats-note">Lade …</p>
+  if (!entries) return <p className="stats-note">{t('Lade …', 'Loading …')}</p>
   return (
     <div className="slot-list">
       {entries.map((entry) => {
         const isAuto = entry.slot === AUTOSAVE_SLOT
-        const disabled = (isAuto && !allowAutosave) || (action === 'Laden' && !entry.info)
+        const disabled = (isAuto && !allowAutosave) || (action === t('Laden', 'Load') && !entry.info)
         return (
           <div key={entry.slot} className="slot-row">
             <div className="slot-text">

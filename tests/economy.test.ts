@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { config, getBuilding } from '../src/data'
+import { config, getBuilding, tiers } from '../src/data'
 import { checkPlacement, checkRoad, demolishAt, placeBuilding, placeRoads } from '../src/sim/build'
 import { balanceOf, settleCycle, totalUpkeep } from '../src/sim/economy'
 import { runMarket } from '../src/sim/market'
@@ -10,6 +10,9 @@ import { createInitialState, type IslandState } from '../src/sim/state'
 import { tickFlat as tick, cycleFlat, placeUnlocked } from './helpers'
 import { findShortages, WARNING_CYCLES } from '../src/sim/warnings'
 import { grassField, patchHouse } from './helpers'
+
+/** Food one pioneer eats per cycle, from the data. */
+const foodRate = tiers[0].needs.find((n) => n.id === 'food')!.rate!
 
 const rich = { coins: 1_000_000, stock: { tools: 500, wood: 500, bricks: 500, marble: 50 } }
 
@@ -82,7 +85,7 @@ describe('goods ledger', () => {
     state = placeBuilding(state, 'market_house', 14, 10, false)
     state = patchHouse(state, 1, { residents: 8 })
     const next = runMarket({ ...state, stock: { ...state.stock, food: 100 } })
-    expect(next.economy.current.consumed.food).toBeCloseTo(0.8)
+    expect(next.economy.current.consumed.food).toBeCloseTo(8 * foodRate)
     expect(next.economy.current.income).toBeGreaterThan(0)
   })
 
@@ -196,7 +199,7 @@ describe('shortage warnings', () => {
     state = placeBuilding(state, 'house_pioneers', 10, 10, false)
     state = placeBuilding(state, 'market_house', 14, 10, false)
     state = patchHouse(state, 1, { residents: 8 })
-    state = { ...state, stock: { ...state.stock, food: 1 } }
+    state = { ...state, stock: { ...state.stock, food: 8 * foodRate * 2 } }
     const next = cycleFlat(state)
     expect(findShortages(next).map((w) => w.good)).toContain('food')
   })

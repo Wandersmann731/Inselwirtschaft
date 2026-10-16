@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { climates } from '../data'
 import { sprites } from '../render/sprites'
 import type { GameState } from '../sim/state'
+import { t } from '../i18n/language'
 
 const SEA = '#1d4e6b'
 
@@ -90,7 +91,7 @@ export function WorldMap({ state, activeIsland, onSelect, onClose }: WorldMapPro
         ctx.strokeRect(offsetX + placement.x * scale, offsetY + placement.y * scale, placement.w * scale, placement.h * scale)
       }
       ctx.fillStyle = 'rgba(0, 0, 0, 0.55)'
-      const label = island.owned ? island.name : `${island.name} (${island.role === 'trader' ? 'Händler' : 'frei'})`
+      const label = island.owned ? island.name : `${island.name} (${island.role === 'trader' ? t('Händler', 'traders') : t('frei', 'free')})`
       const labelWidth = ctx.measureText(label).width + 10 * dpr
       ctx.fillRect(x - labelWidth / 2, y - 10 * dpr, labelWidth, 20 * dpr)
       ctx.fillStyle = '#ffffff'
@@ -114,8 +115,8 @@ export function WorldMap({ state, activeIsland, onSelect, onClose }: WorldMapPro
     <div className="world-backdrop">
       <div className="world-panel">
         <div className="panel-title">
-          <strong>Weltkarte</strong>
-          <button type="button" className="panel-close" onClick={onClose} aria-label="Schließen">
+          <strong>{t('Weltkarte', 'World map')}</strong>
+          <button type="button" className="panel-close" onClick={onClose} aria-label={t('Schließen', 'Close')}>
             ×
           </button>
         </div>

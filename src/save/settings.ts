@@ -18,6 +18,8 @@ export interface Settings {
   vibration: boolean
   /** Keeps the screen on while the game is open (Screen Wake Lock, where the browser has it). */
   keepAwake: boolean
+  /** Language of the texts in the game. */
+  language: 'de' | 'en'
 }
 
 const KEY = 'inselwirtschaft:settings'
@@ -32,6 +34,7 @@ const DEFAULTS: Settings = {
   autoFullscreen: true,
   vibration: true,
   keepAwake: true,
+  language: 'de',
 }
 
 function load(): Settings {

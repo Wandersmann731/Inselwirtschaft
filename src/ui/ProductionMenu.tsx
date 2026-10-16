@@ -6,6 +6,7 @@ import type { IslandState } from '../sim/state'
 import { BuildItem } from './BuildItem'
 import { Icon } from './Icon'
 import { formatWhole, resourceName } from './messages'
+import { t } from '../i18n/language'
 
 interface Selection {
   good: string
@@ -14,11 +15,8 @@ interface Selection {
   need: NeedTile | null
 }
 
-const ROLE_LABEL: Record<ChainRole, string> = {
-  main: '',
-  alternative: 'oder stattdessen',
-  substitute: 'Notlösung, wenn es fehlt',
-}
+const roleLabel = (role: ChainRole): string =>
+  role === 'alternative' ? t('oder stattdessen', 'or instead') : role === 'substitute' ? t('Notlösung, wenn es fehlt', 'fallback when it is missing') : ''
 
 function supplyClass(percent: number | null): string {
   if (percent === null) return 'need-tile'
@@ -36,10 +34,23 @@ export function ProductionMenu({ tool, state }: { tool: BuildController; state: 
 
   return (
     <div className="build-items need-overview">
+      <section className="build-group">
+        <h3 className="build-group-title">{t('Baumaterial', 'Building materials')}</h3>
+        <div className="build-group-row">
+          {MATERIALS.map((good) => (
+            <button key={good} type="button" className="need-tile" onClick={() => setSelected({ good, tierId: null, need: null })}>
+              <Icon name={`goods/${good}`} size={34} />
+              <span className="need-tile-name">{resourceName(good)}</span>
+              <span className="need-tile-state">{formatWhole(state.stock[good] ?? 0)} t</span>
+            </button>
+          ))}
+        </div>
+      </section>
       {needsByTier(state).map((tier) => (
         <section key={tier.tierId} className={tier.locked ? 'build-group locked' : 'build-group'}>
           <h3 className="build-group-title">
-            <Icon name={`tiers/${tier.tierId}`} size={18} /> {tier.name} brauchen{tier.locked && <span className="build-group-users"> · noch nicht erreicht</span>}
+            <Icon name={`tiers/${tier.tierId}`} size={18} /> {t(`${tier.name} brauchen`, `${tier.name} need`)}
+            {tier.locked && <span className="build-group-users"> · {t('noch nicht erreicht', 'not reached yet')}</span>}
           </h3>
           <div className="build-group-row">
             {tier.goods.map((need) => {
@@ -53,25 +64,13 @@ export function ProductionMenu({ tool, state }: { tool: BuildController; state: 
                 >
                   <Icon name={`goods/${need.good}`} size={34} />
                   <span className="need-tile-name">{resourceName(need.good)}</span>
-                  <span className="need-tile-state">{need.optional ? 'Bonus' : supply === null ? '–' : `${Math.round(supply)} %`}</span>
+                  <span className="need-tile-state">{need.optional ? t('Bonus', 'Bonus') : supply === null ? '–' : `${Math.round(supply)} %`}</span>
                 </button>
               )
             })}
           </div>
         </section>
       ))}
-      <section className="build-group">
-        <h3 className="build-group-title">Baumaterial</h3>
-        <div className="build-group-row">
-          {MATERIALS.map((good) => (
-            <button key={good} type="button" className="need-tile" onClick={() => setSelected({ good, tierId: null, need: null })}>
-              <Icon name={`goods/${good}`} size={34} />
-              <span className="need-tile-name">{resourceName(good)}</span>
-              <span className="need-tile-state">{formatWhole(state.stock[good] ?? 0)} t</span>
-            </button>
-          ))}
-        </div>
-      </section>
     </div>
   )
 }
@@ -85,14 +84,14 @@ function ChainView({ tool, state, selection, onBack }: { tool: BuildController; 
     <>
       <div className="chain-head">
         <button type="button" className="tier-tab" onClick={onBack}>
-          ‹ Übersicht
+          ‹ {t('Übersicht', 'Overview')}
         </button>
         <Icon name={`goods/${good}`} size={28} />
         <span className="chain-head-text">
           <strong>{resourceName(good)}</strong>
-          {tier ? ` für ${tier.name}` : ' (Baumaterial)'} · im Lager {formatWhole(state.stock[good] ?? 0)} t
-          {supply !== null && ` · versorgt ${Math.round(supply)} %`}
-          {need?.optional && ' · Bonus: bringt mehr Steuer'}
+          {tier ? t(` für ${tier.name}`, ` for ${tier.name}`) : t(' (Baumaterial)', ' (building material)')} · {t('im Lager', 'in store')} {formatWhole(state.stock[good] ?? 0)} t
+          {supply !== null && t(` · versorgt ${Math.round(supply)} %`, ` · supplied ${Math.round(supply)} %`)}
+          {need?.optional && t(' · Bonus: bringt mehr Steuer', ' · bonus: brings more tax')}
         </span>
       </div>
       <div className="build-items">
@@ -100,7 +99,7 @@ function ChainView({ tool, state, selection, onBack }: { tool: BuildController; 
           <section key={chain.id} className="build-group">
             <h3 className="build-group-title">
               {chain.name}
-              {role !== 'main' && <span className="build-group-users"> · {ROLE_LABEL[role]}</span>}
+              {role !== 'main' && <span className="build-group-users"> · {roleLabel(role)}</span>}
             </h3>
             <div className="build-group-row">
               {chain.buildings.map((id, index) => (

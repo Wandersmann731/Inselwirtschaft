@@ -5,8 +5,7 @@ import { residentsOfTier } from '../sim/tiers'
 import { findShortages } from '../sim/warnings'
 import { depositName, fertilityName, formatSigned, formatWhole } from './messages'
 import { Icon } from './Icon'
-
-const oneDecimal = (value: number): string => value.toFixed(1).replace('.', ',')
+import { oneDecimal, t } from '../i18n/language'
 
 /** Statistics window: money of the last cycle, residents per tier and production and use per good on the island on screen. */
 export function StatsPanel({ state, island, onClose }: { state: GameState; island: IslandState; onClose: () => void }) {
@@ -21,43 +20,43 @@ export function StatsPanel({ state, island, onClose }: { state: GameState; islan
     <div className="stats-backdrop" onClick={onClose}>
       <div className="stats-panel" onClick={(event) => event.stopPropagation()}>
         <div className="panel-title">
-          <strong>Statistik: {island.name}</strong>
-          <button type="button" className="panel-close" onClick={onClose} aria-label="Schließen">
+          <strong>{t('Statistik', 'Statistics')}: {island.name}</strong>
+          <button type="button" className="panel-close" onClick={onClose} aria-label={t('Schließen', 'Close')}>
             ×
           </button>
         </div>
 
         <div className="stats-scroll">
-          <h3>Insel</h3>
+          <h3>{t('Insel', 'Island')}</h3>
           <p className="stats-note">
-            {climates.find((climate) => climate.id === island.climate)?.name ?? island.climate}. Land:{' '}
-            {island.fertilities.length > 0 ? island.fertilities.map(fertilityName).join(', ') : 'keines'}. Vorkommen:{' '}
+            {climates.find((climate) => climate.id === island.climate)?.name ?? island.climate}. {t('Land', 'Land')}:{' '}
+            {island.fertilities.length > 0 ? island.fertilities.map(fertilityName).join(', ') : t('keines', 'none')}. {t('Vorkommen', 'Deposits')}:{' '}
             {island.deposits.map(depositName).join(', ')}.
           </p>
 
-          <h3>Letzter Zyklus dieser Insel</h3>
+          <h3>{t('Letzter Zyklus dieser Insel', 'Last cycle of this island')}</h3>
           {last ? (
             <table className="stats-table">
               <tbody>
                 <tr>
-                  <td>Einnahmen (Marktstände)</td>
+                  <td>{t('Einnahmen (Steuer)', 'Income (tax)')}</td>
                   <td>{formatSigned(last.income)}</td>
                 </tr>
                 <tr>
-                  <td>Betriebskosten</td>
+                  <td>{t('Betriebskosten', 'Upkeep')}</td>
                   <td>{formatSigned(-last.upkeep)}</td>
                 </tr>
                 <tr className="stats-sum">
-                  <td>Bilanz</td>
+                  <td>{t('Bilanz', 'Balance')}</td>
                   <td className={balanceOf(last) >= 0 ? 'positive' : 'negative'}>{formatSigned(balanceOf(last))}</td>
                 </tr>
               </tbody>
             </table>
           ) : (
-            <p className="stats-note">Die Zahlen erscheinen nach dem ersten Wirtschaftszyklus (60 Ticks).</p>
+            <p className="stats-note">{t('Die Zahlen erscheinen nach dem ersten Wirtschaftszyklus (60 Ticks).', 'The numbers appear after the first economy cycle (60 ticks).')}</p>
           )}
 
-          <h3>Einwohner (alle Inseln)</h3>
+          <h3>{t('Einwohner (alle Inseln)', 'Residents (all islands)')}</h3>
           <table className="stats-table">
             <tbody>
               {tiers.map((tier) => (
@@ -69,14 +68,14 @@ export function StatsPanel({ state, island, onClose }: { state: GameState; islan
             </tbody>
           </table>
 
-          <h3>Waren pro Zyklus</h3>
+          <h3>{t('Waren pro Zyklus', 'Goods per cycle')}</h3>
           <table className="stats-table">
             <thead>
               <tr>
-                <th>Ware</th>
-                <th>Lager</th>
-                <th>Erzeugt</th>
-                <th>Verbraucht</th>
+                <th>{t('Ware', 'Good')}</th>
+                <th>{t('Lager', 'Store')}</th>
+                <th>{t('Erzeugt', 'Made')}</th>
+                <th>{t('Verbraucht', 'Used')}</th>
               </tr>
             </thead>
             <tbody>
@@ -92,7 +91,7 @@ export function StatsPanel({ state, island, onClose }: { state: GameState; islan
               ))}
             </tbody>
           </table>
-          <p className="stats-note">Rot: Der Vorrat reicht weniger als 3 Zyklen.</p>
+          <p className="stats-note">{t('Rot: Der Vorrat reicht weniger als 3 Zyklen.', 'Red: the store lasts less than 3 cycles.')}</p>
         </div>
       </div>
     </div>

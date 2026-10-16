@@ -4,6 +4,7 @@ import { MATERIALS } from '../game/needsOverview'
 import { formatSigned, formatWhole, resourceName } from './messages'
 import { toggleFullscreen, useFullscreen } from './fullscreen'
 import { Icon } from './Icon'
+import { numberLocale, t } from '../i18n/language'
 
 interface TopHudProps {
   islandName: string
@@ -29,7 +30,7 @@ interface TopHudProps {
 const LOW_MATERIAL = 10
 
 function speedLabel(speed: GameSpeed): string {
-  return speed === 0 ? 'Pause' : `${speed}x`
+  return speed === 0 ? t('Pause', 'Pause') : `${speed}x`
 }
 
 export function TopHud({
@@ -55,21 +56,21 @@ export function TopHud({
       <div className="hud-stats">
         <div className="hud-row">
         <span className={coins < 0 ? 'hud-stat negative' : 'hud-stat'}>
-          <Icon name="ui/coin" size={20} title="Münzen" /> {formatWhole(coins)}
+          <Icon name="ui/coin" size={20} title={resourceName('coins')} /> {formatWhole(coins)}
         </span>
-        <span className={balanceClass}><Icon name={balance !== null && balance < 0 ? 'ui/balance_down' : 'ui/balance_up'} size={20} title="Bilanz" />{' '}
-          {balance === null ? '–' : `${formatSigned(balance)} / Zyklus`}
+        <span className={balanceClass}><Icon name={balance !== null && balance < 0 ? 'ui/balance_down' : 'ui/balance_up'} size={20} title={t('Bilanz', 'Balance')} />{' '}
+          {balance === null ? '–' : `${formatSigned(balance)} {t('/ Zyklus', '/ cycle')}`}
         </span>
         {owned && MATERIALS.map((good) => (
           <span key={good} className={(stock[good] ?? 0) < LOW_MATERIAL ? 'hud-stat hud-material low' : 'hud-stat hud-material'}>
             <Icon name={`goods/${good}`} size={20} title={resourceName(good)} /> {formatWhole(stock[good] ?? 0)}
           </span>
         ))}
-        {debug && <span className="hud-stat">Tick: {tick.toLocaleString('de-DE')}</span>}
+        {debug && <span className="hud-stat">Tick: {tick.toLocaleString(numberLocale())}</span>}
         </div>
         <div className="hud-row">
         <span className="hud-stat">
-          <Icon name="ui/population" size={20} title="Einwohner" /> {formatWhole(total)}
+          <Icon name="ui/population" size={20} title={t('Einwohner', 'Residents')} /> {formatWhole(total)}
         </span>
         {tiers.slice(0, highestTier + 1).map((tier) => (
           <span key={tier.id} className="hud-stat hud-tier">
@@ -90,14 +91,14 @@ export function TopHud({
             type="button"
             className="speed-button"
             onClick={() => void toggleFullscreen()}
-            aria-label={fullscreen.active ? 'Vollbild beenden' : 'Vollbild'}
-            title={fullscreen.active ? 'Vollbild beenden' : 'Vollbild'}
+            aria-label={fullscreen.active ? t('Vollbild beenden', 'Exit full screen') : t('Vollbild', 'Full screen')}
+            title={fullscreen.active ? t('Vollbild beenden', 'Exit full screen') : t('Vollbild', 'Full screen')}
           >
             {fullscreen.active ? '⤡' : '⛶'}
           </button>
         )}
-        <button type="button" className="speed-button" onClick={onOpenMenu} aria-label="Menü">
-          Menü
+        <button type="button" className="speed-button" onClick={onOpenMenu} aria-label={t('Menü', 'Menu')}>
+          {t('Menü', 'Menu')}
         </button>
         {[...config.speeds, ...(debug ? config.debugSpeeds : [])].map((value) => (
           <button

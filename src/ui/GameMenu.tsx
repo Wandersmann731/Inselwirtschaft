@@ -5,6 +5,7 @@ import { toggleFullscreen, useFullscreen } from './fullscreen'
 import { SettingsPanel } from './SettingsPanel'
 import { SlotList } from './SlotList'
 import { useSlots } from './slots'
+import { t } from '../i18n/language'
 
 interface GameMenuProps {
   loop: GameLoop
@@ -24,36 +25,36 @@ export function GameMenu({ loop, onClose, onQuit }: GameMenuProps) {
   const save = (slot: string): void => {
     saveState(loop.getState(), slot)
       .then(() => {
-        setMessage('Gespeichert.')
+        setMessage(t('Gespeichert.', 'Saved.'))
         setReload((value) => value + 1)
       })
-      .catch(() => setMessage('Speichern ist fehlgeschlagen.'))
+      .catch(() => setMessage(t('Speichern ist fehlgeschlagen.', 'Saving failed.')))
   }
 
   return (
     <div className="stats-backdrop" onClick={onClose}>
       <div className="stats-panel" onClick={(event) => event.stopPropagation()}>
         <div className="panel-title">
-          <strong>Menü</strong>
-          <button type="button" className="panel-close" onClick={onClose} aria-label="Schließen">
+          <strong>{t('Menü', 'Menu')}</strong>
+          <button type="button" className="panel-close" onClick={onClose} aria-label={t('Schließen', 'Close')}>
             ×
           </button>
         </div>
         <div className="stats-scroll">
-          <h3>Speichern</h3>
-          <SlotList entries={slots} action="Speichern" allowAutosave={false} onChoose={save} />
+          <h3>{t('Speichern', 'Save')}</h3>
+          <SlotList entries={slots} action={t('Speichern', 'Save')} allowAutosave={false} onChoose={save} />
           {message && <p className="stats-note">{message}</p>}
           <div className="menu-row">
             <button type="button" className="action-button" onClick={() => setShowSettings(true)}>
-              Einstellungen
+              {t('Einstellungen', 'Settings')}
             </button>
             {fullscreen.supported && (
               <button type="button" className="action-button" onClick={() => void toggleFullscreen()}>
-                {fullscreen.active ? 'Vollbild beenden' : 'Vollbild'}
+                {fullscreen.active ? t('Vollbild beenden', 'Exit full screen') : t('Vollbild', 'Full screen')}
               </button>
             )}
             <button type="button" className="action-button" onClick={onQuit}>
-              Zum Startbildschirm
+              {t('Zum Startbildschirm', 'To the start screen')}
             </button>
           </div>
         </div>

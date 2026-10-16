@@ -8,6 +8,8 @@ import { grassField, patchBuilding, patchHouse, placeUnlocked } from './helpers'
 
 const rich = { coins: 1_000_000, stock: { tools: 500, wood: 500, bricks: 500, marble: 50 } }
 const tax = (tier: string): number => tiers.find((t) => t.id === tier)!.tax
+/** Consumption of one resident per cycle, read from the data so balancing the rates does not break the tests. */
+const rate = (needId: string): number => tiers.flatMap((t) => t.needs).find((n) => n.id === needId)!.rate!
 
 /** A house at (10,10) with the given residents, a market house next to it and a chapel nearby. */
 function village(residents: number, stock: Record<string, number> = {}): IslandState {
@@ -24,7 +26,7 @@ const house = (state: IslandState) => state.buildings.find((b) => b.house)!.hous
 describe('market', () => {
   it('residents fetch their goods from the store by themselves and pay the full land tax', () => {
     const next = runMarket(village(8))
-    expect(next.stock.food).toBeCloseTo(100 - 8 * 0.1)
+    expect(next.stock.food).toBeCloseTo(100 - 8 * rate('food'))
     expect(next.coins).toBeCloseTo(1000 + 8 * tax('pioneers'))
     expect(house(next).needs.food).toBe(100)
     expect(house(next).needs.cloth).toBe(100)
@@ -45,7 +47,7 @@ describe('market', () => {
   })
 
   it('reports partial fulfilment when the store is short', () => {
-    const next = runMarket(village(8, { food: 0.4 }))
+    const next = runMarket(village(8, { food: 4 * rate('food') }))
     expect(house(next).needs.food).toBeCloseTo(50)
     expect(next.stock.food).toBeCloseTo(0)
   })
@@ -83,7 +85,7 @@ describe('market', () => {
   it('accepts leather in place of cloth', () => {
     const next = runMarket(village(8, { cloth: 0, leather: 10 }))
     expect(house(next).needs.cloth).toBe(100)
-    expect(next.stock.leather).toBeCloseTo(10 - 8 * 0.05)
+    expect(next.stock.leather).toBeCloseTo(10 - 8 * rate('cloth'))
   })
 
   it('meets the chapel need only inside the chapel radius of an active chapel', () => {
@@ -116,7 +118,7 @@ describe('market', () => {
     let state = village(8)
     state = placeBuilding({ ...state, coins: 1_000_000, stock: { ...rich.stock } }, 'house_pioneers', 12, 13, false)
     state = patchHouse(state, 4, { residents: 8 })
-    const next = runMarket({ ...state, stock: { food: 1, cloth: 100 } })
+    const next = runMarket({ ...state, stock: { food: 8 * rate('food') * 1.25, cloth: 100 } })
     const homes = next.buildings.filter((b) => b.house)
     expect(homes[0].house!.needs.food).toBe(100)
     expect(homes[1].house!.needs.food).toBeCloseTo(25)

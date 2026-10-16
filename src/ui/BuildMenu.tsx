@@ -6,12 +6,13 @@ import type { IslandState } from '../sim/state'
 import { BuildItem } from './BuildItem'
 import { Icon } from './Icon'
 import { ProductionMenu } from './ProductionMenu'
+import { t } from '../i18n/language'
 
-const CATEGORIES: { id: BuildingCategory; label: string; icon: string }[] = [
-  { id: 'housing', label: 'Wohnen', icon: 'ui/cat_housing' },
-  { id: 'public', label: 'Öffentlich', icon: 'ui/cat_public' },
-  { id: 'production', label: 'Produktion', icon: 'ui/cat_production' },
-  { id: 'infrastructure', label: 'Infrastruktur', icon: 'ui/cat_infrastructure' },
+const CATEGORIES: { id: BuildingCategory; label: () => string; icon: string }[] = [
+  { id: 'housing', label: () => t('Wohnen', 'Housing'), icon: 'ui/cat_housing' },
+  { id: 'public', label: () => t('Öffentlich', 'Public'), icon: 'ui/cat_public' },
+  { id: 'production', label: () => t('Produktion', 'Production'), icon: 'ui/cat_production' },
+  { id: 'infrastructure', label: () => t('Infrastruktur', 'Infrastructure'), icon: 'ui/cat_infrastructure' },
 ]
 
 interface BuildMenuProps {
@@ -50,7 +51,7 @@ export function BuildMenu({ tool, state, onOpenStats, onOpenWorld, onOpenTrade }
             <span className="category-glyph" aria-hidden="true">
               ↺
             </span>
-            <span>Zuletzt</span>
+            <span>{t('Zuletzt', 'Recent')}</span>
           </button>
         )}
         {CATEGORIES.map(({ id, label, icon }) => (
@@ -61,24 +62,24 @@ export function BuildMenu({ tool, state, onOpenStats, onOpenWorld, onOpenTrade }
             onClick={() => setOpen(id === open ? null : id)}
           >
             <Icon name={icon} size={26} />
-            <span>{label}</span>
+            <span>{label()}</span>
           </button>
         ))}
         <button type="button" className="category-button demolish" onClick={() => tool.startDemolish()}>
           <Icon name="ui/cat_demolish" size={26} />
-          <span>Abriss</span>
+          <span>{t('Abriss', 'Demolish')}</span>
         </button>
         <button type="button" className="category-button" onClick={onOpenStats}>
           <Icon name="ui/cat_statistics" size={26} />
-          <span>Statistik</span>
+          <span>{t('Statistik', 'Statistics')}</span>
         </button>
         <button type="button" className="category-button" onClick={onOpenWorld}>
           <Icon name="ui/cat_worldmap" size={26} />
-          <span>Weltkarte</span>
+          <span>{t('Weltkarte', 'World map')}</span>
         </button>
         <button type="button" className="category-button" onClick={onOpenTrade}>
           <Icon name="ui/cat_trade" size={26} />
-          <span>Handel</span>
+          <span>{t('Handel', 'Trade')}</span>
         </button>
       </div>
     </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { config } from '../data'
 import { AUTOSAVE_SLOT, loadSaveInfo, manualSlots, type SaveInfo } from '../save/saveGame'
 import { formatWhole } from './messages'
+import { numberLocale, t } from '../i18n/language'
 
 export interface SlotEntry {
   slot: string
@@ -21,7 +22,7 @@ export function useSlots(reload: number): SlotEntry[] | null {
       setEntries(
         SLOT_NAMES.map((slot, i) => ({
           slot,
-          label: slot === AUTOSAVE_SLOT ? 'Automatisch gespeichert' : `Platz ${i}`,
+          label: slot === AUTOSAVE_SLOT ? t('Automatisch gespeichert', 'Autosave') : t(`Platz ${i}`, `Slot ${i}`),
           info: infos[i],
         })),
       )
@@ -34,12 +35,15 @@ export function useSlots(reload: number): SlotEntry[] | null {
 }
 
 function when(savedAt: number): string {
-  return new Date(savedAt).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+  return new Date(savedAt).toLocaleString(numberLocale(), { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
 
 export function describe(info: SaveInfo | null): string {
-  if (!info) return 'leer'
+  if (!info) return t('leer', 'empty')
   const minutes = Math.floor(info.tick / 60)
-  return `${formatWhole(info.residents)} Einwohner · ${formatWhole(info.coins)} Münzen · ${minutes} Min. gespielt · ${when(info.savedAt)}`
+  return t(
+    `${formatWhole(info.residents)} Einwohner · ${formatWhole(info.coins)} Münzen · ${minutes} Min. gespielt · ${when(info.savedAt)}`,
+    `${formatWhole(info.residents)} residents · ${formatWhole(info.coins)} coins · ${minutes} min played · ${when(info.savedAt)}`,
+  )
 }
 

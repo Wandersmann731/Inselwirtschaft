@@ -3,10 +3,12 @@ import { createRoot } from 'react-dom/client'
 import { Root } from './Root'
 import './index.css'
 import { sprites } from './render/sprites'
+import { initLanguage } from './i18n/language'
 
 async function bootstrap(): Promise<void> {
   // Pictures first: the map is drawn with them. Without them (or while they are missing) it falls back to colour shapes.
   await sprites.load()
+  initLanguage()
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <Root />

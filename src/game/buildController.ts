@@ -1,4 +1,5 @@
 import { getBuilding } from '../data'
+import { t } from '../i18n/language'
 import { demolishBuilding, demolishTiles, footprint, placeBuilding, placeRoads } from '../sim/build'
 import { haptic } from './haptic'
 import { buildSettlement, planSettlement } from '../sim/settlementPlanner'
@@ -188,7 +189,7 @@ export class BuildController {
     if (area) {
       if (area.origins.length === 0) return
       const count = area.origins.length
-      this.track(`${count} ${count === 1 ? 'Haus' : 'Häuser'}`, typeId, () => this.loop.dispatchIsland((state) => buildSettlement(state, typeId, area.origins, area.blocks)))
+      this.track(t(`${count} ${count === 1 ? 'Haus' : 'Häuser'}`, `${count} ${count === 1 ? 'house' : 'houses'}`), typeId, () => this.loop.dispatchIsland((state) => buildSettlement(state, typeId, area.origins, area.blocks)))
       haptic()
       this.set({ ...this.snapshot, area: null })
       return
@@ -274,7 +275,7 @@ export class BuildController {
   routeConfirm(): void {
     const plan = this.snapshot.route.plan
     if (this.snapshot.mode !== 'road' || !plan) return
-    this.track('Straße', null, () => this.loop.dispatchIsland((state) => placeRoads(state, plan.newTiles)))
+    this.track(t('Straße', 'Road'), null, () => this.loop.dispatchIsland((state) => placeRoads(state, plan.newTiles)))
     haptic()
     this.cancel() // the road is built: back to the overview
   }
@@ -356,7 +357,7 @@ export class BuildController {
     if (mode === 'place') return // the area stays until it is built or dragged again
     if (stroke.length === 0) return
     if (mode === 'road') {
-      this.track('Straße', null, () => this.loop.dispatchIsland((state) => placeRoads(state, stroke)))
+      this.track(t('Straße', 'Road'), null, () => this.loop.dispatchIsland((state) => placeRoads(state, stroke)))
       haptic()
       this.cancel() // the road is built: back to the overview
       return

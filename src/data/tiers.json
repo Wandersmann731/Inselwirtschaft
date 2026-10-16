@@ -7,11 +7,11 @@
     "size": [2, 2],
     "color": "#c98a4b",
     "needs": [
-      { "id": "food", "good": "food", "rate": 0.1 },
+      { "id": "food", "good": "food", "rate": 0.025 },
       {
         "id": "cloth",
         "good": "cloth",
-        "rate": 0.05,
+        "rate": 0.0125,
         "alternatives": ["leather"]
       },
       { "id": "chapel", "building": "chapel", "forRise": true }
@@ -26,8 +26,8 @@
     "color": "#d9a066",
     "upgradeCost": { "tools": 1, "wood": 4, "bricks": 0, "marble": 0, "coins": 0 },
     "needs": [
-      { "id": "alcohol", "good": "alcohol", "rate": 0.06 },
-      { "id": "salt", "good": "salt", "rate": 0.04 },
+      { "id": "alcohol", "good": "alcohol", "rate": 0.015 },
+      { "id": "salt", "good": "salt", "rate": 0.01 },
       { "id": "tavern", "building": "tavern" }
     ]
   },
@@ -43,13 +43,13 @@
       {
         "id": "tobacco",
         "good": "tobacco",
-        "rate": 0.04,
+        "rate": 0.01,
         "substitutes": ["salt"]
       },
       {
         "id": "spices",
         "good": "spices",
-        "rate": 0.04,
+        "rate": 0.01,
         "substitutes": ["salt"]
       },
       { "id": "church", "building": "church", "forRise": true }
@@ -67,13 +67,13 @@
       {
         "id": "silk",
         "good": "silk",
-        "rate": 0.03,
+        "rate": 0.0075,
         "substitutes": ["salt"]
       },
       {
         "id": "lamp_oil",
         "good": "lamp_oil",
-        "rate": 0.03,
+        "rate": 0.0075,
         "substitutes": ["salt"]
       },
       { "id": "bathhouse", "building": "bathhouse" }
@@ -88,8 +88,8 @@
     "color": "#f5e6c8",
     "unlock": { "tier": "merchants", "residents": 1900 },
     "needs": [
-      { "id": "jewelry", "good": "jewelry", "rate": 0.02, "optional": true },
-      { "id": "wine", "good": "wine", "rate": 0.03, "optional": true },
+      { "id": "jewelry", "good": "jewelry", "rate": 0.005, "optional": true },
+      { "id": "wine", "good": "wine", "rate": 0.0075, "optional": true },
       { "id": "theater", "building": "theater" }
     ]
   }

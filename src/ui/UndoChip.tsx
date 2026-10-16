@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { t } from '../i18n/language'
 import { UNDO_MS, type BuildController, type UndoEntry } from '../game/buildController'
 
 /**
@@ -31,7 +32,7 @@ export function UndoChip({ tool, entry }: { tool: BuildController; entry: UndoEn
   if (left <= 0) return null
   return (
     <button type="button" className="undo-chip" style={{ bottom }} onClick={() => tool.undo()}>
-      <span aria-hidden="true">↶</span> Rückgängig: {entry.label} <small>{left} s</small>
+      <span aria-hidden="true">↶</span> {t('Rückgängig', 'Undo')}: {entry.label} <small>{left} s</small>
     </button>
   )
 }

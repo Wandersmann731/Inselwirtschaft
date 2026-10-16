@@ -12,6 +12,7 @@ import { hubCount, stockCapacity } from '../sim/storage'
 import { formatCost, formatWhole, needLabel, resourceName, statusText } from './messages'
 import { Icon } from './Icon'
 import { STATUS_ICONS } from './statusIcons'
+import { t } from '../i18n/language'
 
 /** Info panel of the selected building: state of a producer, buffers, upkeep and the off switch. */
 export function BuildingPanel({
@@ -44,7 +45,7 @@ export function BuildingPanel({
     <div className="building-panel">
       <div className="panel-title">
         <strong>{def.name}</strong>
-        <button type="button" className="panel-close" onClick={() => tool.selectBuilding(null)} aria-label="Schließen">
+        <button type="button" className="panel-close" onClick={() => tool.selectBuilding(null)} aria-label={t('Schließen', 'Close')}>
           ×
         </button>
       </div>
@@ -55,7 +56,7 @@ export function BuildingPanel({
             <Icon name={STATUS_ICONS[production.status.kind]} size={26} />
             {statusText(production.status)}
           </div>
-          <div className="panel-line">Auslastung: {production.utilization} % (letzter Zyklus)</div>
+          <div className="panel-line">{t('Auslastung', 'Utilisation')}: {production.utilization} % {t('(letzter Zyklus)', '(last cycle)')}</div>
           <div className="panel-bar">
             <div className="panel-bar-fill" style={{ width: `${(production.progress / cycleTicks) * 100}%` }} />
           </div>
@@ -67,22 +68,22 @@ export function BuildingPanel({
             const names = goods.map(resourceName).join(' / ')
             return (
               <div key={input.good} className="panel-line">
-                Eingang {names}: {have} / {inputTarget(def, input, delay)}
+                {t('Eingang', 'Input')} {names}: {have} / {inputTarget(def, input, delay)}
               </div>
             )
           })}
           {def.output && (
             <div className="panel-line">
-              Ausgang {resourceName(def.output.good)}: {production.output} / {config.production.outputBufferAmount}
+              {t('Ausgang', 'Output')} {resourceName(def.output.good)}: {production.output} / {config.production.outputBufferAmount}
             </div>
           )}
           {def.byproducts?.map((extra) => (
             <div key={extra.good} className="panel-line">
-              Nebenprodukt {resourceName(extra.good)}: {Math.floor(production.extra[extra.good] ?? 0)} / {config.production.outputBufferAmount}
+              {t('Nebenprodukt', 'Byproduct')} {resourceName(extra.good)}: {Math.floor(production.extra[extra.good] ?? 0)} / {config.production.outputBufferAmount}
             </div>
           ))}
           {production.shipments.length > 0 && (
-            <div className="panel-line">Unterwegs: {production.shipments.length} Lieferung(en)</div>
+            <div className="panel-line">{t('Unterwegs', 'On the way')}: {production.shipments.length} {t('Lieferung(en)', 'delivery(ies)')}</div>
           )}
         </>
       )}
@@ -90,39 +91,41 @@ export function BuildingPanel({
       {building.house && <HousePanel house={building.house} stopped={state.upgradeStop ?? []} />}
 
       <div className="panel-line">
-        Unterhalt: {upkeepOf(building)} Münzen pro Zyklus{building.active ? '' : ' (stillgelegt)'}
+        {t('Unterhalt', 'Upkeep')}: {upkeepOf(building)} {t('Münzen pro Zyklus', 'coins per cycle')}{building.active ? '' : t(' (stillgelegt)', ' (shut down)')}
       </div>
       {def.catchment !== undefined && (
         <div className="panel-line">
-          Lager: bis {stockCapacity(state)} je Ware ({hubCount(state)} {hubCount(state) === 1 ? 'Kontor oder Markthaus' : 'Kontore und Markthäuser'}, jedes weitere gibt mehr Platz)
+          {t('Lager', 'Store')}: {t('bis', 'up to')} {stockCapacity(state)} {t('je Ware', 'per good')} ({hubCount(state)}{' '}
+          {hubCount(state) === 1 ? t('Kontor oder Markthaus', 'trading post or market house') : t('Kontore und Markthäuser', 'trading posts and market houses')},{' '}
+          {t('jedes weitere gibt mehr Platz', 'each further one gives more room')})
         </div>
       )}
       {(building.type === 'kontor' || building.type === 'market_house') && <UpgradeStops tool={tool} state={state} />}
       {building.type === 'kontor' && (
         <button type="button" className="action-button panel-toggle" onClick={onOpenKontor}>
-          Handel einstellen
+          {t('Handel einstellen', 'Set up trade')}
         </button>
       )}
       {building.type === 'shipyard' && (
         <button type="button" className="action-button panel-toggle" onClick={() => tool.buildShip()}>
-          Schiff bauen ({formatCost(trade.ship.cost)})
+          {t('Schiff bauen', 'Build ship')} ({formatCost(trade.ship.cost)})
         </button>
       )}
       {building.type !== 'kontor' &&
         (confirming === building.id ? (
           <div className="panel-confirm" ref={confirmRef}>
-            <span>Abreißen? Zurück: {formatCost(refundOf(def.cost))}</span>
+            <span>{t('Abreißen? Zurück', 'Demolish? You get back')}: {formatCost(refundOf(def.cost))}</span>
             <LostSupply state={state} ids={[building.id]} />
             <button type="button" className="action-button danger" onClick={() => tool.demolish(building.id)}>
-              Ja, abreißen
+              {t('Ja, abreißen', 'Yes, demolish')}
             </button>
             <button type="button" className="action-button" onClick={() => setConfirming(null)}>
-              Nein
+              {t('Nein', 'No')}
             </button>
           </div>
         ) : (
           <button type="button" className="action-button panel-toggle" onClick={() => setConfirming(building.id)}>
-            Abreißen
+            {t('Abreißen', 'Demolish')}
           </button>
         ))}
       {!building.house && (
@@ -131,7 +134,7 @@ export function BuildingPanel({
           className="action-button panel-toggle"
           onClick={() => tool.setActive(building.id, !building.active)}
         >
-          {building.active ? 'Stilllegen' : 'Wieder starten'}
+          {building.active ? t('Stilllegen', 'Shut down') : t('Wieder starten', 'Restart')}
         </button>
       )}
     </div>
@@ -143,12 +146,12 @@ function HousePanel({ house, stopped }: { house: NonNullable<IslandState['buildi
   const next = tiers[tiers.indexOf(tier) + 1]
   const stoppedNext = next !== undefined && stopped.includes(next.id)
   if (house.ruin) {
-    return <div className="panel-status">Ruine: Die Aristokraten sind ausgezogen. Nur Abriss hilft.</div>
+    return <div className="panel-status">{t('Ruine: Die Aristokraten sind ausgezogen. Nur Abriss hilft.', 'Ruin: the aristocrats have left. Only demolishing helps.')}</div>
   }
   return (
     <>
       <div className="panel-status">
-        {tier.name}: {Math.floor(house.residents)} / {tier.residents} Einwohner
+        {tier.name}: {Math.floor(house.residents)} / {tier.residents} {t('Einwohner', 'residents')}
         <span className="mood" title={moodOf(house).text}>
           {moodOf(house).face}
         </span>
@@ -160,8 +163,8 @@ function HousePanel({ house, stopped }: { house: NonNullable<IslandState['buildi
           <div key={need.id} className="need-row">
             <span className="need-name">
               {needLabel(need)}
-              {need.optional && <small> (Bonus)</small>}
-              {need.forRise && <small title="Nur für den Aufstieg nötig"> ↑</small>}
+              {need.optional && <small> ({t('Bonus', 'bonus')})</small>}
+              {need.forRise && <small title={t('Nur für den Aufstieg nötig', 'Only needed to rise')}> ↑</small>}
             </span>
             <span className="panel-bar need-bar">
               <span className="panel-bar-fill" style={{ width: `${percent}%`, background: needColor(percent) }} />
@@ -170,9 +173,9 @@ function HousePanel({ house, stopped }: { house: NonNullable<IslandState['buildi
           </div>
         )
       })}
-      <div className="panel-line">Steuer: {formatWhole(taxOf(house))} Münzen pro Zyklus</div>
-      {house.missingMaterials && <div className="panel-line invalid">Aufstieg wartet auf Baumaterial</div>}
-      {stoppedNext && <div className="panel-line">Aufstieg im Markthaus gesperrt</div>}
+      <div className="panel-line">{t('Steuer', 'Tax')}: {formatWhole(taxOf(house))} {t('Münzen pro Zyklus', 'coins per cycle')}</div>
+      {house.missingMaterials && <div className="panel-line invalid">{t('Aufstieg wartet auf Baumaterial', 'Rising waits for building material')}</div>}
+      {stoppedNext && <div className="panel-line">{t('Aufstieg im Markthaus gesperrt', 'Rising blocked at the market house')}</div>}
     </>
   )
 }
@@ -184,7 +187,7 @@ function UpgradeStops({ tool, state }: { tool: BuildController; state: IslandSta
   return (
     <div className="upgrade-stops">
       <div className="panel-line">
-        <strong>Aufstiege</strong> (verbrauchen Baumaterial)
+        <strong>{t('Aufstiege', 'Rises')}</strong> {t('(verbrauchen Baumaterial)', '(use up building material)')}
       </div>
       {rising.map((tier) => {
         const blocked = stopped.has(tier.id)
@@ -196,9 +199,9 @@ function UpgradeStops({ tool, state }: { tool: BuildController; state: IslandSta
             onClick={() => tool.setUpgradeStop(tier.id, !blocked)}
           >
             <span>
-              {blocked ? 'Gesperrt' : 'Erlaubt'}: zu {tier.name}
+              {blocked ? t('Gesperrt', 'Blocked') : t('Erlaubt', 'Allowed')}: {t('zu', 'to')} {tier.name}
             </span>
-            <small>{formatCost(tier.upgradeCost!)} je Haus</small>
+            <small>{formatCost(tier.upgradeCost!)} {t('je Haus', 'per house')}</small>
           </button>
         )
       })}
@@ -211,10 +214,10 @@ function moodOf(house: HouseState): { face: string; text: string } {
   const needs = cumulativeNeeds(house.tier).filter((need) => !need.optional)
   const percent = (id: string): number => house.needs[id] ?? 0
   if (needs.some((need) => !need.forRise && percent(need.id) < config.population.shortageBelow)) {
-    return { face: '☹️', text: 'Unzufrieden: Es fehlt etwas Wichtiges, Bewohner ziehen aus.' }
+    return { face: '☹️', text: t('Unzufrieden: Es fehlt etwas Wichtiges, Bewohner ziehen aus.', 'Unhappy: something important is missing, residents are moving out.') }
   }
-  if (needs.every((need) => percent(need.id) >= 100)) return { face: '😊', text: 'Glücklich: Alles da, das Haus kann aufsteigen.' }
-  return { face: '🙂', text: 'Zufrieden: Sie bleiben, für den Aufstieg fehlt noch etwas.' }
+  if (needs.every((need) => percent(need.id) >= 100)) return { face: '😊', text: t('Glücklich: Alles da, das Haus kann aufsteigen.', 'Happy: everything is there, the house can rise.') }
+  return { face: '🙂', text: t('Zufrieden: Sie bleiben, für den Aufstieg fehlt noch etwas.', 'Content: they stay, something is still missing to rise.') }
 }
 
 function refundOf(cost: BuildingCost): BuildingCost {
@@ -233,7 +236,7 @@ export function LostSupply({ state, ids }: { state: IslandState; ids: number[] }
   if (lost.length === 0) return null
   return (
     <span className="place-hint invalid">
-      Achtung: {lost.length} {lost.length === 1 ? 'Haus bekommt' : 'Häuser bekommen'} danach keine Waren mehr.
+      {t('Achtung', 'Warning')}: {lost.length} {lost.length === 1 ? t('Haus bekommt', 'house gets') : t('Häuser bekommen', 'houses get')} {t('danach keine Waren mehr.', 'no goods afterwards.')}
     </span>
   )
 }

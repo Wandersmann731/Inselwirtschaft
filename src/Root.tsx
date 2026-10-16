@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { App } from './App'
 import { GameLoop } from './game/gameLoop'
+import { getLanguage, subscribeLanguage } from './i18n/language'
 import { startAutosave, saveNow } from './save/autosave'
 import type { GameState } from './sim/state'
 import { MainMenu } from './ui/MainMenu'
@@ -14,6 +15,8 @@ interface Running {
 export function Root() {
   const [running, setRunning] = useState<Running | null>(null)
   const current = useRef<Running | null>(null)
+  // changing the language remounts the screens; the running game (the loop) stays
+  const language = useSyncExternalStore(subscribeLanguage, getLanguage)
 
   const start = useCallback((state: GameState) => {
     const loop = new GameLoop(state)
@@ -40,5 +43,5 @@ export function Root() {
     [],
   )
 
-  return running ? <App loop={running.loop} onQuit={quit} /> : <MainMenu onStart={start} />
+  return running ? <App key={language} loop={running.loop} onQuit={quit} /> : <MainMenu key={language} onStart={start} />
 }

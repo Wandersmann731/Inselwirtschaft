@@ -4,6 +4,7 @@ import { deleteAllSaves } from '../save/saveGame'
 import { audio } from '../audio/engine'
 import { getSettings, updateSettings, type Settings } from '../save/settings'
 import { applyWakeLock } from './wakeLock'
+import { getLanguage, setLanguage, t, type Language } from '../i18n/language'
 
 interface Props {
   onClose: () => void
@@ -14,20 +15,25 @@ interface Props {
 type Toggle = 'debug' | 'waterAnimation' | 'smoke' | 'muted' | 'autoFullscreen' | 'vibration' | 'keepAwake'
 type Volume = 'volumeEffects' | 'volumeAmbience' | 'volumeMusic'
 
-const VOLUMES: { key: Volume; label: string }[] = [
-  { key: 'volumeEffects', label: 'Effekte' },
-  { key: 'volumeAmbience', label: 'Umgebung' },
-  { key: 'volumeMusic', label: 'Musik' },
+const VOLUMES: { key: Volume; label: () => string }[] = [
+  { key: 'volumeEffects', label: () => t('Effekte', 'Effects') },
+  { key: 'volumeAmbience', label: () => t('Umgebung', 'Ambience') },
+  { key: 'volumeMusic', label: () => t('Musik', 'Music') },
 ]
 
-const OPTIONS: { key: Toggle; label: string; hint: string }[] = [
-  { key: 'muted', label: 'Ton aus', hint: 'Schaltet alle Töne stumm.' },
-  { key: 'autoFullscreen', label: 'Vollbild beim Start', hint: 'Nur auf Handys und Tablets. Im Spiel gibt es dafür auch eine Schaltfläche.' },
-  { key: 'vibration', label: 'Vibration', hint: 'Kurzes Rütteln beim Bauen, Abreißen und langen Drücken.' },
-  { key: 'keepAwake', label: 'Bildschirm anlassen', hint: 'Das Handy geht während des Spiels nicht in den Ruhezustand.' },
-  { key: 'waterAnimation', label: 'Bewegtes Wasser', hint: 'Bei langsamen Handys ausschalten.' },
-  { key: 'smoke', label: 'Rauch über Schornsteinen', hint: 'Bei langsamen Handys ausschalten.' },
-  { key: 'debug', label: 'Entwickleranzeige', hint: 'Zeigt Bilder pro Sekunde und das Balancing-Fenster.' },
+const OPTIONS: { key: Toggle; label: () => string; hint: () => string }[] = [
+  { key: 'muted', label: () => t('Ton aus', 'Sound off'), hint: () => t('Schaltet alle Töne stumm.', 'Mutes all sounds.') },
+  { key: 'autoFullscreen', label: () => t('Vollbild beim Start', 'Full screen at start'), hint: () => t('Nur auf Handys und Tablets. Im Spiel gibt es dafür auch eine Schaltfläche.', 'Phones and tablets only. There is also a button for it in the game.') },
+  { key: 'vibration', label: () => t('Vibration', 'Vibration'), hint: () => t('Kurzes Rütteln beim Bauen, Abreißen und langen Drücken.', 'A short buzz when building, demolishing and on long press.') },
+  { key: 'keepAwake', label: () => t('Bildschirm anlassen', 'Keep screen on'), hint: () => t('Das Handy geht während des Spiels nicht in den Ruhezustand.', 'The phone does not go to sleep while you play.') },
+  { key: 'waterAnimation', label: () => t('Bewegtes Wasser', 'Moving water'), hint: () => t('Bei langsamen Handys ausschalten.', 'Switch off on slow phones.') },
+  { key: 'smoke', label: () => t('Rauch über Schornsteinen', 'Smoke over chimneys'), hint: () => t('Bei langsamen Handys ausschalten.', 'Switch off on slow phones.') },
+  { key: 'debug', label: () => t('Entwickleranzeige', 'Developer display'), hint: () => t('Zeigt Bilder pro Sekunde und das Balancing-Fenster.', 'Shows frames per second and the balancing window.') },
+]
+
+const LANGUAGES: { id: Language; label: string }[] = [
+  { id: 'de', label: 'Deutsch' },
+  { id: 'en', label: 'English' },
 ]
 
 export function SettingsPanel({ onClose, onDeleted }: Props) {
@@ -51,15 +57,33 @@ export function SettingsPanel({ onClose, onDeleted }: Props) {
     <div className="stats-backdrop" onClick={onClose}>
       <div className="stats-panel" onClick={(event) => event.stopPropagation()}>
         <div className="panel-title">
-          <strong>Einstellungen</strong>
-          <button type="button" className="panel-close" onClick={onClose} aria-label="Schließen">
+          <strong>{t('Einstellungen', 'Settings')}</strong>
+          <button type="button" className="panel-close" onClick={onClose} aria-label={t('Schließen', 'Close')}>
             ×
           </button>
         </div>
         <div className="stats-scroll">
+          <div className="setting-row">
+            <span>
+              <strong>{t('Sprache', 'Language')}</strong>
+              <span className="stats-note setting-hint">{t('Deutsch oder Englisch. Das laufende Spiel bleibt erhalten.', 'German or English. The running game is kept.')}</span>
+            </span>
+            <span className="coin-options">
+              {LANGUAGES.map((entry) => (
+                <button
+                  key={entry.id}
+                  type="button"
+                  className={entry.id === getLanguage() ? 'category-button active' : 'category-button'}
+                  onClick={() => setLanguage(entry.id)}
+                >
+                  <span>{entry.label}</span>
+                </button>
+              ))}
+            </span>
+          </div>
           {VOLUMES.map((volume) => (
             <label key={volume.key} className="setting-row">
-              <strong>{volume.label}</strong>
+              <strong>{volume.label()}</strong>
               <input
                 type="range"
                 className="volume-slider"
@@ -74,16 +98,16 @@ export function SettingsPanel({ onClose, onDeleted }: Props) {
           {OPTIONS.map((option) => (
             <label key={option.key} className="setting-row">
               <span>
-                <strong>{option.label}</strong>
-                <span className="stats-note setting-hint">{option.hint}</span>
+                <strong>{option.label()}</strong>
+                <span className="stats-note setting-hint">{option.hint()}</span>
               </span>
               <input type="checkbox" checked={settings[option.key]} onChange={() => toggle(option.key)} />
             </label>
           ))}
           <div className="setting-row">
             <span>
-              <strong>Alle Spielstände löschen</strong>
-              <span className="stats-note setting-hint">Entfernt den Autospeicher und die {config.saveSlots} Plätze.</span>
+              <strong>{t('Alle Spielstände löschen', 'Delete all saved games')}</strong>
+              <span className="stats-note setting-hint">{t(`Entfernt den Autospeicher und die ${config.saveSlots} Plätze.`, `Removes the autosave and the ${config.saveSlots} slots.`)}</span>
             </span>
             {confirming ? (
               <button
@@ -96,15 +120,15 @@ export function SettingsPanel({ onClose, onDeleted }: Props) {
                   })
                 }}
               >
-                Wirklich löschen
+                {t('Wirklich löschen', 'Really delete')}
               </button>
             ) : (
               <button type="button" className="action-button" onClick={() => setConfirming(true)}>
-                Löschen
+                {t('Löschen', 'Delete')}
               </button>
             )}
           </div>
-          <p className="stats-note">Inselwirtschaft läuft ohne Konto und ohne Internet. Alle Daten bleiben auf diesem Gerät.</p>
+          <p className="stats-note">{t('Inselwirtschaft läuft ohne Konto und ohne Internet. Alle Daten bleiben auf diesem Gerät.', 'Inselwirtschaft runs without an account and without internet. All data stays on this device.')}</p>
         </div>
       </div>
     </div>

@@ -6,19 +6,20 @@ import { assignRoute, cargoTotal, colonyBlocker, foundColony, loadKit, sendShip,
 import type { GameState, Route, Ship } from '../sim/state'
 import { kontorKit } from '../sim/trade'
 import { formatWhole, resourceName } from './messages'
+import { t } from '../i18n/language'
 
 type Tab = 'ships' | 'routes'
 
 const BLOCKER_TEXT = {
-  notDocked: 'Das Schiff ist unterwegs',
-  notFree: 'Hier kann keine Kolonie gegründet werden',
-  noKit: 'Es fehlt das Baumaterial an Bord (Kontor-Set laden)',
-  noCoins: 'Es fehlen Münzen für das Kontor',
-  noSpot: 'An der Küste ist kein Platz für ein Kontor',
+  notDocked: () => t('Das Schiff ist unterwegs', 'The ship is under way'),
+  notFree: () => t('Hier kann keine Kolonie gegründet werden', 'No colony can be founded here'),
+  noKit: () => t('Es fehlt das Baumaterial an Bord (Kontor-Set laden)', 'The building material is missing on board (load the trading post kit)'),
+  noCoins: () => t('Es fehlen Münzen für das Kontor', 'Not enough coins for the trading post'),
+  noSpot: () => t('An der Küste ist kein Platz für ein Kontor', 'No room on the coast for a trading post'),
 } as const
 
 function amountLabel(amount: number): string {
-  return amount >= trade.orderAmounts[trade.orderAmounts.length - 1] ? 'alle' : `${amount} t`
+  return amount >= trade.orderAmounts[trade.orderAmounts.length - 1] ? t('alle', 'all') : `${amount} t`
 }
 
 /** Fleet and trade routes. */
@@ -33,17 +34,17 @@ export function TradePanel({ loop, state, onClose }: { loop: GameLoop; state: Ga
     <div className="stats-backdrop" onClick={onClose}>
       <div className="stats-panel trade-panel" onClick={(event) => event.stopPropagation()}>
         <div className="panel-title">
-          <strong>Handel</strong>
-          <button type="button" className="panel-close" onClick={onClose} aria-label="Schließen">
+          <strong>{t('Handel', 'Trade')}</strong>
+          <button type="button" className="panel-close" onClick={onClose} aria-label={t('Schließen', 'Close')}>
             ×
           </button>
         </div>
         <div className="tab-row">
           <button type="button" className={tab === 'ships' ? 'category-button active' : 'category-button'} onClick={() => setTab('ships')}>
-            Schiffe ({state.ships.length})
+            {t('Schiffe', 'Ships')} ({state.ships.length})
           </button>
           <button type="button" className={tab === 'routes' ? 'category-button active' : 'category-button'} onClick={() => setTab('routes')}>
-            Routen ({state.routes.length})
+            {t('Routen', 'Routes')} ({state.routes.length})
           </button>
         </div>
         <div className="stats-scroll">
@@ -52,8 +53,8 @@ export function TradePanel({ loop, state, onClose }: { loop: GameLoop; state: Ga
               {state.ships.length === 0 && (
                 <p className="stats-note">
                   {hasYard
-                    ? 'Noch kein Schiff. Tippe die Werft auf der Insel an und baue eines.'
-                    : 'Du brauchst eine Werft an der Küste, um Schiffe zu bauen (ab Siedlern).'}
+                    ? t('Noch kein Schiff. Tippe die Werft auf der Insel an und baue eines.', 'No ship yet. Tap the shipyard on the island and build one.')
+                    : t('Du brauchst eine Werft an der Küste, um Schiffe zu bauen (ab Siedlern).', 'You need a shipyard on the coast to build ships (from settlers).')}
                 </p>
               )}
               {state.ships.map((ship) => (
@@ -105,19 +106,22 @@ function ShipCard({
         <strong>{ship.name}</strong>
         <span>
           {docked
-            ? `Im Hafen: ${islandName(ship.island)}`
-            : `Unterwegs nach ${islandName(ship.destination)} (noch etwa ${Math.ceil(remainingCells(ship) / trade.ship.speed)} s)`}
+            ? t(`Im Hafen: ${islandName(ship.island)}`, `In port: ${islandName(ship.island)}`)
+            : t(
+                `Unterwegs nach ${islandName(ship.destination)} (noch etwa ${Math.ceil(remainingCells(ship) / trade.ship.speed)} s)`,
+                `Sailing to ${islandName(ship.destination)} (about ${Math.ceil(remainingCells(ship) / trade.ship.speed)} s left)`,
+              )}
         </span>
       </div>
       <div className="stats-note">
-        Ladung {formatWhole(cargoTotal(ship))} / {ship.capacity} t
+        {t('Ladung', 'Cargo')} {formatWhole(cargoTotal(ship))} / {ship.capacity} t
         {cargo.length > 0 && `: ${cargo.map(([good, amount]) => `${resourceName(good)} ${formatWhole(amount)}`).join(', ')}`}
-        {route && ` · Route: ${route.name}`}
+        {route && ` · ${t('Route', 'Route')}: ${route.name}`}
       </div>
       {docked && (
         <div className="ship-actions">
           <select value={target} onChange={(event) => setTarget(Number(event.target.value))}>
-            <option value={-1}>Fahrt zu …</option>
+            <option value={-1}>{t('Fahrt zu …', 'Sail to …')}</option>
             {state.islands
               .filter((island) => island.id !== ship.island)
               .map((island) => (
@@ -132,16 +136,16 @@ function ShipCard({
             disabled={target < 0}
             onClick={() => loop.dispatch((s) => sendShip(s, ship.id, target))}
           >
-            Los
+            {t('Los', 'Go')}
           </button>
           {route ? (
             <button type="button" className="action-button" onClick={() => loop.dispatch((s) => assignRoute(s, ship.id, null))}>
-              Route beenden
+              {t('Route beenden', 'End route')}
             </button>
           ) : (
             <>
               <select value={routeId} onChange={(event) => setRouteId(Number(event.target.value))}>
-                {state.routes.length === 0 && <option value={-1}>Keine Route</option>}
+                {state.routes.length === 0 && <option value={-1}>{t('Keine Route', 'No route')}</option>}
                 {state.routes.map((entry) => (
                   <option key={entry.id} value={entry.id}>
                     {entry.name}
@@ -154,17 +158,17 @@ function ShipCard({
                 disabled={routeId < 0}
                 onClick={() => loop.dispatch((s) => assignRoute(s, ship.id, routeId))}
               >
-                Route starten
+                {t('Route starten', 'Start route')}
               </button>
             </>
           )}
           {here?.owned && (
             <>
               <button type="button" className="action-button" onClick={() => loop.dispatch((s) => unloadAll(s, ship.id))}>
-                Entladen
+                {t('Entladen', 'Unload')}
               </button>
               <button type="button" className="action-button" onClick={() => loop.dispatch((s) => loadKit(s, ship.id))}>
-                Kontor-Set laden
+                {t('Kontor-Set laden', 'Load trading post kit')}
               </button>
             </>
           )}
@@ -175,13 +179,13 @@ function ShipCard({
               disabled={blocker !== null}
               onClick={() => loop.dispatch((s) => foundColony(s, ship.id))}
             >
-              Kontor gründen ({formatWhole(kit.coins)} Münzen)
+              {t('Kontor gründen', 'Found trading post')} ({formatWhole(kit.coins)} {resourceName('coins')})
             </button>
           )}
         </div>
       )}
       {docked && blocker && here && !here.owned && here.role === 'colony' && (
-        <div className="place-hint invalid">{BLOCKER_TEXT[blocker]}</div>
+        <div className="place-hint invalid">{BLOCKER_TEXT[blocker]()}</div>
       )}
     </div>
   )
@@ -199,11 +203,11 @@ function RoutesTab({
   return (
     <>
       <button type="button" className="action-button" onClick={() => loop.dispatch((s) => createRoute(s))}>
-        Neue Route
+        {t('Neue Route', 'New route')}
       </button>
       {state.routes.length === 0 && (
         <p className="stats-note">
-          Eine Route ist eine Liste von Häfen mit Lade- und Entladebefehlen. Das Schiff fährt sie der Reihe nach immer wieder ab.
+          {t('Eine Route ist eine Liste von Häfen mit Lade- und Entladebefehlen. Das Schiff fährt sie der Reihe nach immer wieder ab.', 'A route is a list of ports with load and unload orders. The ship sails them in turn, again and again.')}
         </p>
       )}
       {state.routes.map((route) => (
@@ -230,7 +234,7 @@ function RouteEditor({
       <div className="ship-head">
         <strong>{route.name}</strong>
         <button type="button" className="action-button" onClick={() => loop.dispatch((s) => deleteRoute(s, route.id))}>
-          Route löschen
+          {t('Route löschen', 'Delete route')}
         </button>
       </div>
       {route.stops.map((stop, stopIndex) => (
@@ -251,7 +255,7 @@ function RouteEditor({
           ))}
         </select>
         <button type="button" className="action-button" onClick={() => loop.dispatch((s) => addStop(s, route.id, island))}>
-          Halt hinzufügen
+          {t('Halt hinzufügen', 'Add stop')}
         </button>
       </div>
     </div>
@@ -274,7 +278,7 @@ function StopEditor({ route, stopIndex, title, loop }: { route: Route; stopIndex
       {stop.orders.map((order, orderIndex) => (
         <div key={orderIndex} className="order-row">
           <span>
-            {order.mode === 'load' ? 'Laden' : 'Entladen'}: {resourceName(order.good)} {amountLabel(order.amount)}
+            {order.mode === 'load' ? t('Laden', 'Load') : t('Entladen', 'Unload')}: {resourceName(order.good)} {amountLabel(order.amount)}
           </span>
           <button
             type="button"
@@ -287,8 +291,8 @@ function StopEditor({ route, stopIndex, title, loop }: { route: Route; stopIndex
       ))}
       <div className="ship-actions">
         <select value={mode} onChange={(event) => setMode(event.target.value as 'load' | 'unload')}>
-          <option value="load">Laden</option>
-          <option value="unload">Entladen</option>
+          <option value="load">{t('Laden', 'Load')}</option>
+          <option value="unload">{t('Entladen', 'Unload')}</option>
         </select>
         <select value={good} onChange={(event) => setGood(event.target.value)}>
           {goods.map((entry) => (
@@ -309,7 +313,7 @@ function StopEditor({ route, stopIndex, title, loop }: { route: Route; stopIndex
           className="action-button"
           onClick={() => loop.dispatch((s) => addOrder(s, route.id, stopIndex, { good, amount, mode }))}
         >
-          Befehl hinzufügen
+          {t('Befehl hinzufügen', 'Add order')}
         </button>
       </div>
     </div>

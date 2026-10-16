@@ -5,6 +5,7 @@ import type { GameState } from '../sim/state'
 import { findShortages } from '../sim/warnings'
 import { shortageText } from './messages'
 import { Icon } from './Icon'
+import { t } from '../i18n/language'
 
 interface Toast {
   id: number
@@ -48,7 +49,7 @@ export function Toasts({ state }: { state: GameState }) {
     warned.current = now
 
     const inDebt = state.coins < 0
-    if (inDebt && !wasInDebt.current) push('Münzen im Minus: Neubauten sind gesperrt')
+    if (inDebt && !wasInDebt.current) push(t('Münzen im Minus: Neubauten sind gesperrt', 'Coins below zero: new buildings are blocked'))
     wasInDebt.current = inDebt
     // Only re-check when a cycle was settled.
     // eslint-disable-next-line react-hooks/exhaustive-deps

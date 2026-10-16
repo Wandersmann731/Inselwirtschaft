@@ -11,6 +11,7 @@ import { formatWhole } from './messages'
 import { SettingsPanel } from './SettingsPanel'
 import { SlotList } from './SlotList'
 import { useSlots } from './slots'
+import { t } from '../i18n/language'
 
 type Screen = 'main' | 'new' | 'load'
 
@@ -53,9 +54,9 @@ export function MainMenu({ onStart }: MainMenuProps) {
     try {
       const state = await loadState(slot)
       if (state) onStart(state)
-      else setMessage('Dieser Platz ist leer.')
+      else setMessage(t('Dieser Platz ist leer.', 'This slot is empty.'))
     } catch {
-      setMessage('Der Spielstand konnte nicht gelesen werden.')
+      setMessage(t('Der Spielstand konnte nicht gelesen werden.', 'The saved game could not be read.'))
     }
   }
 
@@ -72,20 +73,20 @@ export function MainMenu({ onStart }: MainMenuProps) {
         {screen === 'main' && (
           <div className="menu-buttons">
             <button type="button" className="menu-button primary" disabled={!hasAutosave} onClick={() => void load(AUTOSAVE_SLOT)}>
-              Weiterspielen
+              {t('Weiterspielen', 'Continue')}
             </button>
             <button type="button" className="menu-button" onClick={() => setScreen('new')}>
-              Neues Spiel
+              {t('Neues Spiel', 'New game')}
             </button>
             <button type="button" className="menu-button" onClick={() => setScreen('load')}>
-              Spielstand laden
+              {t('Spielstand laden', 'Load game')}
             </button>
             <button type="button" className="menu-button" onClick={() => setShowSettings(true)}>
-              Einstellungen
+              {t('Einstellungen', 'Settings')}
             </button>
             {fullscreen.supported && (
               <button type="button" className="menu-button" onClick={() => void toggleFullscreen()}>
-                {fullscreen.active ? 'Vollbild beenden' : 'Vollbild'}
+                {fullscreen.active ? t('Vollbild beenden', 'Exit full screen') : t('Vollbild', 'Full screen')}
               </button>
             )}
           </div>
@@ -93,17 +94,17 @@ export function MainMenu({ onStart }: MainMenuProps) {
         {screen === 'new' && (
           <div className="menu-form">
             <label className="menu-field">
-              <span>Karten-Startwert (Seed)</span>
+              <span>{t('Karten-Startwert (Seed)', 'Map seed')}</span>
               <span className="menu-seed">
                 <input inputMode="numeric" value={seed} onChange={(event) => setSeed(event.target.value.replace(/\D/g, '').slice(0, 9))} />
                 <button type="button" className="action-button" onClick={() => setSeed(String(randomSeed()))}>
-                  Zufall
+                  {t('Zufall', 'Random')}
                 </button>
               </span>
-              <span className="stats-note">Derselbe Wert ergibt immer dieselben Inseln.</span>
+              <span className="stats-note">{t('Derselbe Wert ergibt immer dieselben Inseln.', 'The same value always gives the same islands.')}</span>
             </label>
             <div className="menu-field">
-              <span>Startgeld</span>
+              <span>{t('Startgeld', 'Starting coins')}</span>
               <span className="coin-options">
                 {config.startCoinOptions.map((value) => (
                   <button key={value} type="button" className={value === coins ? 'category-button active' : 'category-button'} onClick={() => setCoins(value)}>
@@ -115,20 +116,20 @@ export function MainMenu({ onStart }: MainMenuProps) {
             </div>
             <div className="menu-row">
               <button type="button" className="menu-button" onClick={() => setScreen('main')}>
-                Zurück
+                {t('Zurück', 'Back')}
               </button>
               <button type="button" className="menu-button primary" onClick={startNew}>
-                Los geht’s
+                {t('Los geht’s', 'Let’s go')}
               </button>
             </div>
           </div>
         )}
         {screen === 'load' && (
           <div className="menu-form">
-            <SlotList entries={slots} action="Laden" allowAutosave onChoose={(slot) => void load(slot)} />
+            <SlotList entries={slots} action={t('Laden', 'Load')} allowAutosave onChoose={(slot) => void load(slot)} />
             {message && <p className="place-hint invalid">{message}</p>}
             <button type="button" className="menu-button" onClick={() => setScreen('main')}>
-              Zurück
+              {t('Zurück', 'Back')}
             </button>
           </div>
         )}

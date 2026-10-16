@@ -6,6 +6,7 @@ import { BuildMenu } from './BuildMenu'
 import { DrawBar } from './DrawBar'
 import { PlaceBar } from './PlaceBar'
 import { UndoChip } from './UndoChip'
+import { t } from '../i18n/language'
 
 interface BuildBarProps {
   tool: BuildController
@@ -53,12 +54,14 @@ export function BuildBar({ tool, island, onOpenStats, onOpenWorld, onOpenTrade, 
         <div className="place-info">
           <strong>{island.name}</strong>
           <span className="place-hint">
-            {island.role === 'trader' ? 'Stadt der Händler: Waren kaufst und verkaufst du hier mit deinem Schiff (Handel, Routen).' : 'Noch nicht erschlossen: Mit einem Schiff und dem Kontor-Set gründest du hier eine Kolonie.'}
+            {island.role === 'trader'
+              ? t('Stadt der Händler: Waren kaufst und verkaufst du hier mit deinem Schiff (Handel, Routen).', 'Traders\' town: you buy and sell goods here with your ship (trade, routes).')
+              : t('Noch nicht erschlossen: Mit einem Schiff und dem Kontor-Set gründest du hier eine Kolonie.', 'Not settled yet: with a ship and the trading post kit you can found a colony here.')}
           </span>
         </div>
         <div className="place-actions">
           <button type="button" className="action-button" onClick={onOpenWorld}>
-            Weltkarte
+            {t('Weltkarte', 'World map')}
           </button>
         </div>
       </div>

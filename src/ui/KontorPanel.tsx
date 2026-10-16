@@ -4,6 +4,7 @@ import { setTradeLimit, traderBuyPrice, traderSellPrice, traderSells } from '../
 import type { IslandState } from '../sim/state'
 import { formatWhole } from './messages'
 import { Icon } from './Icon'
+import { t } from '../i18n/language'
 
 const STEP = 10
 
@@ -16,29 +17,31 @@ export function KontorPanel({ loop, island, onClose }: { loop: GameLoop; island:
       return setTradeLimit(state, good, { ...current, [key]: value })
     })
   }
-  const show = (value: number | undefined): string => (value ? formatWhole(value) : 'aus')
+  const show = (value: number | undefined): string => (value ? formatWhole(value) : t('aus', 'off'))
 
   return (
     <div className="stats-backdrop" onClick={onClose}>
       <div className="stats-panel kontor-panel" onClick={(event) => event.stopPropagation()}>
         <div className="panel-title">
-          <strong>Kontor: {island.name}</strong>
-          <button type="button" className="panel-close" onClick={onClose} aria-label="Schließen">
+          <strong>{t('Kontor', 'Trading post')}: {island.name}</strong>
+          <button type="button" className="panel-close" onClick={onClose} aria-label={t('Schließen', 'Close')}>
             ×
           </button>
         </div>
         <p className="stats-note">
-          Der Händler kommt einmal pro Zyklus, bis zu {trade.trader.visitCapacity} Tonnen je Ware. Er verkauft dir Ware unter
-          deiner Ankaufgrenze und kauft alles über deiner Verkaufsgrenze.
+          {t(
+            `Der Händler kommt einmal pro Zyklus, bis zu ${trade.trader.visitCapacity} Tonnen je Ware. Er verkauft dir Ware unter deiner Ankaufgrenze und kauft alles über deiner Verkaufsgrenze.`,
+            `The trader calls once per cycle, up to ${trade.trader.visitCapacity} tons per good. He sells you goods below your buy limit and buys everything above your sell limit.`,
+          )}
         </p>
         <div className="stats-scroll">
           <table className="stats-table kontor-table">
             <thead>
               <tr>
-                <th>Ware</th>
-                <th>Lager</th>
-                <th>Ankauf bis</th>
-                <th>Verkauf ab</th>
+                <th>{t('Ware', 'Good')}</th>
+                <th>{t('Lager', 'Store')}</th>
+                <th>{t('Ankauf bis', 'Buy up to')}</th>
+                <th>{t('Verkauf ab', 'Sell from')}</th>
               </tr>
             </thead>
             <tbody>
@@ -49,7 +52,7 @@ export function KontorPanel({ loop, island, onClose }: { loop: GameLoop; island:
                     <td>
                       <Icon name={`goods/${good.id}`} size={22} /> {good.name}
                       <span className="kontor-price">
-                        {traderSells(good.id) ? ` kauft ${Math.round(traderSellPrice(good.id))}` : ''} · verkauft{' '}
+                        {traderSells(good.id) ? ` ${t('kauft', 'buys')} ${Math.round(traderSellPrice(good.id))}` : ''} · {t('verkauft', 'sells')}{' '}
                         {Math.round(traderBuyPrice(good.id))}
                       </span>
                     </td>

@@ -4,43 +4,40 @@ import type { BuildingCost } from '../data'
 import type { PlacementError } from '../sim/build'
 import type { IslandState, ProductionStatus } from '../sim/state'
 import { config } from '../data'
-
-const RESOURCE_NAMES: Record<string, string> = {
-  coins: 'Münzen',
-  ...Object.fromEntries(goods.map((good) => [good.id, good.name])),
-}
+import { numberLocale, oneDecimal, t } from '../i18n/language'
 
 export function resourceName(id: string): string {
-  return RESOURCE_NAMES[id] ?? id
+  if (id === 'coins') return t('Münzen', 'Coins')
+  return goods.find((good) => good.id === id)?.name ?? id
 }
 
 /** German explanation for a refused placement. */
 export function placementMessage(error: PlacementError): string {
   switch (error.code) {
     case 'outOfMap':
-      return 'Außerhalb der Karte'
+      return t('Außerhalb der Karte', 'Outside the map')
     case 'water':
-      return 'Auf Wasser kann nicht gebaut werden'
+      return t('Auf Wasser kann nicht gebaut werden', 'Cannot build on water')
     case 'mountain':
-      return 'Auf Bergen kann nur ein Steinbruch oder eine Mine stehen'
+      return t('Auf Bergen kann nur ein Steinbruch oder eine Mine stehen', 'Only a quarry or a mine can stand on mountains')
     case 'notMountain':
-      return 'Muss ganz auf einem Berg stehen'
+      return t('Muss ganz auf einem Berg stehen', 'Must stand entirely on a mountain')
     case 'occupied':
-      return 'Die Fläche ist schon belegt'
+      return t('Die Fläche ist schon belegt', 'The area is already taken')
     case 'notCoast':
-      return 'Muss an der Küste stehen'
+      return t('Muss an der Küste stehen', 'Must stand on the coast')
     case 'notOwned':
-      return 'Diese Insel gehört dir noch nicht'
+      return t('Diese Insel gehört dir noch nicht', 'You do not own this island yet')
     case 'noFertility':
-      return `Diese Insel hat kein Land für ${fertilityName(error.missing)}`
+      return t(`Diese Insel hat kein Land für ${fertilityName(error.missing)}`, `This island has no land for: ${fertilityName(error.missing)}`)
     case 'noDeposit':
-      return `Diese Insel hat kein Vorkommen: ${depositName(error.missing)}`
+      return t(`Diese Insel hat kein Vorkommen: ${depositName(error.missing)}`, `This island has no deposit: ${depositName(error.missing)}`)
     case 'debt':
-      return 'Münzen im Minus: Neubau gesperrt'
+      return t('Münzen im Minus: Neubau gesperrt', 'Coins below zero: building blocked')
     case 'locked':
-      return 'Noch nicht freigeschaltet'
+      return t('Noch nicht freigeschaltet', 'Not unlocked yet')
     case 'funds':
-      return `Zu wenig ${resourceName(error.missing ?? 'coins')}`
+      return t(`Zu wenig ${resourceName(error.missing ?? 'coins')}`, `Not enough ${resourceName(error.missing ?? 'coins')}`)
   }
 }
 
@@ -57,17 +54,17 @@ export function formatCost(cost: BuildingCost): string {
 export function statusText(status: ProductionStatus): string {
   switch (status.kind) {
     case 'producing':
-      return 'Produziert'
+      return t('Produziert', 'Producing')
     case 'waiting':
-      return `Wartet auf ${resourceName(status.good ?? '')}`
+      return t(`Wartet auf ${resourceName(status.good ?? '')}`, `Waiting for ${resourceName(status.good ?? '')}`)
     case 'outputFull':
-      return 'Lager voll'
+      return t('Lager voll', 'Store full')
     case 'noRoad':
-      return 'Keine Straße'
+      return t('Keine Straße', 'No road')
     case 'noHub':
-      return 'Kein Markthaus oder Kontor in Reichweite'
+      return t('Kein Markthaus oder Kontor in Reichweite', 'No market house or trading post in reach')
     case 'inactive':
-      return 'Stillgelegt'
+      return t('Stillgelegt', 'Shut down')
   }
 }
 
@@ -80,17 +77,19 @@ export function needLabel(need: TierNeed): string {
 /** Signed number with thousands separators, e.g. "+1.250" or "-40". */
 export function formatSigned(value: number): string {
   const rounded = Math.round(value)
-  return `${rounded > 0 ? '+' : ''}${rounded.toLocaleString('de-DE')}`
+  return `${rounded > 0 ? '+' : ''}${rounded.toLocaleString(numberLocale())}`
 }
 
 export function formatWhole(value: number): string {
-  return Math.floor(value).toLocaleString('de-DE')
+  return Math.floor(value).toLocaleString(numberLocale())
 }
 
 /** Text of a shortage warning toast. */
 export function shortageText(good: string, cycles: number): string {
   const name = resourceName(good)
-  return cycles <= 0 ? `${name} ist ausgegangen` : `${name} reicht nur noch für ${cycles.toFixed(1).replace('.', ',')} Zyklen`
+  return cycles <= 0
+    ? t(`${name} ist ausgegangen`, `${name} has run out`)
+    : t(`${name} reicht nur noch für ${oneDecimal(cycles)} Zyklen`, `${name} lasts only ${oneDecimal(cycles)} more cycles`)
 }
 
 /** The building materials in store, e.g. "Münzen 9.800 · Werkzeug 50 · Holz 97". */
@@ -98,7 +97,7 @@ export function formatStock(state: IslandState): string {
   const materials = goods
     .filter((good) => good.id in config.startStock)
     .map((good) => `${good.name} ${formatWhole(state.stock[good.id] ?? 0)}`)
-  return [`Münzen ${formatWhole(state.coins)}`, ...materials].join(' · ')
+  return [`${resourceName('coins')} ${formatWhole(state.coins)}`, ...materials].join(' · ')
 }
 
 export function fertilityName(id: string | undefined): string {
@@ -115,9 +114,9 @@ export function blockerLabel(error: PlacementError, lockLabel: string): string {
     case 'locked':
       return lockLabel
     case 'noFertility':
-      return `Braucht: ${fertilityName(error.missing)}`
+      return t(`Braucht: ${fertilityName(error.missing)}`, `Needs: ${fertilityName(error.missing)}`)
     case 'noDeposit':
-      return `Braucht: ${depositName(error.missing)}`
+      return t(`Braucht: ${depositName(error.missing)}`, `Needs: ${depositName(error.missing)}`)
     default:
       return placementMessage(error)
   }
