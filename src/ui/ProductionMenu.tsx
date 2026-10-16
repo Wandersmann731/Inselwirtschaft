@@ -102,12 +102,16 @@ function ChainView({ tool, state, selection, onBack }: { tool: BuildController; 
               {role !== 'main' && <span className="build-group-users"> · {roleLabel(role)}</span>}
             </h3>
             <div className="build-group-row">
-              {chain.buildings.map((id, index) => (
-                <div key={id} className="build-step">
-                  {index > 0 && <span className={chainSeparator(chain, index) === 'oder' ? 'chain-arrow word' : 'chain-arrow'}>{chainSeparator(chain, index)}</span>}
-                  <BuildItem def={getBuilding(id)} state={state} tool={tool} count={builtCount(state, id)} />
-                </div>
-              ))}
+              {chain.buildings.map((id, index) => {
+                // 'oder' is the internal token for alternatives; only the shown text is translated
+                const sep = index > 0 ? chainSeparator(chain, index) : null
+                return (
+                  <div key={id} className="build-step">
+                    {sep && <span className={sep === 'oder' ? 'chain-arrow word' : 'chain-arrow'}>{sep === 'oder' ? t('oder', 'or') : sep}</span>}
+                    <BuildItem def={getBuilding(id)} state={state} tool={tool} count={builtCount(state, id)} />
+                  </div>
+                )
+              })}
             </div>
           </section>
         ))}

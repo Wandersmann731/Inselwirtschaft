@@ -20,7 +20,7 @@ interface BuildBarProps {
 /** Bottom bar: the build menu, or the bar of the active build tool. */
 export function BuildBar({ tool, island, onOpenStats, onOpenWorld, onOpenTrade, onOpenKontor }: BuildBarProps) {
   const snapshot = useSyncExternalStore(tool.subscribe, tool.getSnapshot)
-  if (!island.owned) return <ForeignBar />
+  if (!island.owned) return <ForeignBar island={island} onOpenWorld={onOpenWorld} />
   const undo = snapshot.undo && snapshot.undo.islandId === island.id && snapshot.mode !== 'demolish' ? <UndoChip key={snapshot.undo.at} tool={tool} entry={snapshot.undo} /> : null
   if (snapshot.mode === 'place') {
     return (
@@ -47,24 +47,25 @@ export function BuildBar({ tool, island, onOpenStats, onOpenWorld, onOpenTrade, 
       <BuildMenu tool={tool} state={island} onOpenStats={onOpenStats} onOpenWorld={onOpenWorld} onOpenTrade={onOpenTrade} />
     </>
   )
+}
 
-  function ForeignBar() {
-    return (
-      <div className="place-bar">
-        <div className="place-info">
-          <strong>{island.name}</strong>
-          <span className="place-hint">
-            {island.role === 'trader'
-              ? t('Stadt der Händler: Waren kaufst und verkaufst du hier mit deinem Schiff (Handel, Routen).', 'Traders\' town: you buy and sell goods here with your ship (trade, routes).')
-              : t('Noch nicht erschlossen: Mit einem Schiff und dem Kontor-Set gründest du hier eine Kolonie.', 'Not settled yet: with a ship and the trading post kit you can found a colony here.')}
-          </span>
-        </div>
-        <div className="place-actions">
-          <button type="button" className="action-button" onClick={onOpenWorld}>
-            {t('Weltkarte', 'World map')}
-          </button>
-        </div>
+/** Bar for an island the player does not own. Module level, so ticks do not remount it and swallow taps. */
+function ForeignBar({ island, onOpenWorld }: { island: IslandState; onOpenWorld: () => void }) {
+  return (
+    <div className="place-bar">
+      <div className="place-info">
+        <strong>{island.name}</strong>
+        <span className="place-hint">
+          {island.role === 'trader'
+            ? t('Stadt der Händler: Waren kaufst und verkaufst du hier mit deinem Schiff (Handel, Routen).', 'Traders\' town: you buy and sell goods here with your ship (trade, routes).')
+            : t('Noch nicht erschlossen: Mit einem Schiff und dem Kontor-Set gründest du hier eine Kolonie.', 'Not settled yet: with a ship and the trading post kit you can found a colony here.')}
+        </span>
       </div>
-    )
-  }
+      <div className="place-actions">
+        <button type="button" className="action-button" onClick={onOpenWorld}>
+          {t('Weltkarte', 'World map')}
+        </button>
+      </div>
+    </div>
+  )
 }
