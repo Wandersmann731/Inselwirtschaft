@@ -2,14 +2,14 @@ import { getBuilding } from '../data'
 import type { PlacedBuilding } from '../sim/state'
 import { buildingRect } from '../sim/coverage'
 import { tileToWorld, HALF_H, HALF_W } from './iso'
-import { sprites } from './sprites'
+import { sprites, type SpriteImage } from './sprites'
 import { buildingKey } from './spriteKeys'
 
 /** Sprites are made at twice the game's tile size. */
 const SPRITE_SCALE = 0.5
 
 export interface SpritePlacement {
-  image: HTMLImageElement
+  image: SpriteImage
   /** Top left corner and size in world pixels. */
   x: number
   y: number
