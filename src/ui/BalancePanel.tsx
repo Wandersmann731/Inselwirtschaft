@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { config, goods } from '../data'
+import { config, goods, tiers } from '../data'
 import type { GameLoop } from '../game/gameLoop'
 import { formatSigned, formatWhole } from './messages'
 import { useSyncExternalStore } from 'react'
@@ -60,7 +60,7 @@ export function BalancePanel({ loop, onClose }: { loop: GameLoop; onClose: () =>
             <button type="button" className="action-button" onClick={() => addGoods(100)}>
               +100 von jeder Ware
             </button>
-            <button type="button" className="action-button" onClick={() => loop.dispatch((s) => ({ ...s, highestTier: 4 }))}>
+            <button type="button" className="action-button" onClick={() => loop.dispatch((s) => ({ ...s, highestTier: tiers.length - 1 }))}>
               Alle Stufen freischalten
             </button>
           </div>

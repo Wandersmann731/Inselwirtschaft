@@ -51,6 +51,19 @@ describe('routes', () => {
     expect(addOrder(addStop(state, 1, 0), 1, 0, { good: 'wood', amount: 0, mode: 'load' }).routes[0].stops[0].orders).toEqual([])
   })
 
+  it('keeps a ship heading for the same stop when an earlier stop is removed', () => {
+    let state = createRoute(base)
+    state = addStop(state, 1, 0)
+    state = addStop(state, 1, 2)
+    state = addStop(state, 1, 3)
+    state = { ...state, ships: [{ ...ship(1), stopIndex: 2 }, { ...ship(1), id: 2, stopIndex: 0 }] }
+    const next = removeStop(state, 1, 0)
+    // the first ship was heading for island 3, which is now stop 1; the second for the removed stop, now the next one
+    expect(next.routes[0].stops[next.ships[0].stopIndex].island).toBe(3)
+    expect(next.routes[0].stops[next.ships[1].stopIndex].island).toBe(2)
+    expect(removeStop(state, 1, 7)).toBe(state)
+  })
+
   it('takes ships off a deleted route', () => {
     let state = { ...createRoute(base), ships: [ship(1)] }
     state = deleteRoute(state, 1)

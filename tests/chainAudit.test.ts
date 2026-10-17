@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildings, climates, getBuilding, goods, landNames, tiers } from '../src/data'
+import { buildings, climates, getBuilding, goods, landNames, tiers, world } from '../src/data'
 
 const producers = buildings.filter((b) => b.output)
 const tierIndex = (id: string): number => tiers.findIndex((t) => t.id === id)
@@ -104,9 +104,10 @@ describe('production chains make sense', () => {
     })
   })
 
-  it('every fertility and deposit a building needs exists on some island type', () => {
-    const fertilities = new Set(climates.flatMap((c) => c.fertilities))
-    const deposits = new Set(landNames.deposits.map((d) => d.id))
+  it('every fertility and deposit a building needs exists on an island the player can own', () => {
+    const ownable = world.archipelago.filter((spec) => spec.role === 'home' || spec.role === 'colony')
+    const fertilities = new Set(ownable.flatMap((spec) => climates.find((c) => c.id === spec.climate)!.fertilities))
+    const deposits = new Set(ownable.flatMap((spec) => spec.deposits))
     for (const b of buildings) {
       if (b.requiresFertility) expect(fertilities.has(b.requiresFertility), `${b.id}: ${b.requiresFertility}`).toBe(true)
       if (b.requiresDeposit) expect(deposits.has(b.requiresDeposit), `${b.id}: ${b.requiresDeposit}`).toBe(true)

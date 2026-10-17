@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Writes the original costs and upkeep (scripts/anno_original.py) into src/data/buildings.json and the market prices into goods.json.
+"""Writes the original costs and upkeep (scripts/anno_original.py) into src/data/buildings.json.
+Market prices are not written any more: market stands are gone and the land tax does not use goods prices.
 Keeps the formatting of the files. Run from the project root:  python3 scripts/apply-anno.py
 """
 import json
 import re
 from pathlib import Path
 
-from anno_original import ORIGINAL, PRICES
+from anno_original import ORIGINAL
 
 ROOT = Path(__file__).resolve().parent.parent
 path = ROOT / "src/data/buildings.json"
@@ -26,9 +27,4 @@ for bid, (tools, wood, bricks, marble, coins, active, idle, radius) in ORIGINAL.
     text = text[:start] + block + text[end:]
 path.write_text(text)
 
-goods_path = ROOT / "src/data/goods.json"
-goods_text = goods_path.read_text()
-for good, price in PRICES.items():
-    goods_text = re.sub(rf'("id": "{good}"[^}}]*?"price": )\d+', rf"\g<1>{price}", goods_text)
-goods_path.write_text(goods_text)
 print("done")

@@ -78,11 +78,12 @@ function touchesWater(state: IslandState, x: number, y: number, w: number, h: nu
 /**
  * Reasons that have nothing to do with the spot: the island is not yours, you are in debt, the
  * building is not unlocked yet, or the island lacks the fertility or deposit it needs.
+ * ignoreUnlock skips the unlock check (for scenery such as the trader town).
  */
-export function buildingBlocker(state: IslandState, def: BuildingDef): PlacementError | null {
+export function buildingBlocker(state: IslandState, def: BuildingDef, ignoreUnlock = false): PlacementError | null {
   if (!state.owned) return { code: 'notOwned' }
   if (state.coins < 0) return { code: 'debt' }
-  if (!isBuildingUnlocked(state, def.id)) return { code: 'locked' }
+  if (!ignoreUnlock && !isBuildingUnlocked(state, def.id)) return { code: 'locked' }
   if (def.requiresFertility && !state.fertilities.includes(def.requiresFertility)) {
     return { code: 'noFertility', missing: def.requiresFertility }
   }
@@ -99,9 +100,10 @@ export function checkPlacement(
   x: number,
   y: number,
   rotated: boolean,
+  ignoreUnlock = false,
 ): PlacementError | null {
   const def = getBuilding(typeId)
-  const blocked = buildingBlocker(state, def)
+  const blocked = buildingBlocker(state, def, ignoreUnlock)
   if (blocked) return blocked
   const { w, h } = footprint(def, rotated)
   for (let ty = y; ty < y + h; ty++) {
@@ -137,9 +139,10 @@ export function placeBuilding(
   x: number,
   y: number,
   rotated: boolean,
+  ignoreUnlock = false,
 ): IslandState {
   const def = getBuilding(typeId)
-  if (def.kind === 'road' || checkPlacement(state, typeId, x, y, rotated)) return state
+  if (def.kind === 'road' || checkPlacement(state, typeId, x, y, rotated, ignoreUnlock)) return state
   const { w, h } = footprint(def, rotated)
   const building: PlacedBuilding = { id: state.nextBuildingId, type: typeId, x, y, rotated, active: true }
   if (def.output) building.production = createProduction()

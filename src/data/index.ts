@@ -28,12 +28,5 @@ export function getBuilding(id: string): BuildingDef {
   return def
 }
 
-const goodMap = new Map(goods.map((good) => [good.id, good]))
-
-/** Selling price of one unit of a good, 0 if it has none. */
-export function priceOf(goodId: string): number {
-  return goodMap.get(goodId)?.price ?? 0
-}
-
 export const landNames: LandNames = landJson
 export const trade: TradeConfig = tradeJson

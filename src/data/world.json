@@ -65,6 +65,13 @@
       "climate": "prairie",
       "size": [40, 60],
       "deposits": ["stone", "ore"]
+    },
+    {
+      "role": "colony",
+      "name": "Weidenland",
+      "climate": "prairie",
+      "size": [55, 85],
+      "deposits": ["stone", "ore"]
     }
   ]
 }

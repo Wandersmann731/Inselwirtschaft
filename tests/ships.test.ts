@@ -7,7 +7,8 @@ import { createRng } from '../src/sim/rng'
 import { assignRoute, buildShip, cargoTotal, colonyBlocker, foundColony, getShip, loadKit, moveShips, sendShip, unloadAll } from '../src/sim/ships'
 import { createInitialState, type GameState } from '../src/sim/state'
 import { tick } from '../src/sim/tick'
-import { kontorKit, traderBuyPrice, traderSellPrice } from '../src/sim/trade'
+import { totalUpkeep } from '../src/sim/economy'
+import { kontorKit, traderBuyPrice, traderSellPrice, traderSells } from '../src/sim/trade'
 
 const base = createInitialState(1)
 const HOME = 0
@@ -51,6 +52,13 @@ function until(state: GameState, done: (state: GameState) => boolean, limit = 30
     if (done(next)) return next
   }
   throw new Error('condition not reached')
+}
+
+/** Coins after a trip, plus the building upkeep paid on the way: what trading alone changed. */
+function coinsWithoutUpkeep(start: GameState, end: GameState): number {
+  const cycles = Math.floor(end.tick / config.economyCycleTicks) - Math.floor(start.tick / config.economyCycleTicks)
+  const upkeep = start.islands.filter((island) => island.owned).reduce((sum, island) => sum + totalUpkeep(toIslandState(start, island.id)), 0)
+  return end.coins + cycles * upkeep
 }
 
 function untilDocked(state: GameState, shipId: number, limit = 3000): { state: GameState; ticks: number } {
@@ -175,6 +183,18 @@ describe('trade routes', () => {
     expect(getIsland(arrived.state, COLONY).stock.wood ?? 0).toBe(0)
   })
 
+  it('waits at a route whose stops are all at its island and sails on once a stop elsewhere is added', () => {
+    let state = createRoute(buildShip(withYard(), HOME))
+    state = addStop(state, 1, HOME)
+    state = assignRoute(state, 1, 1)
+    state = sail(state, trade.ship.routeRetryTicks * 2)
+    expect(getShip(state, 1).island).toBe(HOME)
+    state = addStop(state, 1, COLONY)
+    // within one retry interval it leaves for the new stop
+    const left = until(state, (s) => getShip(s, 1).island === null, trade.ship.routeRetryTicks)
+    expect(getShip(left, 1).destination).toBe(COLONY)
+  })
+
   it('can be taken off the route', () => {
     let state = createRoute(buildShip(withYard(), HOME))
     state = addStop(state, 1, HOME)
@@ -200,7 +220,7 @@ describe('trading with the trader island', () => {
     state = { ...state, ships: [{ ...ship, cargo: { wood: 30 } }] }
     const coins = state.coins
     const arrived = untilDocked(assignRoute(state, 1, 1), 1).state
-    expect(arrived.coins).toBeCloseTo(coins + 30 * traderBuyPrice('wood'))
+    expect(coinsWithoutUpkeep(state, arrived)).toBeCloseTo(coins + 30 * traderBuyPrice('wood'))
     expect(cargoTotal(getShip(arrived, 1))).toBe(0)
   })
 
@@ -209,13 +229,33 @@ describe('trading with the trader island', () => {
     const coins = state.coins
     const arrived = untilDocked(assignRoute(state, 1, 1), 1).state
     expect(getShip(arrived, 1).cargo.tobacco).toBe(20)
-    expect(arrived.coins).toBeCloseTo(coins - 20 * traderSellPrice('tobacco'))
+    expect(coinsWithoutUpkeep(state, arrived)).toBeCloseTo(coins - 20 * traderSellPrice('tobacco'))
 
-    const poor = untilDocked(assignRoute({ ...state, coins: 50 }, 1, 1), 1).state
+    // the same trip again with only 50 coins left once the upkeep on the way is paid
+    const upkeepOnTheWay = coinsWithoutUpkeep(state, arrived) - arrived.coins
+    const poor = untilDocked(assignRoute({ ...state, coins: 50 + upkeepOnTheWay }, 1, 1), 1).state
     expect(getShip(poor, 1).cargo.tobacco ?? 0).toBe(Math.floor(50 / traderSellPrice('tobacco')))
     expect(poor.coins).toBeGreaterThanOrEqual(0)
   })
 })
+
+describe('the trader only sells his own goods', () => {
+  it('does not sell a good he does not trade in, and takes no coins for it', () => {
+    const unsold = goodsNotSold()[0]
+    let state = buildShip(withYard(), HOME)
+    state = createRoute(state)
+    state = addStop(state, 1, TRADER)
+    state = addOrder(state, 1, 0, { good: unsold, amount: 20, mode: 'load' })
+    const coins = state.coins
+    const arrived = untilDocked(assignRoute(state, 1, 1), 1).state
+    expect(getShip(arrived, 1).cargo[unsold] ?? 0).toBe(0)
+    expect(coinsWithoutUpkeep(state, arrived)).toBe(coins)
+  })
+})
+
+function goodsNotSold(): string[] {
+  return ['jewelry', 'gems', 'gold', 'iron', 'tools', 'wood'].filter((good) => !traderSells(good))
+}
 
 describe('loading and unloading by hand', () => {
   it('loads the Kontor goods and unloads everything at your own island', () => {
