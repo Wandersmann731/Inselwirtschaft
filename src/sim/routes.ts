@@ -24,8 +24,16 @@ export function addStop(state: GameState, routeId: number, islandId: number): Ga
   return updateRoute(state, routeId, (route) => ({ ...route, stops: [...route.stops, { island: islandId, orders: [] }] }))
 }
 
+/** Removes a stop. Ships on the route keep heading for the same stop, or for the one after a removed stop. */
 export function removeStop(state: GameState, routeId: number, stopIndex: number): GameState {
-  return updateRoute(state, routeId, (route) => ({ ...route, stops: route.stops.filter((_, i) => i !== stopIndex) }))
+  const route = state.routes.find((entry) => entry.id === routeId)
+  if (!route || stopIndex < 0 || stopIndex >= route.stops.length) return state
+  const left = route.stops.length - 1
+  const shifted = (index: number): number => (left === 0 ? 0 : index > stopIndex ? index - 1 : index)
+  return {
+    ...updateRoute(state, routeId, (entry) => ({ ...entry, stops: entry.stops.filter((_, i) => i !== stopIndex) })),
+    ships: state.ships.map((ship) => (ship.routeId === routeId ? { ...ship, stopIndex: shifted(ship.stopIndex) } : ship)),
+  }
 }
 
 export function addOrder(state: GameState, routeId: number, stopIndex: number, order: RouteOrder): GameState {

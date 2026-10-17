@@ -54,8 +54,6 @@ export interface GoodDef {
   name: string
   /** Base price in trade between islands. The trader buys below and sells above it. */
   tradePrice: number
-  /** Coins paid by residents for one unit at a market stand. */
-  price?: number
 }
 
 export interface BuildingInput {
@@ -265,6 +263,8 @@ export interface TradeConfig {
     capacity: number
     /** World map cells per tick. */
     speed: number
+    /** Every this many ticks a docked route ship that could not leave for its next stop tries again. */
+    routeRetryTicks: number
     cost: BuildingCost
   }
   trader: {

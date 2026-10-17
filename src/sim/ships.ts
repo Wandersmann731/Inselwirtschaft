@@ -2,7 +2,7 @@ import { trade } from '../data'
 import { findSeaPath, portCell } from '../world/seaPath'
 import { checkPlacement, missingResource, pay, placeBuilding } from './build'
 import { fromIslandState, getIsland, onIsland, toIslandState } from './islands'
-import { traderBuyPrice, traderSellPrice, kontorKit } from './trade'
+import { traderBuyPrice, traderSellPrice, traderSells, kontorKit } from './trade'
 import type { GameState, IslandState, RouteOrder, Ship } from './state'
 import { stockCapacity } from './storage'
 
@@ -64,11 +64,26 @@ function departTo(state: GameState, ship: Ship, islandId: number): GameState {
 
 /** Sails every ship on its way a little. Arriving ships dock and follow their route. */
 export function moveShips(state: GameState): GameState {
+  const retry = state.tick % trade.ship.routeRetryTicks === 0
   let next = state
   for (const ship of state.ships) {
     if (ship.island === null) next = stepShip(next, ship.id)
+    else if (retry && ship.routeId !== null) next = resumeRoute(next, ship.id)
   }
   return next
+}
+
+/**
+ * A docked route ship whose next stop lies at another island sails there. This picks up ships that found no sea
+ * path, whose route got a new stop after a pass over one island, or whose route was emptied while they sailed.
+ */
+function resumeRoute(state: GameState, shipId: number): GameState {
+  const ship = getShip(state, shipId)
+  const route = state.routes.find((entry) => entry.id === ship.routeId)
+  if (!route || route.stops.length === 0 || ship.island === null) return state
+  const index = ship.stopIndex % route.stops.length
+  const target = route.stops[index].island
+  return target === ship.island ? state : departTo(state, { ...ship, stopIndex: index }, target)
 }
 
 function stepShip(state: GameState, shipId: number): GameState {
@@ -103,19 +118,28 @@ function arrive(state: GameState, shipId: number): GameState {
   return runRouteStop(state, shipId)
 }
 
-/** Does the orders of the stop the ship is at, then sails on to the next stop. */
+/**
+ * Does the orders of the stop the ship is at and of the stops right after it at the same island, then sails on to
+ * the next stop at another island. A ship that lies elsewhere than its stop sails to that stop first.
+ */
 function runRouteStop(state: GameState, shipId: number): GameState {
   const ship = getShip(state, shipId)
   const route = state.routes.find((entry) => entry.id === ship.routeId)
   if (!route || route.stops.length === 0 || ship.island === null) return state
-  const stop = route.stops[ship.stopIndex % route.stops.length]
+  const count = route.stops.length
+  let index = ship.stopIndex % count
+  if (route.stops[index].island !== ship.island) return departTo(state, { ...ship, stopIndex: index }, route.stops[index].island)
   let next = state
-  if (stop.island === ship.island) {
-    for (const order of stop.orders) next = applyOrder(next, shipId, order)
+  // at most one pass over the route, so a route with all stops at this island does not loop
+  for (let step = 0; step < count; step++) {
+    for (const order of route.stops[index].orders) next = applyOrder(next, shipId, order)
+    index = (index + 1) % count
+    if (route.stops[index].island !== ship.island) {
+      return departTo(next, { ...getShip(next, shipId), stopIndex: index }, route.stops[index].island)
+    }
   }
-  const nextIndex = (ship.stopIndex + 1) % route.stops.length
-  const departing = { ...getShip(next, shipId), stopIndex: nextIndex }
-  return departTo(next, departing, route.stops[nextIndex].island)
+  // Every stop is at this island: wait here, pointing past the last stop so a stop added later comes next.
+  return withShip(next, { ...getShip(next, shipId), stopIndex: count })
 }
 
 /** Puts a docked ship on a route (or takes it off with null). It goes to the first stop. */
@@ -156,6 +180,7 @@ function applyOrder(state: GameState, shipId: number, order: RouteOrder): GameSt
 
   if (island.role === 'trader') {
     if (order.mode === 'load') {
+      if (!traderSells(order.good)) return state
       const price = traderSellPrice(order.good)
       const affordable = price > 0 ? Math.floor(Math.max(0, state.coins) / price) : 0
       const amount = Math.min(order.amount, free, affordable)

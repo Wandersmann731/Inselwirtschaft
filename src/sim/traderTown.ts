@@ -1,3 +1,4 @@
+import { tiers } from '../data'
 import { hash2 } from '../world/noise2d'
 import { checkPlacement, placeBuilding, placeRoads } from './build'
 import { portTile } from './harbour'
@@ -5,11 +6,15 @@ import { fromIslandState, toIslandState } from './islands'
 import { planRoute } from './roadPlanner'
 import { planSettlement } from './settlementPlanner'
 import type { GameState, IslandState } from './state'
+import { getTier } from './tiers'
 
-/** Everything that may be built, for free: the trader town is laid out with the normal building rules. */
+/**
+ * Everything that may be built, for free: the trader town is laid out with the normal building rules, only the
+ * unlocks of the player's realm do not apply to it.
+ */
 function builder(flat: IslandState): IslandState {
   const plenty = Object.fromEntries(['tools', 'wood', 'bricks', 'marble'].map((good) => [good, 1e9]))
-  return { ...flat, owned: true, coins: 1e9, highestTier: 4, stock: plenty }
+  return { ...flat, owned: true, coins: 1e9, highestTier: tiers.length - 1, stock: plenty }
 }
 
 /** The free spot for a building closest to a point, or null. */
@@ -20,7 +25,7 @@ function nearest(state: IslandState, typeId: string, ax: number, ay: number, min
     for (let x = 0; x < width; x++) {
       const d = Math.hypot(x - ax, y - ay)
       if (d < minDistance || (best && d >= best.d)) continue
-      if (checkPlacement(state, typeId, x, y, false) === null) best = { x, y, d }
+      if (checkPlacement(state, typeId, x, y, false, true) === null) best = { x, y, d }
     }
   }
   return best
@@ -38,14 +43,14 @@ export function buildTraderTown(game: GameState, islandId: number): GameState {
 
   const kontor = nearest(town, 'kontor', harbour.x, harbour.y)
   if (!kontor) return game
-  town = placeBuilding(town, 'kontor', kontor.x, kontor.y, false)
+  town = placeBuilding(town, 'kontor', kontor.x, kontor.y, false, true)
   // the town lies inland from the Kontor, towards the middle of the island
   const mx = town.map.width / 2
   const my = town.map.height / 2
   const toward = (share: number) => ({ x: kontor.x + (mx - kontor.x) * share, y: kontor.y + (my - kontor.y) * share })
   const marketAt = toward(0.3)
   const market = nearest(town, 'market_house', marketAt.x, marketAt.y, 4)
-  if (market) town = placeBuilding(town, 'market_house', market.x, market.y, false)
+  if (market) town = placeBuilding(town, 'market_house', market.x, market.y, false, true)
   if (market) {
     const route = planRoute(town, { x: kontor.x, y: kontor.y }, { x: market.x, y: market.y })
     if (route.reachable) town = placeRoads(town, route.newTiles)
@@ -53,7 +58,7 @@ export function buildTraderTown(game: GameState, islandId: number): GameState {
   const centre = market ?? kontor
   for (const typeId of ['church', 'tavern']) {
     const spot = nearest(town, typeId, centre.x + 3, centre.y + 3, 3)
-    if (spot) town = placeBuilding(town, typeId, spot.x, spot.y, false)
+    if (spot) town = placeBuilding(town, typeId, spot.x, spot.y, false, true)
   }
   const quarter = planSettlement(town, 'house_pioneers', { x: centre.x - 9, y: centre.y - 9 }, { x: centre.x + 9, y: centre.y + 9 })
   town = quarter.result
@@ -63,8 +68,7 @@ export function buildTraderTown(game: GameState, islandId: number): GameState {
     buildings: town.buildings.map((building) => {
       if (!building.house) return building
       const tier = hash2(building.x, building.y, 77) < 0.6 ? 'merchants' : 'citizens'
-      const residents = tier === 'merchants' ? 42 : 28
-      return { ...building, house: { ...building.house, tier, residents } }
+      return { ...building, house: { ...building.house, tier, residents: getTier(tier).residents } }
     }),
   }
   const done: IslandState = { ...town, owned: false, coins: original.coins, highestTier: original.highestTier, stock: original.stock, economy: original.economy }

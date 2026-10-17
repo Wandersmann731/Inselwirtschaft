@@ -89,7 +89,7 @@ describe('the data hangs together', () => {
     }
   })
 
-  it('has a producer for every good that has a price', () => {
+  it('has a producer for every good a building sells', () => {
     for (const def of buildings.flatMap((entry) => entry.sells ?? [])) expect(made.has(def), def).toBe(true)
   })
 
