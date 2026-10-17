@@ -149,10 +149,12 @@ export function renderChunk(rx: number, ry: number, tiles: number[], ctx: ChunkC
   const groundCtx = ground.getContext('2d')
   if (!groundCtx) return null
   const image = groundCtx.createImageData(CHUNK_W, CHUNK_H)
+  // tiles with a building or road stay land under the rounded coast
+  const solid = (x: number, y: number): boolean => ctx.occupancy[y * map.width + x] !== 0 || ctx.roads[y * map.width + x] !== 0
   for (let y = 0; y < CHUNK_H; y++) {
     for (let x = 0; x < CHUNK_W; x++) {
       const offset = (y * CHUNK_W + x) * 4
-      groundPixel(map, ctx.textures, ctx.seed, x0 + x + 0.5, y0 + y + 0.5, image.data, offset)
+      groundPixel(map, ctx.textures, ctx.seed, x0 + x + 0.5, y0 + y + 0.5, image.data, offset, solid)
       if (ctx.yard) wearYard(ctx, x0 + x + 0.5, y0 + y + 0.5, image.data, offset)
     }
   }

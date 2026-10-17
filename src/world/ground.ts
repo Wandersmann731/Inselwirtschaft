@@ -131,13 +131,27 @@ const FOAM_TO = 0.74
  * next to the sea gets a foam rim, sea next to land a shallow rim. Sea far from land is transparent (the animated
  * water shows through).
  */
-export function groundPixel(map: GameMap, tex: GroundTextures, seed: number, wx: number, wy: number, out: Uint8ClampedArray, offset: number): void {
+export function groundPixel(
+  map: GameMap,
+  tex: GroundTextures,
+  seed: number,
+  wx: number,
+  wy: number,
+  out: Uint8ClampedArray,
+  offset: number,
+  solid?: (x: number, y: number) => boolean,
+): void {
   const u = (wy / HALF_H + wx / HALF_W) / 2
   const v = (wy / HALF_H - wx / HALF_W) / 2
   const [du, dv] = coastWarp(u, v, seed)
   const ut = u + du
   const vt = v + dv
-  const share = landField(map, ut, vt)
+  let share = landField(map, ut, vt)
+  // A tile with a building or road on it stays land: the wobbled coast must not cut into a footprint.
+  const tx = Math.floor(u)
+  const ty = Math.floor(v)
+  const pinned = solid !== undefined && tx >= 0 && ty >= 0 && tx < map.width && ty < map.height && solid(tx, ty)
+  if (pinned) share = Math.max(share, FOAM_TO)
 
   if (share < 0.5) {
     if (share < SHALLOW_FROM) {
@@ -152,7 +166,7 @@ export function groundPixel(map: GameMap, tex: GroundTextures, seed: number, wx:
     return
   }
 
-  let t0 = terrainAt(map, ut, vt)
+  let t0 = pinned ? terrainAt(map, u, v) : terrainAt(map, ut, vt)
   if (t0 === Terrain.Water) t0 = nearestLand(map, ut, vt)
   landColor(t0, tex, u, v, seed, color)
   // soft transition to the neighbouring terrain
