@@ -25,6 +25,8 @@ class SpriteStore {
   private images = new Map<string, SpriteImage>()
   /** True once loading finished (also if some sprites are missing: drawing then falls back to colour shapes). */
   ready = false
+  /** Counts the pictures that arrived. Caches built from missing pictures are made again when it changes. */
+  version = 0
 
   /** Loads every sprite listed in sprites/index.json. Gives up waiting after timeoutMs. */
   async load(timeoutMs = 20000): Promise<void> {
@@ -47,6 +49,7 @@ class SpriteStore {
           const image = new Image()
           image.onload = () => {
             this.images.set(key, key.startsWith('buildings/') ? this.cleaned(key, image) : image)
+            this.version++
             resolve()
           }
           image.onerror = () => resolve()
@@ -107,9 +110,15 @@ class SpriteStore {
   }
 
   private variantCache = new Map<string, string[]>()
+  private variantVersion = 0
 
   /** All pictures of one thing: `base` itself and `base_2`, `base_3` ... (or `base_1` ...), whichever exist. */
   variants(base: string): string[] {
+    if (this.variantVersion !== this.version) {
+      // pictures that arrived after loading gave up waiting: look again
+      this.variantCache.clear()
+      this.variantVersion = this.version
+    }
     let list = this.variantCache.get(base)
     if (!list || !this.ready) {
       list = []

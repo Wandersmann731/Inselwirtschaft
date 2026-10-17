@@ -55,6 +55,11 @@ export class WaterPattern {
     this.transform = new DOMMatrix().translate(-cellW / 2, 0).scale(cellW / (sprites.get(waterKey(0))?.width ?? cellW), cellH / (sprites.get(waterKey(0))?.height ?? cellH))
   }
 
+  /** False if a picture was missing when the pattern was made. */
+  get complete(): boolean {
+    return this.patterns.every((pattern) => pattern !== null)
+  }
+
   /** A pattern shifted by (dx, dy) in world pixels. */
   private shifted(index: number, dx: number, dy: number, scale = 1): CanvasPattern | null {
     const pattern = this.patterns[index]

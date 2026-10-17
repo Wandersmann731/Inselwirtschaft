@@ -1,7 +1,8 @@
 import { world } from '../data'
 import type { ToolSnapshot } from '../game/buildController'
 import type { IslandState } from '../sim/state'
-import { inMap, TERRAIN_NAMES, type GameMap } from '../world/terrain'
+import { inMap, Terrain, type GameMap } from '../world/terrain'
+import { t } from '../i18n/language'
 import {
   centerCamera,
   clampCamera,
@@ -29,8 +30,11 @@ import { SEA_COLOR, diamondPath, paintTile } from './terrainStyle'
 
 const SELECTION_COLOR = '#ffd23f'
 const ZOOM_LIMITS = { min: world.minZoom, max: world.maxZoom }
-/** Above this device-pixels-per-world-pixel the chunk bitmaps are rendered at 2x. */
-const HIGH_RES_THRESHOLD = 1.6
+/**
+ * Device pixels per world pixel at which the chunk bitmaps switch to 2x (above UP) and back to 1x (below DOWN).
+ * The gap keeps small pinches near the threshold from making all pictures again.
+ */
+const HIGH_RES = { up: 1.75, down: 1.45 }
 
 /**
  * Draws the map on a canvas. Lives outside React: React only mounts and destroys it.
@@ -46,6 +50,9 @@ export class MapRenderer {
   private cache = new TerrainCache()
   private overlay = new OverlayRenderer()
   private water: WaterPattern | null = null
+  /** Sprite version the water pattern was made with: it is made again if pictures arrived late. */
+  private waterVersion = -1
+  private chunkScale = 1
   private surf = new Surf()
   private rafId = 0
   private dpr = 1
@@ -186,7 +193,10 @@ export class MapRenderer {
     }
 
     const { zoom } = this.camera
-    this.cache.prepare(map, zoom * dpr > HIGH_RES_THRESHOLD ? 2 : 1)
+    const density = zoom * dpr
+    if (density > HIGH_RES.up) this.chunkScale = 2
+    else if (density < HIGH_RES.down) this.chunkScale = 1
+    this.cache.prepare(map, this.chunkScale)
 
     // World -> device pixel transform.
     const k = dpr * zoom
@@ -210,7 +220,10 @@ export class MapRenderer {
   /** The sea: an animated pattern over the visible part of the world. */
   private drawWater(now: number, animated: boolean): void {
     if (!sprites.ready) return
-    this.water ??= new WaterPattern(this.ctx)
+    if (!this.water || (this.waterVersion !== sprites.version && !this.water.complete)) {
+      this.water = new WaterPattern(this.ctx)
+      this.waterVersion = sprites.version
+    }
     const rect = visibleWorldRect(this.camera, this.viewport)
     this.water.fill(this.ctx, { x: rect.minX - 2, y: rect.minY - 2, w: rect.maxX - rect.minX + 4, h: rect.maxY - rect.minY + 4 }, now, animated)
   }
@@ -313,11 +326,11 @@ export class MapRenderer {
     const { ctx } = this
     const lines = [
       `${this.fps.toFixed(0)} FPS · Zoom ${this.camera.zoom.toFixed(2)} · Chunks ${this.chunksDrawn}`,
-      `Karte ${map.width}x${map.height}`,
+      `${t('Karte', 'Map')} ${map.width}x${map.height}`,
     ]
     if (this.selected) {
       const terrain = map.tiles[this.selected.y * map.width + this.selected.x]
-      lines.push(`Kachel ${this.selected.x}, ${this.selected.y}: ${TERRAIN_NAMES[terrain]}`)
+      lines.push(`${t('Kachel', 'Tile')} ${this.selected.x}, ${this.selected.y}: ${terrainName(terrain)}`)
     }
     ctx.font = '14px monospace'
     ctx.textBaseline = 'top'
@@ -331,3 +344,20 @@ export class MapRenderer {
   }
 }
 
+/** Name of a terrain code for the developer display. */
+function terrainName(terrain: number): string {
+  switch (terrain) {
+    case Terrain.Water:
+      return t('Wasser', 'Water')
+    case Terrain.Beach:
+      return t('Strand', 'Beach')
+    case Terrain.Grass:
+      return t('Gras', 'Grass')
+    case Terrain.Forest:
+      return t('Wald', 'Forest')
+    case Terrain.Mountain:
+      return t('Berg', 'Mountain')
+    default:
+      return String(terrain)
+  }
+}
