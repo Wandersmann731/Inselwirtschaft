@@ -151,6 +151,31 @@ export interface TierDef {
   unlock?: { tier: string; residents: number }
 }
 
+/** One goal of the beginner tips. All fields given must hold. */
+export interface TutorialCondition {
+  /** Each group needs at least one building of these types on an owned island. */
+  buildings?: string[][]
+  /** At least this many houses on the owned islands. */
+  houses?: number
+  /** This building may be built (its tier and resident threshold are reached). */
+  unlocked?: string
+  /** This tier was reached. */
+  tier?: string
+  /** One of these goods lies in the store of an owned island. */
+  stock?: string[]
+}
+
+/** A beginner tip: shown until one of its conditions holds or the player skips it. */
+export interface TutorialStep {
+  id: string
+  /** The tip counts as done once a tier above this one was reached. */
+  tier: string
+  /** Alternatives; an empty list is never met on its own. */
+  done: TutorialCondition[]
+  /** Buildings the tip offers to build, in the order a player needs them. */
+  build?: string[]
+}
+
 /** A production chain as the build menu shows it: its buildings from raw material to the finished good. */
 export interface ChainDef {
   id: string

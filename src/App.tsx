@@ -10,6 +10,7 @@ import { getSettings } from './save/settings'
 import { BalancePanel } from './ui/BalancePanel'
 import { BuildBar } from './ui/BuildBar'
 import { GameMenu } from './ui/GameMenu'
+import { HintCard } from './ui/HintCard'
 import { KontorPanel } from './ui/KontorPanel'
 import type { MapRenderer } from './render/mapRenderer'
 import { MapCanvas } from './ui/MapCanvas'
@@ -70,6 +71,7 @@ export function App({ loop, onQuit }: { loop: GameLoop; onQuit: () => void }) {
         debug={debug}
         onOpenBalance={() => setShowBalance(true)}
       />
+      <HintCard loop={loop} state={state} island={island} tool={tool} />
       <Toasts state={state} />
       {showMenu && <GameMenu loop={loop} onClose={() => setShowMenu(false)} onQuit={onQuit} />}
       {showBalance && <BalancePanel loop={loop} onClose={() => setShowBalance(false)} />}

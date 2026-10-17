@@ -20,6 +20,8 @@ export interface Settings {
   keepAwake: boolean
   /** Language of the texts in the game. */
   language: 'de' | 'en'
+  /** Beginner tips: what to build next. */
+  hints: boolean
 }
 
 /** German if the browser is set to German, English otherwise. Used until the player picks a language. */
@@ -41,6 +43,7 @@ const DEFAULTS: Settings = {
   vibration: true,
   keepAwake: true,
   language: browserLanguage(),
+  hints: true,
 }
 
 /** Only what the player chose is saved: the browser language and the ?debug switch stay defaults, not choices. */

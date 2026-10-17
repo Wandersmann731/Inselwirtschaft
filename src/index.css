@@ -1094,3 +1094,82 @@ body,
   margin-left: 6px;
   font-size: 18px;
 }
+
+/* Beginner tip: top right like the info panel, which hides it while open. */
+.hint-card {
+  position: fixed;
+  top: 64px;
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 14;
+  width: min(560px, calc(100vw - 24px));
+  /* stays above the build menu bar and scrolls if the text is long */
+  max-height: calc(100dvh - 64px - 72px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px 12px 12px;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  background: rgba(10, 20, 30, 0.92);
+  font-size: 15px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+.hint-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 18px;
+}
+
+.hint-count {
+  margin-left: 8px;
+  color: #b8c7d3;
+  font-size: 14px;
+}
+
+.hint-body {
+  margin: 2px 0 10px;
+  line-height: 1.4;
+}
+
+.hint-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hint-actions .action-button.confirm {
+  flex: 1 1 auto;
+}
+
+.hint-chip {
+  position: fixed;
+  top: 64px;
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 14;
+  min-width: var(--button-size);
+  min-height: var(--button-size);
+  padding: 0 14px;
+  border: 2px solid var(--accent);
+  border-radius: 24px;
+  background: rgba(10, 20, 30, 0.92);
+  color: var(--hud-text);
+  font-size: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+
+/* An open build menu category needs the room. */
+:root:has(.build-menu > :not(.build-categories)) :is(.hint-card, .hint-chip) {
+  display: none;
+}
+
+@media (orientation: portrait) {
+  .hint-card,
+  .hint-chip {
+    top: 124px;
+  }
+
+  .hint-card {
+    max-height: calc(100dvh - 124px - 150px);
+  }
+}

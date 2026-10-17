@@ -159,6 +159,8 @@ export const MIGRATIONS: Record<number, Migration> = {
     const islands = (data.islands as Record<string, unknown>[]).map((island) => ({ upgradeStop: [], ...island }))
     return addTraderTowns({ ...data, islands } as unknown as GameState) as unknown as RawState
   },
+  // v14 adds the beginner tips. Tips the save has already outgrown are skipped by their tier.
+  13: (data) => ({ hintsDone: [], ...data }),
 }
 
 /** Brings a raw saved object up to the current version or throws if that is impossible. */

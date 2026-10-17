@@ -6,7 +6,7 @@ import type { GameMap } from '../world/terrain'
 export type { GameMap }
 
 /** Bump when the GameState shape changes and add a migration in migrations.ts. */
-export const CURRENT_SAVE_VERSION = 13
+export const CURRENT_SAVE_VERSION = 14
 
 export type GameSpeed = number
 
@@ -205,6 +205,8 @@ export interface GameState {
   routes: Route[]
   nextShipId: number
   nextRouteId: number
+  /** Beginner tips (tutorial.json) that were met or skipped. They do not come back. */
+  hintsDone: string[]
 }
 
 /**
@@ -229,6 +231,7 @@ export function createStateWith(seed: number, islands: Island[], world: WorldCha
     routes: [],
     nextShipId: 1,
     nextRouteId: 1,
+    hintsDone: [],
   }
 }
 
