@@ -179,11 +179,13 @@ export class MapInput {
     this.afterPointerRemoved()
   }
 
-  /** After a pinch one finger may stay down: continue as a drag without a jump. */
+  /** After a pinch one finger may stay down: continue as a drag without a jump. After a third finger, the pinch goes on with the two left. */
   private afterPointerRemoved(): void {
     if (this.pointers.size === 1) {
       this.lastPan = [...this.pointers.values()][0]
       this.moved = true
+    } else if (this.pointers.size === 2) {
+      this.readPinch()
     }
   }
 

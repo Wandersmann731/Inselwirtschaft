@@ -55,12 +55,18 @@ export class GameLoop {
     if (this.timer !== undefined) return
     this.lastTime = performance.now()
     this.timer = window.setInterval(this.update, config.loopIntervalMs)
+    if (typeof document === 'undefined') return
+    document.addEventListener('visibilitychange', this.restartClock)
+    document.addEventListener('resume', this.restartClock)
   }
 
   stop(): void {
     if (this.timer === undefined) return
     window.clearInterval(this.timer)
     this.timer = undefined
+    if (typeof document === 'undefined') return
+    document.removeEventListener('visibilitychange', this.restartClock)
+    document.removeEventListener('resume', this.restartClock)
   }
 
   setSpeed(speed: GameSpeed): void {
@@ -113,6 +119,15 @@ export class GameLoop {
   private setState(state: GameState): void {
     this.view = { ...this.view, state }
     this.emit()
+  }
+
+  /**
+   * The page was hidden, shown again or resumed after being frozen: the clock starts afresh. Phones stop timers
+   * in the background, so the last update may lie long before the page comes back.
+   */
+  private restartClock = (): void => {
+    this.lastTime = performance.now()
+    this.accumulatorMs = 0
   }
 
   private update = (): void => {

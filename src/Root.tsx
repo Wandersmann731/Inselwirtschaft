@@ -15,8 +15,9 @@ interface Running {
 export function Root() {
   const [running, setRunning] = useState<Running | null>(null)
   const current = useRef<Running | null>(null)
-  // changing the language remounts the screens; the running game (the loop) stays
-  const language = useSyncExternalStore(subscribeLanguage, getLanguage)
+  // changing the language renders the screens again with the new texts; nothing is remounted, so the camera,
+  // open windows, the build tool and the music stay as they are
+  useSyncExternalStore(subscribeLanguage, getLanguage)
 
   const start = useCallback((state: GameState) => {
     const loop = new GameLoop(state)
@@ -43,5 +44,5 @@ export function Root() {
     [],
   )
 
-  return running ? <App key={language} loop={running.loop} onQuit={quit} /> : <MainMenu key={language} onStart={start} />
+  return running ? <App loop={running.loop} onQuit={quit} /> : <MainMenu onStart={start} />
 }

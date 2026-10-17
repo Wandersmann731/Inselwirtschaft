@@ -19,7 +19,7 @@ import { Toasts } from './ui/Toasts'
 import { TopHud } from './ui/TopHud'
 import { TradePanel } from './ui/TradePanel'
 import { WorldMap } from './ui/WorldMap'
-import { applyWakeLock } from './ui/wakeLock'
+import { setWakeLockActive } from './ui/wakeLock'
 
 export function App({ loop, onQuit }: { loop: GameLoop; onQuit: () => void }) {
   const { state, activeIsland } = useSyncExternalStore(loop.subscribe, loop.getView)
@@ -43,7 +43,10 @@ export function App({ loop, onQuit }: { loop: GameLoop; onQuit: () => void }) {
   // Looking at another island drops the current tool and selection.
   useEffect(() => tool.cancel(), [tool, activeIsland])
   // keep the screen on while playing (setting "Bildschirm anlassen")
-  useEffect(() => applyWakeLock(), [])
+  useEffect(() => {
+    setWakeLockActive(true)
+    return () => setWakeLockActive(false)
+  }, [])
 
   const settled = state.islands.flatMap((entry) => (entry.owned && entry.economy.last ? [entry.economy.last] : []))
   const balance = settled.length > 0 ? settled.reduce((sum, ledger) => sum + balanceOf(ledger), 0) : null

@@ -43,17 +43,19 @@ const DEFAULTS: Settings = {
   language: browserLanguage(),
 }
 
-function load(): Settings {
+/** Only what the player chose is saved: the browser language and the ?debug switch stay defaults, not choices. */
+function loadStored(): Partial<Settings> {
   try {
     const raw = localStorage.getItem(KEY)
-    if (raw) return { ...DEFAULTS, ...(JSON.parse(raw) as Partial<Settings>) }
+    if (raw) return JSON.parse(raw) as Partial<Settings>
   } catch {
     /* private mode or broken data: use the defaults */
   }
-  return { ...DEFAULTS }
+  return {}
 }
 
-const current: Settings = load()
+const stored: Partial<Settings> = loadStored()
+const current: Settings = { ...DEFAULTS, ...stored }
 if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debug')) current.debug = true
 
 /** The settings in use. The renderer reads this every frame, so changes show at once. */
@@ -63,8 +65,9 @@ export function getSettings(): Readonly<Settings> {
 
 export function updateSettings(change: Partial<Settings>): void {
   Object.assign(current, change)
+  Object.assign(stored, change)
   try {
-    localStorage.setItem(KEY, JSON.stringify(current))
+    localStorage.setItem(KEY, JSON.stringify(stored))
   } catch {
     /* cannot save: the change still holds until the page is closed */
   }

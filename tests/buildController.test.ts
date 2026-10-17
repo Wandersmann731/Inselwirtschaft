@@ -81,12 +81,20 @@ describe('BuildController', () => {
     expect(tool.getSnapshot().stroke).toHaveLength(0)
   })
 
-  it('a second finger keeps the demolish marks, clearing drops them', () => {
+  it('a second finger keeps the earlier demolish marks but drops what the pinch marked, clearing drops all', () => {
     const { tool } = setup()
     tool.startDemolish()
     tool.strokeStart({ x: 3, y: 3 })
+    tool.strokeEnd()
+    // the first finger of a pinch lands and sweeps before the second one arrives
+    tool.strokeStart({ x: 6, y: 6 })
+    tool.strokeMove({ x: 8, y: 6 })
     tool.strokeCancel()
-    expect(tool.getSnapshot().stroke).toHaveLength(1)
+    expect(tool.getSnapshot().stroke).toEqual([{ x: 3, y: 3 }])
+    // a pinch starting on a marked tile keeps it marked
+    tool.strokeStart({ x: 3, y: 3 })
+    tool.strokeCancel()
+    expect(tool.getSnapshot().stroke).toEqual([{ x: 3, y: 3 }])
     tool.clearStroke()
     expect(tool.getSnapshot().stroke).toHaveLength(0)
   })
