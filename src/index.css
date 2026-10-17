@@ -562,8 +562,8 @@ body,
 }
 
 .step-button {
-  min-width: 40px;
-  min-height: 40px;
+  min-width: var(--button-size);
+  min-height: var(--button-size);
   border: 0;
   border-radius: 6px;
   background: #2b4254;

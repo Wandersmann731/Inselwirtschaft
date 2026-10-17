@@ -59,7 +59,7 @@ export function TopHud({
           <Icon name="ui/coin" size={20} title={resourceName('coins')} /> {formatWhole(coins)}
         </span>
         <span className={balanceClass}><Icon name={balance !== null && balance < 0 ? 'ui/balance_down' : 'ui/balance_up'} size={20} title={t('Bilanz', 'Balance')} />{' '}
-          {balance === null ? '–' : `${formatSigned(balance)} {t('/ Zyklus', '/ cycle')}`}
+          {balance === null ? '–' : `${formatSigned(balance)} ${t('/ Zyklus', '/ cycle')}`}
         </span>
         {owned && MATERIALS.map((good) => (
           <span key={good} className={(stock[good] ?? 0) < LOW_MATERIAL ? 'hud-stat hud-material low' : 'hud-stat hud-material'}>

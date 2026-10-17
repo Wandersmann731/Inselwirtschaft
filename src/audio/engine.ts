@@ -33,6 +33,8 @@ class AudioEngine {
   private musicSignature = ''
   private musicIndex = 0
   private musicVolume = 0
+  /** Old tracks still fading out. Their fade runs on requestAnimationFrame, which stops while the page is hidden. */
+  private fading = new Set<HTMLAudioElement>()
 
   /** Must be called from a tap or click. Creates the audio context the first time. */
   unlock(): void {
@@ -46,6 +48,7 @@ class AudioEngine {
       this.effects.connect(this.master)
       this.ambience.connect(this.master)
       this.master.connect(this.ctx.destination)
+      document.addEventListener('visibilitychange', () => this.onVisibility())
       this.applySettings()
       void this.loadIndex().then(() => {
         this.syncLoops()
@@ -53,6 +56,31 @@ class AudioEngine {
       })
     }
     if (this.ctx.state === 'suspended') void this.ctx.resume()
+  }
+
+  /** Silences everything while the app is in the background or the screen is off, and resumes when it is back. */
+  private onVisibility(): void {
+    if (document.hidden) {
+      void this.ctx?.suspend()
+      this.music?.pause()
+      for (const element of this.fading) {
+        element.pause()
+        element.src = ''
+      }
+      this.fading.clear()
+      return
+    }
+    if (this.ctx?.state === 'suspended') void this.ctx.resume()
+    const music = this.music
+    if (!music?.paused) return
+    music
+      .play()
+      .then(() => {
+        if (this.musicVolume === 0) this.fadeMusic(music, 1)
+      })
+      .catch(() => {
+        /* blocked until the next tap */
+      })
   }
 
   get unlocked(): boolean {
@@ -197,13 +225,16 @@ class AudioEngine {
       const settings = getSettings()
       const from = this.musicVolume
       const started = performance.now()
+      this.fading.add(old)
       const fade = (): void => {
+        if (!this.fading.has(old)) return
         const t = Math.min(1, (performance.now() - started) / MUSIC_FADE_MS)
         old.volume = settings.muted ? 0 : Math.min(1, settings.volumeMusic * from * (1 - t))
         if (t < 1) requestAnimationFrame(fade)
         else {
           old.pause()
           old.src = ''
+          this.fading.delete(old)
         }
       }
       fade()
@@ -219,6 +250,8 @@ class AudioEngine {
       this.musicIndex++
       this.syncMusic()
     })
+    // In the background the track only waits; onVisibility starts it when the app is back
+    if (document.hidden) return
     element.play().then(() => this.fadeMusic(element, 1)).catch(() => {
       /* blocked until the next tap */
     })

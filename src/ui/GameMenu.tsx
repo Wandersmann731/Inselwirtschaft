@@ -31,35 +31,38 @@ export function GameMenu({ loop, onClose, onQuit }: GameMenuProps) {
       .catch(() => setMessage(t('Speichern ist fehlgeschlagen.', 'Saving failed.')))
   }
 
+  // Settings sit beside the menu backdrop, not inside it, so a tap on their backdrop does not bubble up and close the menu too
   return (
-    <div className="stats-backdrop" onClick={onClose}>
-      <div className="stats-panel" onClick={(event) => event.stopPropagation()}>
-        <div className="panel-title">
-          <strong>{t('Menü', 'Menu')}</strong>
-          <button type="button" className="panel-close" onClick={onClose} aria-label={t('Schließen', 'Close')}>
-            ×
-          </button>
-        </div>
-        <div className="stats-scroll">
-          <h3>{t('Speichern', 'Save')}</h3>
-          <SlotList entries={slots} action={t('Speichern', 'Save')} allowAutosave={false} onChoose={save} />
-          {message && <p className="stats-note">{message}</p>}
-          <div className="menu-row">
-            <button type="button" className="action-button" onClick={() => setShowSettings(true)}>
-              {t('Einstellungen', 'Settings')}
+    <>
+      <div className="stats-backdrop" onClick={onClose}>
+        <div className="stats-panel" onClick={(event) => event.stopPropagation()}>
+          <div className="panel-title">
+            <strong>{t('Menü', 'Menu')}</strong>
+            <button type="button" className="panel-close" onClick={onClose} aria-label={t('Schließen', 'Close')}>
+              ×
             </button>
-            {fullscreen.supported && (
-              <button type="button" className="action-button" onClick={() => void toggleFullscreen()}>
-                {fullscreen.active ? t('Vollbild beenden', 'Exit full screen') : t('Vollbild', 'Full screen')}
+          </div>
+          <div className="stats-scroll">
+            <h3>{t('Speichern', 'Save')}</h3>
+            <SlotList entries={slots} action={t('Speichern', 'Save')} allowAutosave={false} onChoose={save} />
+            {message && <p className="stats-note">{message}</p>}
+            <div className="menu-row">
+              <button type="button" className="action-button" onClick={() => setShowSettings(true)}>
+                {t('Einstellungen', 'Settings')}
               </button>
-            )}
-            <button type="button" className="action-button" onClick={onQuit}>
-              {t('Zum Startbildschirm', 'To the start screen')}
-            </button>
+              {fullscreen.supported && (
+                <button type="button" className="action-button" onClick={() => void toggleFullscreen()}>
+                  {fullscreen.active ? t('Vollbild beenden', 'Exit full screen') : t('Vollbild', 'Full screen')}
+                </button>
+              )}
+              <button type="button" className="action-button" onClick={onQuit}>
+                {t('Zum Startbildschirm', 'To the start screen')}
+              </button>
+            </div>
           </div>
         </div>
       </div>
       {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
-    </div>
+    </>
   )
 }

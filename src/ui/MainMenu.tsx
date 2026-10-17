@@ -49,8 +49,15 @@ export function MainMenu({ onStart }: MainMenuProps) {
   }, [])
   const hasAutosave = slots?.find((entry) => entry.slot === AUTOSAVE_SLOT)?.info != null
 
+  /** Switches the screen and drops an old load error, so it does not show up out of context. */
+  const show = (next: Screen): void => {
+    setMessage('')
+    setScreen(next)
+  }
+
   const load = async (slot: string): Promise<void> => {
     goFullscreen()
+    setMessage('')
     try {
       const state = await loadState(slot)
       if (state) onStart(state)
@@ -75,10 +82,10 @@ export function MainMenu({ onStart }: MainMenuProps) {
             <button type="button" className="menu-button primary" disabled={!hasAutosave} onClick={() => void load(AUTOSAVE_SLOT)}>
               {t('Weiterspielen', 'Continue')}
             </button>
-            <button type="button" className="menu-button" onClick={() => setScreen('new')}>
+            <button type="button" className="menu-button" onClick={() => show('new')}>
               {t('Neues Spiel', 'New game')}
             </button>
-            <button type="button" className="menu-button" onClick={() => setScreen('load')}>
+            <button type="button" className="menu-button" onClick={() => show('load')}>
               {t('Spielstand laden', 'Load game')}
             </button>
             <button type="button" className="menu-button" onClick={() => setShowSettings(true)}>
@@ -89,6 +96,7 @@ export function MainMenu({ onStart }: MainMenuProps) {
                 {fullscreen.active ? t('Vollbild beenden', 'Exit full screen') : t('Vollbild', 'Full screen')}
               </button>
             )}
+            {message && <p className="place-hint invalid">{message}</p>}
           </div>
         )}
         {screen === 'new' && (
@@ -115,7 +123,7 @@ export function MainMenu({ onStart }: MainMenuProps) {
               </span>
             </div>
             <div className="menu-row">
-              <button type="button" className="menu-button" onClick={() => setScreen('main')}>
+              <button type="button" className="menu-button" onClick={() => show('main')}>
                 {t('Zurück', 'Back')}
               </button>
               <button type="button" className="menu-button primary" onClick={startNew}>
@@ -128,7 +136,7 @@ export function MainMenu({ onStart }: MainMenuProps) {
           <div className="menu-form">
             <SlotList entries={slots} action={t('Laden', 'Load')} allowAutosave onChoose={(slot) => void load(slot)} />
             {message && <p className="place-hint invalid">{message}</p>}
-            <button type="button" className="menu-button" onClick={() => setScreen('main')}>
+            <button type="button" className="menu-button" onClick={() => show('main')}>
               {t('Zurück', 'Back')}
             </button>
           </div>
