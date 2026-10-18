@@ -6,8 +6,9 @@ import goodsJson from './goods.json'
 import landJson from './land.json'
 import tiersJson from './tiers.json'
 import tradeJson from './trade.json'
+import tutorialJson from './tutorial.json'
 import worldJson from './world.json'
-import type { BuildingDef, ChainDef, ClimateDef, GameConfig, GoodDef, LandNames, TierDef, TradeConfig, WorldConfig } from './types'
+import type { BuildingDef, ChainDef, ClimateDef, GameConfig, GoodDef, LandNames, TierDef, TradeConfig, TutorialStep, WorldConfig } from './types'
 
 export type * from './types'
 
@@ -30,3 +31,4 @@ export function getBuilding(id: string): BuildingDef {
 
 export const landNames: LandNames = landJson
 export const trade: TradeConfig = tradeJson
+export const tutorial: TutorialStep[] = tutorialJson

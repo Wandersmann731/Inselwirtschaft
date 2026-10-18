@@ -13,7 +13,7 @@ interface Props {
   onDeleted?: () => void
 }
 
-type Toggle = 'debug' | 'waterAnimation' | 'smoke' | 'muted' | 'autoFullscreen' | 'vibration' | 'keepAwake'
+type Toggle = 'hints' | 'debug' | 'waterAnimation' | 'smoke' | 'muted' | 'autoFullscreen' | 'vibration' | 'keepAwake'
 type Volume = 'volumeEffects' | 'volumeAmbience' | 'volumeMusic'
 
 const VOLUMES: { key: Volume; label: () => string }[] = [
@@ -23,6 +23,7 @@ const VOLUMES: { key: Volume; label: () => string }[] = [
 ]
 
 const OPTIONS: { key: Toggle; label: () => string; hint: () => string }[] = [
+  { key: 'hints', label: () => t('Tipps für Einsteiger', 'Beginner tips'), hint: () => t('Zeigt im Spiel, was du als Nächstes bauen solltest.', 'Shows in the game what to build next.') },
   { key: 'muted', label: () => t('Ton aus', 'Sound off'), hint: () => t('Schaltet alle Töne stumm.', 'Mutes all sounds.') },
   { key: 'autoFullscreen', label: () => t('Vollbild beim Start', 'Full screen at start'), hint: () => t('Nur auf Handys und Tablets. Im Spiel gibt es dafür auch eine Schaltfläche.', 'Phones and tablets only. There is also a button for it in the game.') },
   { key: 'vibration', label: () => t('Vibration', 'Vibration'), hint: () => t('Kurzes Rütteln beim Bauen, Abreißen und langen Drücken.', 'A short buzz when building, demolishing and on long press.') },

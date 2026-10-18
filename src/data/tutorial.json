@@ -1,0 +1,65 @@
+[
+  { "id": "houses", "tier": "pioneers", "done": [{ "houses": 4 }], "build": ["house_pioneers"] },
+  {
+    "id": "food",
+    "tier": "pioneers",
+    "done": [{ "buildings": [["fishery", "hunting_lodge", "bakery", "butcher"]] }],
+    "build": ["fishery", "hunting_lodge"]
+  },
+  { "id": "wood", "tier": "pioneers", "done": [{ "buildings": [["forester"]] }], "build": ["forester"] },
+  {
+    "id": "cloth",
+    "tier": "pioneers",
+    "done": [{ "buildings": [["sheep_farm", "cotton_plantation"], ["weaver"]] }, { "buildings": [["tannery"]] }],
+    "build": ["sheep_farm", "cotton_plantation", "weaver"]
+  },
+  { "id": "grow", "tier": "pioneers", "done": [{ "unlocked": "chapel" }], "build": ["house_pioneers"] },
+  { "id": "chapel", "tier": "pioneers", "done": [{ "buildings": [["chapel"]] }], "build": ["chapel"] },
+  { "id": "riseSettlers", "tier": "pioneers", "done": [{ "tier": "settlers" }] },
+  { "id": "tavern", "tier": "settlers", "done": [{ "buildings": [["tavern"]] }], "build": ["tavern"] },
+  {
+    "id": "alcohol",
+    "tier": "settlers",
+    "done": [{ "buildings": [["potato_farm", "brewery", "distillery"]] }, { "stock": ["alcohol"] }],
+    "build": ["potato_farm", "hops_farm", "brewery"]
+  },
+  {
+    "id": "salt",
+    "tier": "settlers",
+    "done": [{ "buildings": [["saltworks"]] }, { "stock": ["salt"] }],
+    "build": ["salt_mine", "saltworks"]
+  },
+  {
+    "id": "tools",
+    "tier": "settlers",
+    "done": [{ "buildings": [["toolmaker"]] }],
+    "build": ["ore_mine", "smelter", "toolmaker"]
+  },
+  { "id": "bricks", "tier": "settlers", "done": [{ "buildings": [["stonemason"]] }], "build": ["quarry", "stonemason"] },
+  { "id": "growSettlers", "tier": "settlers", "done": [{ "unlocked": "church" }] },
+  { "id": "church", "tier": "settlers", "done": [{ "buildings": [["church"]] }], "build": ["church"] },
+  { "id": "riseCitizens", "tier": "settlers", "done": [{ "tier": "citizens" }] },
+  {
+    "id": "citizenGoods",
+    "tier": "citizens",
+    "done": [{ "buildings": [["tobacco_factory", "spice_plantation"]] }, { "stock": ["tobacco", "spices"] }],
+    "build": ["tobacco_plantation", "tobacco_factory", "spice_plantation"]
+  },
+  { "id": "riseMerchants", "tier": "citizens", "done": [{ "tier": "merchants" }] },
+  { "id": "bathhouse", "tier": "merchants", "done": [{ "buildings": [["bathhouse"]] }], "build": ["bathhouse"] },
+  {
+    "id": "merchantGoods",
+    "tier": "merchants",
+    "done": [{ "buildings": [["dyer", "oil_boiler"]] }, { "stock": ["silk", "lamp_oil"] }],
+    "build": ["silk_plantation", "indigo_farm", "dyer", "whaler", "oil_boiler"]
+  },
+  { "id": "growMerchants", "tier": "merchants", "done": [{ "unlocked": "theater" }] },
+  { "id": "theater", "tier": "merchants", "done": [{ "buildings": [["theater"]] }], "build": ["theater"] },
+  {
+    "id": "aristocrats",
+    "tier": "merchants",
+    "done": [{ "buildings": [["house_aristocrats"]] }],
+    "build": ["house_aristocrats"]
+  },
+  { "id": "finished", "tier": "aristocrats", "done": [] }
+]
