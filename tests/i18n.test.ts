@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { buildings, chains, climates, goods, landNames, tiers } from '../src/data'
 import { applyDataLanguage } from '../src/i18n/dataNames'
-import { t } from '../src/i18n/language'
+import { gameTitle, logoFile, t } from '../src/i18n/language'
 import { updateSettings } from '../src/save/settings'
 
 afterEach(() => {
@@ -15,6 +15,13 @@ describe('language', () => {
     expect(t('Bauen', 'Build')).toBe('Bauen')
     updateSettings({ language: 'en' })
     expect(t('Bauen', 'Build')).toBe('Build')
+  })
+
+  it('names the game and picks the title picture in the player\'s language', () => {
+    updateSettings({ language: 'de' })
+    expect([gameTitle(), logoFile()]).toEqual(['Inselwirtschaft', 'logo.webp'])
+    updateSettings({ language: 'en' })
+    expect([gameTitle(), logoFile()]).toEqual(['Island Economy', 'logo_en.webp'])
   })
 
   it('gives every good, building, tier, climate, chain, fertility and deposit an English name and can switch back', () => {

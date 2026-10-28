@@ -459,6 +459,7 @@ Für die Installation als App auf dem Startbildschirm und den Startbildschirm de
 | `icon_192` | `app/icon-192.png` | 192x192 | - | same as icon_512, downscaled |
 | `splash` | `app/splash.png` | 1920x1080 | - | landscape key art of a harbour town on an island with a trading ship, warm morning light, no text, leave the top third calm for a title |
 | `logo` | `app/logo.png` | 1024x256 | - | title logo reading Inselwirtschaft in a bold carved wooden sign style with a small anchor, transparent background, the only picture that may contain text |
+| `logo_en` | `app/logo_en.png` | 1024x256 | - | English title logo reading Island Economy, made from the German logo (same carved wooden sign style with a small anchor), transparent background |
 
 ## 4. Prompts
 

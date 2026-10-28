@@ -11,7 +11,7 @@ import { formatWhole } from './messages'
 import { SettingsPanel } from './SettingsPanel'
 import { SlotList } from './SlotList'
 import { useSlots } from './slots'
-import { t } from '../i18n/language'
+import { gameTitle, logoFile, t } from '../i18n/language'
 
 type Screen = 'main' | 'new' | 'load'
 
@@ -76,7 +76,7 @@ export function MainMenu({ onStart }: MainMenuProps) {
   return (
     <div className="menu-screen">
       <div className="menu-panel">
-        <img className="menu-logo" src={`${import.meta.env.BASE_URL}sprites/app/logo.webp`} alt="Inselwirtschaft" />
+        <img className="menu-logo" src={`${import.meta.env.BASE_URL}sprites/app/${logoFile()}`} alt={gameTitle()} />
         {screen === 'main' && (
           <div className="menu-buttons">
             <button type="button" className="menu-button primary" disabled={!hasAutosave} onClick={() => void load(AUTOSAVE_SLOT)}>
