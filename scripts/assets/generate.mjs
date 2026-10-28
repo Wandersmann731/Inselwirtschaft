@@ -170,7 +170,7 @@ async function finish(job, rawFile) {
   }
 
   if (job.kind === 'app') {
-    if (job.id === 'logo') {
+    if (job.id === 'logo' || job.id === 'logo_en') {
       const cut = await shrinkMatte(await removeBackground(await sharp(rawFile).png().toBuffer(), { low: 55, high: 120 }), 2)
       fs.writeFileSync(target, await fitInto(cut, job.width, job.height, { margin: 0.03 }))
     } else if (job.id === 'splash') {

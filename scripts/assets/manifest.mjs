@@ -150,6 +150,13 @@ function jobFor(row) {
       job.prompt =
         'Game title logo with the single word "Inselwirtschaft" in bold carved wooden sign letters with a small anchor, hand-painted cel-shaded look with dark-brown outlines, plain flat magenta background (#FF00FF), no other text, no frame, no watermark'
     }
+    // The English title is made from the German logo, so both have the same wood, colours and anchor.
+    if (id === 'logo_en') {
+      job.aspectRatio = '16:9'
+      job.guide = 'art/app/logo.png'
+      job.prompt =
+        'Change this game title logo so it reads "Island Economy" instead of "Inselwirtschaft". Keep everything else exactly as in the picture: the same light sandy-beige wooden letters with darker brown edges and wood grain, the brown wooden board under the last word, the small anchor hanging from the last letter, dark-brown outlines, hand-painted cel-shaded look. The letters and the anchor must keep their natural wood colours: no pink, purple or magenta anywhere in the logo. Keep the plain flat magenta background (#FF00FF) completely empty, no other text, no frame, no watermark'
+    }
     if (id === 'icon_192' || id === 'icon_maskable_512') job.derivedFrom = 'icon_512'
   }
   return job

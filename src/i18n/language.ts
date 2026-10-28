@@ -25,10 +25,21 @@ export function oneDecimal(value: number): string {
   return getSettings().language === 'en' ? text : text.replace('.', ',')
 }
 
+/** The game's name: Inselwirtschaft in German, Island Economy in English. */
+export function gameTitle(): string {
+  return t('Inselwirtschaft', 'Island Economy')
+}
+
+/** The title picture of the start menu for the current language (under public/sprites/app). */
+export function logoFile(): string {
+  return getLanguage() === 'en' ? 'logo_en.webp' : 'logo.webp'
+}
+
 export function setLanguage(language: Language): void {
   updateSettings({ language })
   applyDataLanguage(language)
   document.documentElement.lang = language
+  document.title = gameTitle()
   listeners.forEach((listener) => listener())
 }
 
@@ -42,4 +53,5 @@ export function subscribeLanguage(listener: () => void): () => void {
 export function initLanguage(): void {
   applyDataLanguage(getLanguage())
   document.documentElement.lang = getLanguage()
+  document.title = gameTitle()
 }

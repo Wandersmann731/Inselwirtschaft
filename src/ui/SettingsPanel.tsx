@@ -114,7 +114,7 @@ export function SettingsPanel({ onClose, onDeleted }: Props) {
               </button>
             )}
           </div>
-          <p className="stats-note">{t('Inselwirtschaft läuft ohne Konto und ohne Internet. Alle Daten bleiben auf diesem Gerät.', 'Inselwirtschaft runs without an account and without internet. All data stays on this device.')}</p>
+          <p className="stats-note">{t('Inselwirtschaft läuft ohne Konto und ohne Internet. Alle Daten bleiben auf diesem Gerät.', 'Island Economy runs without an account and without internet. All data stays on this device.')}</p>
         </div>
       </div>
     </div>
