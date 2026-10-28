@@ -1131,6 +1131,14 @@ body,
   line-height: 1.4;
 }
 
+.hint-note {
+  margin: -4px 0 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(240, 180, 60, 0.18);
+  line-height: 1.35;
+}
+
 .hint-actions {
   display: flex;
   flex-wrap: wrap;

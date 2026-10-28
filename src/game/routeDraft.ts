@@ -26,6 +26,14 @@ function withPlan(state: IslandState, draft: RouteDraft): RouteDraft {
   return { ...draft, plan: planRoute(state, draft.start, draft.end, draft.via) }
 }
 
+/** A route from a building to the nearest trading post or market house, as if both had been tapped. */
+export function routeToStore(state: IslandState, from: Tile): RouteDraft {
+  const distance = (b: Tile): number => Math.abs(b.x - from.x) + Math.abs(b.y - from.y)
+  const hub = state.buildings.filter((b) => b.type === 'kontor' || b.type === 'market_house').sort((a, b) => distance(a) - distance(b))[0]
+  const started = tapRoute(state, EMPTY_ROUTE, from)
+  return hub ? tapRoute(state, started, { x: hub.x, y: hub.y }) : started
+}
+
 /** A tap sets the start first, then the end. Later taps move whichever end point is closer; waypoints stay. */
 export function tapRoute(state: IslandState, draft: RouteDraft, tile: Tile): RouteDraft {
   if (anchorTiles(state, tile).length === 0) return draft

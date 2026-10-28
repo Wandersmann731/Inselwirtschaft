@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { islandName } from './i18n/dataNames'
 import { tiers } from './data'
 import { BuildController } from './game/buildController'
 import type { GameLoop } from './game/gameLoop'
@@ -63,7 +64,7 @@ export function App({ loop, onQuit }: { loop: GameLoop; onQuit: () => void }) {
         residentsByTier={residentsByTier}
         highestTier={state.highestTier}
         speed={state.speed}
-        islandName={island.name}
+        islandName={islandName(island.name)}
         stock={island.stock}
         owned={island.owned}
         onSpeedChange={(speed) => loop.setSpeed(speed)}

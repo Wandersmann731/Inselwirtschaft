@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { islandName } from '../i18n/dataNames'
 import { config } from '../data'
 import { toIslandState } from '../sim/islands'
 import type { GameState } from '../sim/state'
@@ -42,7 +43,7 @@ export function Toasts({ state }: { state: GameState }) {
         now.add(key)
         if (!warned.current.has(key)) {
           const text = shortageText(warning.good, warning.cycles)
-          push(owned.length > 1 ? `${island.name}: ${text}` : text)
+          push(owned.length > 1 ? `${islandName(island.name)}: ${text}` : text)
         }
       }
     }

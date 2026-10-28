@@ -10,7 +10,9 @@ export interface MapInputHandlers {
   /** One finger held still for a while (not while drawing): show information about what lies there. */
   onLongPress?(x: number, y: number): void
   /** Grab mode only: a single finger went down; return true to take it as a drag (see onStrokeMove/End), false to pan. */
-  onGrab?(x: number, y: number): boolean
+  onGrab?(x: number, y: number, pointerType: string): boolean
+  /** The mouse moved over the map with no button pressed. */
+  onHover?(x: number, y: number): void
   /** Draw and grab mode: a single finger or the mouse starts, continues and ends a stroke. */
   onStrokeStart?(x: number, y: number): void
   onStrokeMove?(x: number, y: number): void
@@ -89,7 +91,7 @@ export class MapInput {
       if (this.mode === 'draw') {
         this.stroking = true
         this.handlers.onStrokeStart?.(pos.x, pos.y)
-      } else if (this.mode === 'grab' && this.handlers.onGrab?.(pos.x, pos.y)) {
+      } else if (this.mode === 'grab' && this.handlers.onGrab?.(pos.x, pos.y, event.pointerType)) {
         this.stroking = true
       } else {
         this.startLongPress(pos)
@@ -104,7 +106,13 @@ export class MapInput {
   }
 
   private onMove = (event: PointerEvent): void => {
-    if (!this.pointers.has(event.pointerId)) return
+    if (!this.pointers.has(event.pointerId)) {
+      if (event.pointerType === 'mouse' && this.pointers.size === 0) {
+        const pos = this.local(event)
+        this.handlers.onHover?.(pos.x, pos.y)
+      }
+      return
+    }
     const pos = this.local(event)
     this.pointers.set(event.pointerId, pos)
 

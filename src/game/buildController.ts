@@ -9,9 +9,9 @@ import { buildShip } from '../sim/ships'
 import type { IslandState } from '../sim/state'
 import { recordBuild, undoBuild } from '../sim/undo'
 import type { GameLoop } from './gameLoop'
-import { nearestSpot, originAt } from './placeSearch'
+import { nearestSpot, originAt, outOfReach } from './placeSearch'
 import { loadRecent, pushRecent } from './recent'
-import { grabRoute, moveRoute, releaseRoute, resetWaypoints, tapRoute, EMPTY_ROUTE, type RouteDraft } from './routeDraft'
+import { grabRoute, moveRoute, releaseRoute, resetWaypoints, routeToStore, tapRoute, EMPTY_ROUTE, type RouteDraft } from './routeDraft'
 import { IDLE, UNDO_MS, type ToolSnapshot, type UndoEntry } from './toolSnapshot'
 import { strokeLine, type Tile } from './stroke'
 
@@ -80,6 +80,16 @@ export class BuildController {
     this.set({ ...IDLE, mode: 'road' })
   }
 
+  /**
+   * Road mode with a route already planned from the building to the nearest trading post or market house,
+   * so a beginner only has to press "Build". If no route is found, only the start is set.
+   */
+  startRoadFrom(buildingId: number): void {
+    const island = this.loop.getIslandState()
+    const from = island.buildings.find((b) => b.id === buildingId)
+    this.set({ ...IDLE, mode: 'road', route: from ? routeToStore(island, from) : EMPTY_ROUTE })
+  }
+
   startDemolish(): void {
     this.set({ ...IDLE, mode: 'demolish' })
   }
@@ -126,6 +136,26 @@ export class BuildController {
   setCenter(tile: Tile): void {
     if (this.snapshot.mode !== 'place' || this.snapshot.areaMode) return
     this.set({ ...this.snapshot, center: tile }, true)
+  }
+
+  /**
+   * A tap or click on the map while placing: builds right there. If it cannot be built there
+   * (no room, wrong ground, too expensive), the ghost moves to the spot and the bar says why.
+   */
+  placeAt(tile: Tile): void {
+    if (this.snapshot.mode !== 'place' || this.snapshot.areaMode) return
+    this.setCenter(tile)
+    const { typeId, origin, rotated } = this.snapshot
+    // out of reach a house stays empty: a tap only shows the warning there, "Build" still builds on purpose
+    if (!typeId || !origin || outOfReach(this.loop.getIslandState(), typeId, origin, rotated)) return
+    this.confirm()
+  }
+
+  /** With a mouse the ghost follows the pointer, so a click builds where the ghost is shown. */
+  hover(tile: Tile): void {
+    const { mode, areaMode, center } = this.snapshot
+    if (mode !== 'place' || areaMode || (center && center.x === tile.x && center.y === tile.y)) return
+    this.setCenter(tile)
   }
 
   /** Builds the ghost building. Does nothing if the placement is invalid or unaffordable. */

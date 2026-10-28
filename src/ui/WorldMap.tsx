@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { islandName } from '../i18n/dataNames'
 import { climates } from '../data'
 import { sprites } from '../render/sprites'
 import type { GameState } from '../sim/state'
@@ -126,7 +127,7 @@ export function WorldMap({ state, activeIsland, onSelect, onClose }: WorldMapPro
         ctx.strokeRect(offsetX + placement.x * scale, offsetY + placement.y * scale, placement.w * scale, placement.h * scale)
       }
       ctx.fillStyle = 'rgba(0, 0, 0, 0.55)'
-      const label = island.owned ? island.name : `${island.name} (${island.role === 'trader' ? t('Händler', 'traders') : t('frei', 'free')})`
+      const label = island.owned ? islandName(island.name) : `${islandName(island.name)} (${island.role === 'trader' ? t('Händler', 'traders') : t('frei', 'free')})`
       const labelWidth = ctx.measureText(label).width + 10 * dpr
       ctx.fillRect(x - labelWidth / 2, y - 10 * dpr, labelWidth, 20 * dpr)
       ctx.fillStyle = '#ffffff'

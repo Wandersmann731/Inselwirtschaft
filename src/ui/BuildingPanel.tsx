@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { config, getBuilding, tiers, trade } from '../data'
 import type { BuildingCost } from '../data'
-import { cumulativeNeeds, getTier } from '../sim/tiers'
+import { cumulativeNeeds, getTier, tierIndex } from '../sim/tiers'
 import type { BuildController } from '../game/buildController'
 import { inputTarget, upkeepOf } from '../sim/production'
 import { getLinks } from '../sim/logistics'
@@ -56,7 +56,7 @@ export function BuildingPanel({
             <Icon name={STATUS_ICONS[production.status.kind]} size={26} />
             {statusText(production.status)}
           </div>
-          <div className="panel-line">{t('Auslastung', 'Utilisation')}: {production.utilization} % {t('(letzter Zyklus)', '(last cycle)')}</div>
+          <div className="panel-line">{t('Auslastung', 'Utilization')}: {production.utilization}{t(' %', '%')} {t('(letzter Zyklus)', '(last cycle)')}</div>
           <div className="panel-bar">
             <div className="panel-bar-fill" style={{ width: `${(production.progress / cycleTicks) * 100}%` }} />
           </div>
@@ -83,7 +83,7 @@ export function BuildingPanel({
             </div>
           ))}
           {production.shipments.length > 0 && (
-            <div className="panel-line">{t('Unterwegs', 'On the way')}: {production.shipments.length} {t('Lieferung(en)', 'delivery(ies)')}</div>
+            <div className="panel-line">{t('Unterwegs', 'On the way')}: {production.shipments.length} {production.shipments.length === 1 ? t('Lieferung', 'delivery') : t('Lieferungen', 'deliveries')}</div>
           )}
         </>
       )}
@@ -169,7 +169,7 @@ function HousePanel({ house, stopped }: { house: NonNullable<IslandState['buildi
             <span className="panel-bar need-bar">
               <span className="panel-bar-fill" style={{ width: `${percent}%`, background: needColor(percent) }} />
             </span>
-            <span className="need-percent">{percent} %</span>
+            <span className="need-percent">{percent}{t(' %', '%')}</span>
           </div>
         )
       })}
@@ -214,6 +214,9 @@ function moodOf(house: HouseState): { face: string; text: string } {
   const needs = cumulativeNeeds(house.tier).filter((need) => !need.optional)
   const percent = (id: string): number => house.needs[id] ?? 0
   if (needs.some((need) => !need.forRise && percent(need.id) < config.population.shortageBelow)) {
+    if (tierIndex(house.tier) === 0 && house.residents <= config.population.firstResidents) {
+      return { face: '☹️', text: t('Unzufrieden: Es fehlt etwas Wichtiges. Weitere Bewohner ziehen erst ein, wenn es da ist.', 'Unhappy: something important is missing. More residents only move in once it arrives.') }
+    }
     return { face: '☹️', text: t('Unzufrieden: Es fehlt etwas Wichtiges, Bewohner ziehen aus.', 'Unhappy: something important is missing, residents are moving out.') }
   }
   if (needs.every((need) => percent(need.id) >= 100)) return { face: '😊', text: t('Glücklich: Alles da, das Haus kann aufsteigen.', 'Happy: everything is there, the house can rise.') }

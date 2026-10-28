@@ -1,4 +1,5 @@
 import { buildings, chains, climates, goods, landNames, tiers } from '../data'
+import { getSettings } from '../save/settings'
 
 /** English names of the game data by id. The German names stay in the JSON files. */
 const EN: Record<string, Record<string, string>> = {
@@ -11,7 +12,7 @@ const EN: Record<string, Record<string, string>> = {
   },
   buildings: {
     house_pioneers: 'Pioneer house', house_aristocrats: 'Aristocrat house', food_salt_stand: 'Food/salt stall', cloth_stand: 'Clothing stall',
-    chapel: 'Chapel', tavern: 'Tavern', church: 'Church', bathhouse: 'Bathhouse', theater: 'Theatre', cathedral: 'Cathedral',
+    chapel: 'Chapel', tavern: 'Tavern', church: 'Church', bathhouse: 'Bathhouse', theater: 'Theater', cathedral: 'Cathedral',
     drink_stand: 'Drinks stall', tobacco_spice_stand: 'Tobacco/spice stall', lamp_oil_stand: 'Lamp oil stall', jewelry_stand: 'Jewelry stall',
     forester: "Forester's hut", quarry: 'Quarry', ore_mine: 'Ore mine', weaver: 'Weaver', sheep_farm: 'Sheep farm',
     cotton_plantation: 'Cotton plantation', fishery: 'Fishery', grain_farm: 'Grain farm', mill: 'Mill', bakery: 'Bakery',
@@ -52,6 +53,17 @@ const TARGETS: [string, Named[]][] = [
 ]
 
 const german = new Map<Named, string>()
+
+/** English names of the islands. A saved game keeps the German name, so it is translated when shown. */
+const ISLANDS_EN: Record<string, string> = {
+  Heimatinsel: 'Home Island', Eisrand: 'Icerim', Frostmark: 'Frostmark', Sonnenhain: 'Sungrove',
+  Grünwall: 'Greenwall', Handelshafen: 'Trade Harbor', Weidenland: 'Meadowland',
+}
+
+/** The name of an island in the current language. */
+export function islandName(name: string): string {
+  return getSettings().language === 'en' ? (ISLANDS_EN[name] ?? name) : name
+}
 
 /** Switches the `name` of all game data between German (the JSON) and English. */
 export function applyDataLanguage(language: 'de' | 'en'): void {

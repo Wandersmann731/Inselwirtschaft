@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { islandName as translatedIsland } from '../i18n/dataNames'
 import { goods, trade } from '../data'
 import type { GameLoop } from '../game/gameLoop'
 import { addOrder, addStop, createRoute, deleteRoute, removeOrder, removeStop } from '../sim/routes'
@@ -25,7 +26,7 @@ function amountLabel(amount: number): string {
 /** Fleet and trade routes. */
 export function TradePanel({ loop, state, onClose }: { loop: GameLoop; state: GameState; onClose: () => void }) {
   const [tab, setTab] = useState<Tab>('ships')
-  const islandName = (id: number | null): string => state.islands.find((island) => island.id === id)?.name ?? '?'
+  const islandName = (id: number | null): string => translatedIsland(state.islands.find((island) => island.id === id)?.name ?? '?')
   const hasYard = state.islands.some(
     (island) => island.owned && island.buildings.some((b) => b.type === 'shipyard' && b.active),
   )
@@ -126,7 +127,7 @@ function ShipCard({
               .filter((island) => island.id !== ship.island)
               .map((island) => (
                 <option key={island.id} value={island.id}>
-                  {island.name}
+                  {translatedIsland(island.name)}
                 </option>
               ))}
           </select>

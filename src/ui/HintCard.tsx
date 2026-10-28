@@ -7,8 +7,8 @@ import { t } from '../i18n/language'
 import { getSettings } from '../save/settings'
 import { buildingBlocker } from '../sim/build'
 import type { GameState, IslandState } from '../sim/state'
-import { currentHint, hintProgress, skipHint } from '../sim/tutorial'
-import { hintText } from './hintTexts'
+import { currentHint, hintProgress, isConnected, skipHint } from '../sim/tutorial'
+import { hintText, inText } from './hintTexts'
 
 interface Props {
   loop: GameLoop
@@ -24,6 +24,18 @@ function offeredBuilding(step: TutorialStep, island: IslandState): string | null
     return blocker === null || blocker.code === 'debt'
   })
   return buildable.find((id) => !island.buildings.some((building) => building.type === id)) ?? buildable[0] ?? null
+}
+
+/** A building of the tip that stands but delivers nothing yet: no road, or no trading post or market house in reach. */
+function waitingBuilding(step: TutorialStep, island: IslandState): IslandState['buildings'][number] | null {
+  return island.buildings.find((building) => (step.build ?? []).includes(building.type) && !isConnected(building)) ?? null
+}
+
+/** The line under the tip that says why the built producer does not count yet. */
+function waitingNote(name: string, noRoad: boolean): string {
+  return noRoad
+    ? t(`${name}: noch keine Straße zum Kontor, darum kommt nichts im Lager an.`, `Not connected yet: the ${inText(name)} needs a road to the trading post.`)
+    : t(`${name}: außerhalb von Kontor und Markthaus, darum kommt nichts im Lager an.`, `The ${inText(name)} is out of reach of the trading post and market house, so it delivers nothing.`)
 }
 
 /**
@@ -48,6 +60,8 @@ export function HintCard({ loop, state, island, tool }: Props) {
   const text = hintText(step.id)
   const { index, total } = hintProgress(step.id)
   const build = offeredBuilding(step, island)
+  const waiting = waitingBuilding(step, island)
+  const noRoad = waiting?.production?.status.kind === 'noRoad'
   const last = step.done.length === 0
   return (
     <div className="hint-card" role="dialog" aria-live="polite" aria-label={text.title}>
@@ -56,13 +70,18 @@ export function HintCard({ loop, state, island, tool }: Props) {
         <span className="hint-count" title={t(`Tipp ${index} von ${total}`, `Tip ${index} of ${total}`)}>
           {index}/{total}
         </span>
-        <button type="button" className="panel-close" onClick={() => setFoldedId(step.id)} aria-label={t('Tipp einklappen', 'Fold tip')}>
+        <button type="button" className="panel-close" onClick={() => setFoldedId(step.id)} aria-label={t('Tipp einklappen', 'Collapse tip')}>
           –
         </button>
       </div>
       <p className="hint-body">{text.body}</p>
+      {waiting && <p className="hint-note">{waitingNote(getBuilding(waiting.type).name, noRoad)}</p>}
       <div className="hint-actions">
-        {build && (
+        {waiting && noRoad ? (
+          <button type="button" className="action-button confirm" onClick={() => tool.startRoadFrom(waiting.id)}>
+            {t('Straße bauen', 'Build road')}
+          </button>
+        ) : build && (
           <button type="button" className="action-button confirm" onClick={() => tool.startPlacing(build)}>
             {t('Bauen', 'Build')}: {getBuilding(build).name}
           </button>
