@@ -57,9 +57,18 @@ function loadStored(): Partial<Settings> {
   return {}
 }
 
+/** The settings a page starts with: the defaults, then what the address asks for, then what the player chose. */
+export function initialSettings(stored: Partial<Settings>, search: string): Settings {
+  const params = new URLSearchParams(search)
+  // Embedded in another page (?embed): music starts off there. A music volume the player set still wins.
+  const embed: Partial<Settings> = params.has('embed') ? { volumeMusic: 0 } : {}
+  const settings: Settings = { ...DEFAULTS, ...embed, ...stored }
+  if (params.has('debug')) settings.debug = true
+  return settings
+}
+
 const stored: Partial<Settings> = loadStored()
-const current: Settings = { ...DEFAULTS, ...stored }
-if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debug')) current.debug = true
+const current: Settings = initialSettings(stored, typeof window !== 'undefined' ? window.location.search : '')
 
 /** The settings in use. The renderer reads this every frame, so changes show at once. */
 export function getSettings(): Readonly<Settings> {
