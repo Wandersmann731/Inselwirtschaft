@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import type { BuildController } from '../game/buildController'
-import { world } from '../data'
 import { haptic } from '../game/haptic'
 import { MapInput } from '../input/touch'
 import { MapRenderer } from '../render/mapRenderer'
@@ -21,7 +20,6 @@ export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    let lastTap: { tile: { x: number; y: number }; time: number } | null = null
     const renderer = new MapRenderer(canvas, getState, tool.getSnapshot, () => getSettings().debug)
     renderer.start()
     onRenderer?.(renderer)
@@ -30,18 +28,9 @@ export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
     const handleTap = (x: number, y: number): void => {
       const { mode, freehand } = tool.getSnapshot()
       if (mode === 'place') {
+        // a tap or click builds right there; where it cannot be built, the ghost shows why
         const tile = renderer.tileAt(x, y)
-        if (!tile) return
-        // a second tap on the same spot builds
-        const last = lastTap
-        lastTap = { tile, time: performance.now() }
-        if (last && lastTap.time - last.time < world.input.doubleTapMs && Math.abs(last.tile.x - tile.x) <= 1 && Math.abs(last.tile.y - tile.y) <= 1) {
-          tool.setCenter(tile)
-          tool.confirm()
-          lastTap = null
-        } else {
-          tool.setCenter(tile)
-        }
+        if (tile) tool.placeAt(tile)
       } else if (mode === 'road' && !freehand) {
         const tile = renderer.tileAt(x, y)
         if (tile) tool.routeTap(tile)
@@ -67,10 +56,16 @@ export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
         renderer.selectAt(x, y)
         tool.inspect(id)
       },
-      onGrab: (x, y) => {
+      onGrab: (x, y, pointerType) => {
+        // with a mouse the ghost follows the pointer: dragging moves the map, a click builds
+        if (pointerType === 'mouse' && tool.getSnapshot().mode === 'place') return false
         const tile = renderer.tileAt(x, y)
         grabStart = { x, y }
         return tile ? tool.grab(tile) : false
+      },
+      onHover: (x, y) => {
+        const tile = renderer.tileAt(x, y)
+        if (tile) tool.hover(tile)
       },
       onStrokeStart: (x, y) => {
         const tile = renderer.tileAt(x, y)
@@ -84,7 +79,7 @@ export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
       },
       onStrokeEnd: () => {
         if (!tool.grabbing) return tool.strokeEnd()
-        // a touch on the ghost building that did not move it counts as a tap (a second tap there builds)
+        // a touch on the ghost building that did not move it counts as a tap: it builds there
         if (!tool.grabRelease() && tool.getSnapshot().mode === 'place') handleTap(grabStart.x, grabStart.y)
       },
       onStrokeCancel: () => (tool.grabbing ? void tool.grabRelease() : tool.strokeCancel()),

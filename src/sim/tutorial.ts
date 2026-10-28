@@ -2,7 +2,7 @@
 import { tutorial } from '../data'
 import type { TutorialCondition, TutorialStep } from '../data'
 import { isBuildingUnlocked, tierIndex } from './tiers'
-import type { GameState } from './state'
+import type { GameState, PlacedBuilding } from './state'
 
 /** What the conditions look at, gathered once over the player's islands. */
 interface Realm {
@@ -12,6 +12,12 @@ interface Realm {
   stocked: Set<string>
 }
 
+/** False for a producer that cannot deliver yet: no road to a store, or no trading post or market house in reach. */
+export function isConnected(building: PlacedBuilding): boolean {
+  const kind = building.production?.status.kind
+  return kind !== 'noRoad' && kind !== 'noHub'
+}
+
 function survey(state: GameState): Realm {
   const types = new Set<string>()
   const stocked = new Set<string>()
@@ -19,6 +25,8 @@ function survey(state: GameState): Realm {
   for (const island of state.islands) {
     if (!island.owned) continue
     for (const building of island.buildings) {
+      // a producer without a road (or out of reach of a store) delivers nothing yet: its tip is not done
+      if (!isConnected(building)) continue
       types.add(building.type)
       if (building.house && !building.house.ruin) houses += 1
     }

@@ -26,6 +26,11 @@ export interface GameConfig {
   population: {
     /** Residents moving into a house with all needs met, per economy cycle. */
     moveInPerCycle: number
+    /**
+     * Pioneers who move into a new house at the next cycle even before goods arrive, and stay in a shortage.
+     * More only come once food and cloth are there. Higher tiers keep waiting for their goods.
+     */
+    firstResidents: number
     /** Residents leaving a house in shortage, per economy cycle. */
     moveOutPerCycle: number
     /** Cycles with all needs at 100 % (and full house) before a house rises a tier. */
@@ -214,7 +219,7 @@ export interface WorldConfig {
   maxCachedChunks: number
   minZoom: number
   maxZoom: number
-  input: { tapSlopPx: number; tapMaxMs: number; wheelZoomSpeed: number; longPressMs: number; doubleTapMs: number }
+  input: { tapSlopPx: number; tapMaxMs: number; wheelZoomSpeed: number; longPressMs: number }
   /** Worn earth around houses, so a group of houses looks like a grown village and not like single plots. */
   settlement: {
     color: [number, number, number]

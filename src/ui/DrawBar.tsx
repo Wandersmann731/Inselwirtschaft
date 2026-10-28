@@ -37,13 +37,13 @@ export function DrawBar({ tool, snapshot, state }: { tool: BuildController; snap
                 {parts.join(', ')} · {t('zurück', 'refund')}: <Cost cost={preview.refund} />
               </>
             ) : (
-              t('50 % der Baukosten zurück', '50 % of the building cost back')
+              t('50 % der Baukosten zurück', '50% of the building cost back')
             )}
           </span>
           <LostSupply state={state} ids={preview.buildings} />
           <span className="place-hint">
             {marked > 0
-              ? t('Weitere antippen oder darüberziehen, dann „Abreißen“. Zwei Finger bewegen die Karte.', 'Tap or drag over more, then "Demolish". Two fingers move the map.')
+              ? t('Weitere antippen oder darüberziehen, dann „Abreißen“. Zwei Finger bewegen die Karte.', 'Tap or drag over more, then “Demolish”. Two fingers move the map.')
               : t('Gebäude oder Straßen antippen oder darüberziehen, um sie zu markieren. Zwei Finger bewegen die Karte.', 'Tap or drag over buildings or roads to mark them. Two fingers move the map.')}
           </span>
         </div>
@@ -71,11 +71,11 @@ export function DrawBar({ tool, snapshot, state }: { tool: BuildController; snap
   const missing = count > 0 ? missingResource(state, total) : null
 
   let hint: string
-  if (freehand) hint = t('Mit dem Finger ziehen, um Straßen zu bauen. Zwei Finger bewegen die Karte.', 'Drag with your finger to build roads. Two fingers move the map.')
+  if (freehand) hint = t('Ziehen, um Straßen zu bauen. Zwei Finger bewegen die Karte.', 'Drag to build roads. Two fingers move the map.')
   else if (!route.start) hint = t('Startpunkt antippen (Gebäude oder freie Kachel).', 'Tap the start point (a building or a free tile).')
   else if (!route.end) hint = t('Zielpunkt antippen. Das Spiel schlägt die beste Route vor.', 'Tap the target point. The game proposes the best route.')
   else if (count === 0) hint = t('Diese Strecke ist schon gebaut. Ziel neu antippen oder die Route ziehen.', 'This stretch is already built. Tap a new target or drag the route.')
-  else hint = t('Route ziehen, um sie zu verbiegen. Antippen verschiebt den näheren Punkt (A oder B). Dann „Bauen“.', 'Drag the route to bend it. Tapping moves the closer end (A or B). Then "Build".')
+  else hint = t('Route ziehen, um sie zu verbiegen. Antippen verschiebt den näheren Punkt (A oder B). Dann „Bauen“.', 'Drag the route to bend it. Tapping moves the closer end (A or B). Then “Build”.')
 
   return (
     <div className="place-bar">
@@ -88,7 +88,7 @@ export function DrawBar({ tool, snapshot, state }: { tool: BuildController; snap
             </>
           ) : (
             <>
-              {count} {t('neue Kacheln', 'new tiles')} <Cost cost={total} />
+              {count} {count === 1 ? t('neue Kachel', 'new tile') : t('neue Kacheln', 'new tiles')} <Cost cost={total} />
             </>
           )}
         </span>

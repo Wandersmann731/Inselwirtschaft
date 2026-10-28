@@ -1,7 +1,7 @@
 import { getBuilding } from '../data'
 import { buildingRect } from '../sim/coverage'
 import type { IslandState, HouseState, ProductionStatusKind } from '../sim/state'
-import { getTier, tierIndex } from '../sim/tiers'
+import { cumulativeNeeds, getTier, tierIndex } from '../sim/tiers'
 import { config } from '../data'
 import { diamondPath } from './terrainStyle'
 import { boxHeight, drawBox, type TileRect } from './shapes'
@@ -133,9 +133,15 @@ function houseHeight(house: HouseState): number {
 }
 
 /** Green if all needs are met, red if one is in shortage, yellow in between. */
+/**
+ * Red: a need for staying is short, residents leave. Yellow: something is still missing to rise (a need below
+ * 100 %, or the chapel the pioneers only need for rising). Green: all there. Optional bonus needs never colour it.
+ */
 function houseDotColor(house: HouseState): string {
-  const values = Object.values(house.needs)
-  if (values.some((percent) => percent < config.population.shortageBelow)) return STATUS_COLORS.noRoad
-  if (values.some((percent) => percent < 100 - 1e-6)) return STATUS_COLORS.waiting
+  const kinds = new Map(cumulativeNeeds(house.tier).map((need) => [need.id, need]))
+  const needs = Object.entries(house.needs).filter(([id]) => !kinds.get(id)?.optional)
+  const toStay = needs.filter(([id]) => !kinds.get(id)?.forRise)
+  if (toStay.some(([, percent]) => percent < config.population.shortageBelow)) return STATUS_COLORS.noRoad
+  if (needs.some(([, percent]) => percent < 100 - 1e-6)) return STATUS_COLORS.waiting
   return STATUS_COLORS.producing
 }

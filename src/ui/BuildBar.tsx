@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { islandName } from '../i18n/dataNames'
 import type { BuildController } from '../game/buildController'
 import type { IslandState } from '../sim/state'
 import { BuildingPanel } from './BuildingPanel'
@@ -54,7 +55,7 @@ function ForeignBar({ island, onOpenWorld }: { island: IslandState; onOpenWorld:
   return (
     <div className="place-bar">
       <div className="place-info">
-        <strong>{island.name}</strong>
+        <strong>{islandName(island.name)}</strong>
         <span className="place-hint">
           {island.role === 'trader'
             ? t('Stadt der Händler: Waren kaufst und verkaufst du hier mit deinem Schiff (Handel, Routen).', 'Traders\' town: you buy and sell goods here with your ship (trade, routes).')

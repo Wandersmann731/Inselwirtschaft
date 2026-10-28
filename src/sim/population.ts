@@ -48,16 +48,20 @@ export function runPopulation(state: IslandState): IslandState {
 
 function stepHouse(previous: HouseState, stock: Record<string, number>, ledger: CycleLedger, stopped: Set<string>): HouseState {
   const house: HouseState = { ...previous }
-  const { moveInPerCycle, moveOutPerCycle, upgradeCycles, downgradeCycles, ruinCycles } = config.population
+  const { moveInPerCycle, firstResidents, moveOutPerCycle, upgradeCycles, downgradeCycles, ruinCycles } = config.population
   const tier = getTier(house.tier)
 
   if (shortage(house)) {
-    // Nobody lives here yet: the empty house waits for its needs instead of counting down to a fall or a ruin.
+    // The first pioneers move into a new house right away and stay, so a new town comes alive at once.
+    // More only come, and nobody rises, once food and cloth are there.
+    const floor = previousTier(house.tier) ? 0 : Math.min(firstResidents, tier.residents)
+    if (previous.residents <= floor) return { ...house, residents: floor, shortageTimer: 0, upgradeTimer: 0, missingMaterials: false }
+    // Nobody lives here yet (higher tiers): the empty house waits for its needs instead of counting down to a fall or a ruin.
     if (previous.residents === 0) return { ...house, shortageTimer: 0, upgradeTimer: 0, missingMaterials: false }
     house.shortageTimer += 1
     house.upgradeTimer = 0
     house.missingMaterials = false
-    house.residents = Math.max(0, house.residents - moveOutPerCycle)
+    house.residents = Math.max(floor, house.residents - moveOutPerCycle)
 
     if (tier.unlock) {
       // Aristocrats do not fall back, their house collapses.

@@ -12,7 +12,7 @@ interface SlotListProps {
 }
 
 export function SlotList({ entries, action, allowAutosave, onChoose }: SlotListProps) {
-  if (!entries) return <p className="stats-note">{t('Lade …', 'Loading …')}</p>
+  if (!entries) return <p className="stats-note">{t('Lade …', 'Loading…')}</p>
   return (
     <div className="slot-list">
       {entries.map((entry) => {

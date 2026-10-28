@@ -27,13 +27,13 @@ export function PlaceBar({ tool, snapshot, state }: PlaceBarProps) {
   const canBuild = areaMode ? (area?.origins.length ?? 0) > 0 : origin !== null && error === null
   const square = def.size[0] === def.size[1]
 
-  let hint = t('Tippe auf die Karte, um die Position zu wählen', 'Tap the map to choose the position')
+  let hint = t('Tippe oder klicke auf die Karte, um dort zu bauen', 'Tap or click the map to build there')
   let hintClass = 'place-hint'
   if (areaMode) {
     const count = area?.origins.length ?? 0
     hint =
       area === null
-        ? t('Fläche mit dem Finger aufziehen, das Spiel setzt die Häuser', 'Drag an area with your finger, the game places the houses')
+        ? t('Fläche aufziehen, das Spiel setzt die Häuser', 'Drag across an area, the game places the houses')
         : t(
             `${count} ${count === 1 ? 'Haus' : 'Häuser'} geplant${area.outOfMoney ? ' (mehr ist nicht bezahlbar)' : ''}. Neu aufziehen ändert die Fläche.`,
             `${count} ${count === 1 ? 'house' : 'houses'} planned${area.outOfMoney ? ' (more is not affordable)' : ''}. Dragging again changes the area.`,
@@ -61,7 +61,7 @@ export function PlaceBar({ tool, snapshot, state }: PlaceBarProps) {
         : t('Außerhalb von Kontor und Markthaus: der Betrieb liefert nichts ab', 'Outside trading post and market house: the building delivers nothing')
       hintClass = 'place-hint invalid'
     } else {
-      hint = t('Bereit: „Bauen“ oder die Stelle noch einmal antippen', 'Ready: tap "Build" or tap the spot again')
+      hint = t('Bereit: Tippen oder Klicken baut hier, Ziehen verschiebt', 'Ready: tap or click to build here, drag to move')
     }
   }
 

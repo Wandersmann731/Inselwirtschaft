@@ -64,7 +64,7 @@ export function ProductionMenu({ tool, state }: { tool: BuildController; state: 
                 >
                   <Icon name={`goods/${need.good}`} size={34} />
                   <span className="need-tile-name">{resourceName(need.good)}</span>
-                  <span className="need-tile-state">{need.optional ? t('Bonus', 'Bonus') : supply === null ? '–' : `${Math.round(supply)} %`}</span>
+                  <span className="need-tile-state">{need.optional ? t('Bonus', 'Bonus') : supply === null ? '–' : `${Math.round(supply)}${t(' %', '%')}`}</span>
                 </button>
               )
             })}
@@ -90,7 +90,7 @@ function ChainView({ tool, state, selection, onBack }: { tool: BuildController; 
         <span className="chain-head-text">
           <strong>{resourceName(good)}</strong>
           {tier ? t(` für ${tier.name}`, ` for ${tier.name}`) : t(' (Baumaterial)', ' (building material)')} · {t('im Lager', 'in store')} {formatWhole(state.stock[good] ?? 0)} t
-          {supply !== null && t(` · versorgt ${Math.round(supply)} %`, ` · supplied ${Math.round(supply)} %`)}
+          {supply !== null && t(` · versorgt ${Math.round(supply)} %`, ` · supplied ${Math.round(supply)}%`)}
           {need?.optional && t(' · Bonus: bringt mehr Steuer', ' · bonus: brings more tax')}
         </span>
       </div>

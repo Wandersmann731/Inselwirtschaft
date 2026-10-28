@@ -41,3 +41,9 @@ export function nearestSpot(state: IslandState, typeId: string, rotated: boolean
   }
   return fallback
 }
+
+/** True for a house or producer outside the reach of every trading post and market house: it would get or deliver no goods. */
+export function outOfReach(state: IslandState, typeId: string, origin: Tile, rotated: boolean): boolean {
+  const def = getBuilding(typeId)
+  return Boolean(def.houseTier || def.output) && !hubReaches(state, { x: origin.x, y: origin.y, ...footprint(def, rotated) })
+}

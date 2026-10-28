@@ -1,4 +1,5 @@
 import { climates, goods, tiers } from '../data'
+import { islandName } from '../i18n/dataNames'
 import { balanceOf } from '../sim/economy'
 import type { GameState, IslandState } from '../sim/state'
 import { residentsOfTier } from '../sim/tiers'
@@ -20,7 +21,7 @@ export function StatsPanel({ state, island, onClose }: { state: GameState; islan
     <div className="stats-backdrop" onClick={onClose}>
       <div className="stats-panel" onClick={(event) => event.stopPropagation()}>
         <div className="panel-title">
-          <strong>{t('Statistik', 'Statistics')}: {island.name}</strong>
+          <strong>{t('Statistik', 'Statistics')}: {islandName(island.name)}</strong>
           <button type="button" className="panel-close" onClick={onClose} aria-label={t('Schließen', 'Close')}>
             ×
           </button>
@@ -53,7 +54,7 @@ export function StatsPanel({ state, island, onClose }: { state: GameState; islan
               </tbody>
             </table>
           ) : (
-            <p className="stats-note">{t('Die Zahlen erscheinen nach dem ersten Wirtschaftszyklus (60 Ticks).', 'The numbers appear after the first economy cycle (60 ticks).')}</p>
+            <p className="stats-note">{t('Die Zahlen erscheinen nach dem ersten Wirtschaftszyklus, nach einer Minute Spielzeit.', 'The numbers appear after the first economy cycle, after one minute of play.')}</p>
           )}
 
           <h3>{t('Einwohner (alle Inseln)', 'Residents (all islands)')}</h3>

@@ -9,7 +9,7 @@ import { isBuildingUnlocked, residentsFromTier, residentsOfTier } from '../src/s
 import { grassField, patchHouse } from './helpers'
 
 const rich = { coins: 1_000_000, stock: { tools: 500, wood: 500, bricks: 500, marble: 50 } }
-const { upgradeCycles, downgradeCycles, ruinCycles, moveInPerCycle, moveOutPerCycle } = config.population
+const { upgradeCycles, downgradeCycles, ruinCycles, moveInPerCycle, moveOutPerCycle, firstResidents } = config.population
 
 const ALL_MET = { food: 100, cloth: 100, chapel: 100 }
 const SHORT = { food: 0, cloth: 100, chapel: 100 }
@@ -36,11 +36,20 @@ describe('moving in and out', () => {
     expect(house(state).tier).toBe('pioneers')
   })
 
-  it('does not let anyone move in during shortage and lets residents leave', () => {
-    const state = patchHouse(oneHouse(), 1, { needs: SHORT, residents: 5 })
-    expect(house(runPopulation(state)).residents).toBe(5 - moveOutPerCycle)
+  it('lets residents leave during a shortage, but not the first pioneers', () => {
+    const state = patchHouse(oneHouse(), 1, { needs: SHORT, residents: 6 })
+    expect(house(runPopulation(state)).residents).toBe(6 - moveOutPerCycle)
+    const long = cycles(patchHouse(oneHouse(), 1, { needs: SHORT, residents: 8 }), 20)
+    expect(house(long).residents).toBe(firstResidents)
+    expect(house(long).tier).toBe('pioneers')
+  })
+
+  it('lets the first pioneers move into a new house before goods arrive, and the rest once they are there', () => {
     const empty = patchHouse(oneHouse(), 1, { needs: SHORT, residents: 0 })
-    expect(house(runPopulation(empty)).residents).toBe(0)
+    const first = runPopulation(empty)
+    expect(house(first).residents).toBe(firstResidents)
+    expect(house(cycles(first, 5)).residents).toBe(firstResidents) // no more while food is missing
+    expect(house(cycles(patchHouse(first, 1, { needs: ALL_MET }), 2)).residents).toBe(8)
   })
 })
 

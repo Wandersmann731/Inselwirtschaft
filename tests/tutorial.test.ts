@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { getBuilding, tutorial } from '../src/data'
 import { migrateState } from '../src/sim/migrations'
 import { createNewGame } from '../src/sim/newGame'
+import { createProduction } from '../src/sim/productionState'
 import { createRng } from '../src/sim/rng'
 import { CURRENT_SAVE_VERSION, type GameState, type PlacedBuilding } from '../src/sim/state'
 import { tick } from '../src/sim/tick'
@@ -42,6 +43,18 @@ describe('beginner tips', () => {
     expect(currentHint(game)?.id).toBe('wood')
     game = withBuildings(game, ['forester'])
     expect(currentHint(game)?.id).toBe('cloth')
+  })
+
+  it('wait for a producer to be connected by road before moving on', () => {
+    const base = withBuildings(createNewGame(1), [...houses(4), 'fishery'])
+    const withStatus = (kind: 'noRoad' | 'noHub' | 'producing'): GameState => {
+      const home = base.islands[0]
+      const buildings = home.buildings.map((b) => (b.type === 'fishery' ? { ...b, production: { ...createProduction(), status: { kind } } } : b))
+      return { ...base, islands: [{ ...home, buildings }, ...base.islands.slice(1)] }
+    }
+    expect(currentHint(withStatus('noRoad'))?.id).toBe('food')
+    expect(currentHint(withStatus('noHub'))?.id).toBe('food')
+    expect(currentHint(withStatus('producing'))?.id).toBe('wood')
   })
 
   it('need both the wool farm and the weaver for cloth, or a tannery for leather', () => {

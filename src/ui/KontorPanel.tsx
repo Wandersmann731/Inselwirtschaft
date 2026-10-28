@@ -1,4 +1,5 @@
 import { goods, trade } from '../data'
+import { islandName } from '../i18n/dataNames'
 import type { GameLoop } from '../game/gameLoop'
 import { setTradeLimit, traderBuyPrice, traderSellPrice, traderSells } from '../sim/trade'
 import type { IslandState } from '../sim/state'
@@ -23,7 +24,7 @@ export function KontorPanel({ loop, island, onClose }: { loop: GameLoop; island:
     <div className="stats-backdrop" onClick={onClose}>
       <div className="stats-panel kontor-panel" onClick={(event) => event.stopPropagation()}>
         <div className="panel-title">
-          <strong>{t('Kontor', 'Trading post')}: {island.name}</strong>
+          <strong>{t('Kontor', 'Trading post')}: {islandName(island.name)}</strong>
           <button type="button" className="panel-close" onClick={onClose} aria-label={t('Schließen', 'Close')}>
             ×
           </button>
