@@ -7,18 +7,21 @@
 //      Bushes, flowers, tufts and pebbles from art/decor sit in the gaps between the houses.
 //   node scripts/assets/quarters.mjs            (then node scripts/assets/optimize.mjs)
 //   node scripts/assets/quarters.mjs --preview  (also writes art-raw/quarter_preview.png)
+//   node scripts/assets/quarters.mjs --houses aristocrats,citizens_6   (only these tiers or pictures, no yards)
 import fs from 'node:fs'
 import path from 'node:path'
 import sharp from 'sharp'
+import { guideBody, nearPlot, plotColour, standingMask } from './house-cut.mjs'
 import { tileableTexture } from './image-tools.mjs'
 import { ROOT } from './manifest.mjs'
 
 const TILE_W = 128 // tile size in the pictures (twice the game's 64 x 32)
 const TILE_H = 64
 const TIERS = ['pioneers', 'settlers', 'citizens', 'merchants', 'aristocrats']
-const BODY_COLORS = [[150, 150, 150], [182, 182, 182], [226, 226, 226]] // walls and roof of the guide block
 const KEEP = 16 // picture pixels around the house that stay fully visible (porch, shadow, a bit of garden)
 const FADE = 30 // then the plot fades out over this many pixels
+const RIM_FROM = 4 // ground this close to the edge of the footprint (picture pixels, measured upwards) is gone
+const RIM_FADE = 22 // and from there it comes in over this many pixels
 export const BLOCK_SIZES = [[1, 2], [2, 1], [2, 2], [1, 3], [3, 1], [2, 3], [3, 2], [3, 3]]
 const STYLES = { village: 3, town: 2 } // pictures per size
 
@@ -51,15 +54,37 @@ async function cutHouse(file, guideFile, out) {
   const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
   const { width, height } = info
   const guide = await sharp(guideFile).resize(width, height, { kernel: 'nearest' }).removeAlpha().raw().toBuffer()
-  const body = new Uint8Array(width * height)
-  for (let i = 0; i < width * height; i++) {
-    const [r, g, b] = [guide[i * 3], guide[i * 3 + 1], guide[i * 3 + 2]]
-    if (BODY_COLORS.some(([cr, cg, cb]) => Math.abs(r - cr) < 3 && Math.abs(g - cg) < 3 && Math.abs(b - cb) < 3)) body[i] = 1
+  const body = guideBody(guide, width, height)
+  // Wings and towers beyond the guide block belong to the house as well: what stands up and touches the block.
+  // Trees at the corners of the plot stand alone and fade with the ground.
+  const cx = width / 2
+  const cy = height - width / 4
+  const inside = (x, y) => (1 - Math.abs(x + 0.5 - cx) / (width / 2) - Math.abs(y + 0.5 - cy) / (width / 4)) * (width / 4)
+  const groundLike = nearPlot(plotColour(data, width, height))
+  const standing = standingMask(data, body, width, height, { feet: { margin: 22, groundLike } })
+  const queue = []
+  for (let i = 0; i < width * height; i++) if (body[i]) queue.push(i)
+  for (let head = 0; head < queue.length; head++) {
+    const i = queue[head]
+    const x = i % width
+    for (const next of [i - width, i + width, x > 0 ? i - 1 : -1, x < width - 1 ? i + 1 : -1]) {
+      if (next < 0 || next >= width * height || body[next] || !standing[next]) continue
+      body[next] = 1
+      queue.push(next)
+    }
   }
   const distance = distanceTo(body, width, height)
+  // towards the edge of the footprint the ground always goes, however wide the house is
   for (let i = 0; i < width * height; i++) {
     const f = Math.max(0, Math.min(1, 1 - (distance[i] - KEEP) / FADE))
-    data[i * 4 + 3] = Math.round(data[i * 4 + 3] * f * f * (3 - 2 * f))
+    let keep = f * f * (3 - 2 * f)
+    if (!body[i]) {
+      const x = i % width
+      const y = (i - x) / width
+      const rim = Math.max(0, Math.min(1, (inside(x, y) - RIM_FROM) / RIM_FADE))
+      keep *= rim * rim * (3 - 2 * rim)
+    }
+    data[i * 4 + 3] = Math.round(data[i * 4 + 3] * keep)
   }
   await sharp(data, { raw: { width, height, channels: 4 } }).png().toFile(out)
 }
@@ -196,10 +221,13 @@ if (!fs.existsSync(pavingFile)) {
 }
 const textures = { grass: await texture('grass'), sand: await texture('sand'), paving: await texture('paving') }
 
+// --houses a,b: only the houses of these tiers are cut again (a tier, or one picture as tier_number), the yards stay
+const housesOnly = process.argv.includes('--houses') ? process.argv[process.argv.indexOf('--houses') + 1].split(',') : null
 let cut = 0
 for (const tier of [...TIERS, 'ruin']) {
   const guide = path.join(ROOT, 'docs', 'vorlagen', 'buildings', `house_${tier}_guide.png`)
   for (let n = 1; n <= 16; n++) {
+    if (housesOnly && !housesOnly.includes(tier) && !housesOnly.includes(`${tier}_${n}`)) continue
     const file = art('buildings', `house_${tier}_${n}.png`)
     if (!fs.existsSync(file) || !fs.existsSync(guide)) continue
     await cutHouse(file, guide, art('buildings', `house_${tier}_q_${n}.png`))
@@ -207,6 +235,7 @@ for (const tier of [...TIERS, 'ruin']) {
   }
 }
 console.log(`${cut} houses without plot`)
+if (housesOnly) process.exit(0)
 
 fs.mkdirSync(art('quarters'), { recursive: true })
 let yards = 0

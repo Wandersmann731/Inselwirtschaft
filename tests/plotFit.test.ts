@@ -94,6 +94,16 @@ describe('pictures with cropped walls', () => {
     expect(isCutOff(house(false), 128, 120)).toBe(true)
   })
 
+  it('are not suspected when a pale wall ends in a soft edge', () => {
+    // no dark outline, but a half-transparent pixel beside the wall, as scaling a painted edge leaves it
+    const data = house(false)
+    for (let y = 10; y < 70; y++) {
+      data.set([...WALL, 90], (y * 128 + 39) * 4)
+      data.set([...WALL, 90], (y * 128 + 90) * 4)
+    }
+    expect(isCutOff(data, 128, 120)).toBe(false)
+  })
+
   it('are not suspected when the side is not straight', () => {
     // a gable: every row begins in another column
     const data = blank(128, 120)

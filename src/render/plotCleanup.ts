@@ -16,6 +16,8 @@ const RING_TO = 0.22
 /** Above the upper edges: ground-coloured pixels connected to the edge, up to this far (in tiles), are loose earth. */
 const FRINGE_REACH = 1.2
 const FRINGE_COLOUR = 45
+/** Loose earth lies low. What rises higher than this above the edge (in picture pixels) is a wall in the plot's colour. */
+const FRINGE_RISE = 22
 
 export interface PlotGeometry {
   /** Footprint in tiles, as in the building data. */
@@ -118,7 +120,9 @@ export function cleanPlotPixels(data: Uint8ClampedArray, width: number, height: 
 /**
  * Ground painted above the upper edges of the diamond (a plot drawn as a block, or loose earth): starting at the
  * edge, every connected pixel in the plot colour is removed, up to FRINGE_REACH tiles away. The fill stops at walls,
- * roofs and everything else that is not ground-coloured, so the building stays.
+ * roofs and everything else that is not ground-coloured, so the building stays. A wall in the very colour of the
+ * plot stays as well: a patch that rises far above the edge is no loose earth and is left alone as a whole, and
+ * in a low patch only the pixels with nothing painted above them go.
  */
 function removeLooseGround(data: Uint8ClampedArray, width: number, height: number, colour: [number, number, number], edge: (x: number, y: number) => number): void {
   const isGround = (i: number): boolean => {
@@ -130,30 +134,48 @@ function removeLooseGround(data: Uint8ClampedArray, width: number, height: numbe
     const e = edge(x, y)
     return e < 0 && -e <= FRINGE_REACH
   }
-  const seen = new Uint8Array(width * height)
-  const queue: number[] = []
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      // seeds: outside pixels right at the edge (their neighbour below lies inside the diamond)
-      if (y + 1 >= height || !outside(x, y) || edge(x, y + 1) < 0) continue
-      const i = y * width + x
-      if (isGround(i)) {
-        seen[i] = 1
-        queue.push(i)
-      }
-    }
+  // the row where each column crosses the upper edge
+  const edgeRow = new Int32Array(width)
+  for (let x = 0; x < width; x++) {
+    let y = 0
+    while (y < height && edge(x, y) < 0) y++
+    edgeRow[x] = y
   }
-  while (queue.length > 0) {
-    const i = queue.pop()!
-    data[i * 4 + 3] = 0
-    const x = i % width
-    const y = (i - x) / width
-    for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
-      if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue
-      const n = ny * width + nx
-      if (seen[n] || !outside(nx, ny) || !isGround(n)) continue
-      seen[n] = 1
-      queue.push(n)
+  const seen = new Uint8Array(width * height)
+  for (let sy = 0; sy < height; sy++) {
+    for (let sx = 0; sx < width; sx++) {
+      // seeds: outside pixels right at the edge (their neighbour below lies inside the diamond)
+      const seed = sy * width + sx
+      if (sy + 1 >= height || seen[seed] || !outside(sx, sy) || edge(sx, sy + 1) < 0 || !isGround(seed)) continue
+      // one connected patch of ground colour, and how far it rises above the edge
+      const patch = [seed]
+      seen[seed] = 1
+      let rise = 0
+      for (let head = 0; head < patch.length; head++) {
+        const i = patch[head]
+        const x = i % width
+        const y = (i - x) / width
+        rise = Math.max(rise, edgeRow[x] - y)
+        for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
+          if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue
+          const n = ny * width + nx
+          if (seen[n] || !outside(nx, ny) || !isGround(n)) continue
+          seen[n] = 1
+          patch.push(n)
+        }
+      }
+      // a stone house on paving of the same stone: a patch that climbs high has climbed a wall, and that stays
+      if (rise > FRINGE_RISE) continue
+      // Loose earth has nothing above it. Where paint goes on above the patch, the patch is the foot of a wall
+      // that crosses the edge, and stays too.
+      const inPatch = new Set(patch)
+      const loose: number[] = []
+      for (const i of patch) {
+        let above = i - width
+        while (above >= 0 && inPatch.has(above)) above -= width
+        if (above < 0 || data[above * 4 + 3] <= 128) loose.push(i)
+      }
+      for (const i of loose) data[i * 4 + 3] = 0
     }
   }
 }

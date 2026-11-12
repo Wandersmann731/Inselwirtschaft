@@ -1,5 +1,6 @@
 // Some house pictures were cropped when they were made: a wall or roof ends in a straight vertical line, with no
-// outline, as if cut with a knife. A painted wall always ends in a dark outline. This check finds the cut ones, so
+// outline, as if cut with a knife. A painted wall ends in a dark outline, or at least in a soft edge: a trace of
+// half-transparent paint beside it. This check finds the cut ones, so
 // the game can leave them out and use the whole pictures of the same house instead.
 
 /** Only the upper part of a picture is looked at: below it lies the plot, which may end anywhere. */
@@ -9,6 +10,8 @@ const MIN_ROWS = 40
 /** A painted edge is dark in at least this share of its rows. */
 const MIN_DARK = 0.45
 const DARK = 75
+/** A cut is hard: in at least this share of its rows the pixel next to the edge is completely empty. */
+const MIN_HARD = 0.7
 
 /**
  * True if the left or right side of the picture is a straight vertical cut without an outline. Works on RGBA
@@ -40,6 +43,7 @@ export function isCutOff(data: Uint8ClampedArray, width: number, height: number)
     }
     if (run.length < MIN_ROWS) continue
     let dark = 0
+    let hard = 0
     for (const y of run) {
       for (const x of [column - 1, column, column + 1]) {
         if (x < 0 || x >= width) continue
@@ -49,7 +53,13 @@ export function isCutOff(data: Uint8ClampedArray, width: number, height: number)
           break
         }
       }
+      // a painted edge has a trace of paint on its outside (it was scaled down from a larger picture), a cut has none
+      let x = step === 1 ? 0 : width - 1
+      while (data[(y * width + x) * 4 + 3] <= 200) x += step
+      const outside = x - step
+      if (outside < 0 || outside >= width || data[(y * width + outside) * 4 + 3] === 0) hard++
     }
+    if (hard / run.length < MIN_HARD) continue
     if (dark / run.length < MIN_DARK) return true
   }
   return false

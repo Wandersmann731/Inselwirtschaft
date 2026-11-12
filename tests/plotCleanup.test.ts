@@ -69,6 +69,29 @@ describe('plot cleanup', () => {
     expect(alphaAt(data, width, 128, 40)).toBe(255)
   })
 
+  it('keeps a wall that has the colour of the plot and stands on the upper edge', () => {
+    const width = 256
+    const height = 200
+    const data = picture(width, height, 0, 0)
+    // a wall in the plot colour from the upper left edge 60 pixels up
+    for (let y = 50; y < 116; y++) for (let x = 40; x < 60; x++) data.set([200, 170, 90, 255], (y * width + x) * 4)
+    cleanPlotPixels(data, width, height, { w: 2, h: 2, pads: NO_PADS }, true)
+    expect(alphaAt(data, width, 50, 60)).toBe(255)
+    expect(alphaAt(data, width, 50, 104)).toBe(255)
+  })
+
+  it('keeps the foot of a wall in the plot colour when the rest of the wall goes on above it', () => {
+    const width = 256
+    const height = 200
+    const data = picture(width, height, 0, 0)
+    // 12 pixels of wall in the plot colour right above the upper left edge, then the wall in another colour
+    for (let y = 100; y < 116; y++) for (let x = 40; x < 50; x++) data.set([200, 170, 90, 255], (y * width + x) * 4)
+    for (let y = 60; y < 100; y++) for (let x = 40; x < 50; x++) data.set([90, 60, 160, 255], (y * width + x) * 4)
+    cleanPlotPixels(data, width, height, { w: 2, h: 2, pads: NO_PADS }, true)
+    expect(alphaAt(data, width, 45, 104)).toBe(255)
+    expect(alphaAt(data, width, 45, 70)).toBe(255)
+  })
+
   it('fills a missing corner of the plot with the plot colour', () => {
     const width = 256
     const height = 128

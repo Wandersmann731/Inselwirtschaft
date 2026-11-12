@@ -51,6 +51,12 @@ Weitere Optionen: `--parallel 5`, `--provider flux-2-pro` (je nach Anbieter und 
   (`pickVariant` in `src/render/spriteKeys.ts`), also immer dieselbe. Die Beschreibungen dazu stehen in `scripts/asset_data.py` (`HOUSE_STYLE`).
 - Häuser, Forsthaus, Fischerei und Minen stehen auf einem **kleinen Grundstück**, das zum Rand hin ausblendet (`featherPlot`). Das Gebäude
   füllt nur die Mitte, deshalb überlappen Nachbarn nicht und sie fügen sich in Wald oder Berg ein.
+- **Wohnhäuser werden an ihrem gemalten Grundstück ausgerichtet**, nicht am grauen Block der Vorlage (`cropToPlot` in `house-cut.mjs`):
+  Die Ecken des gemalten Grundstücks kommen auf die Ecken der Baufläche, die Erdkante fällt weg. Was auf dem Grundstück steht, bleibt
+  ganz, auch wenn das Haus breiter oder höher ist als der Block (Flügel, Türme, Bäume; `standingMask`). Früher schnitt der Zuschnitt
+  alles ab, was mehr als 22 Bildpunkte über den Block hinausragte. So neu zugeschnitten sind bisher alle 16 Aristokratenhäuser und
+  `house_citizens_6/9/16`, `house_pioneers_12`, `house_settlers_3/16`, `house_merchants_7`; die übrigen Häuser kommen beim nächsten
+  `--reprocess` dazu. Danach `node scripts/assets/quarters.mjs --houses <stufe oder stufe_nummer>` und `optimize.mjs` ausführen.
 - Bäume, Büsche und Felsen **direkt neben** einem Gebäude werden mit dem Gebäude tiefensortiert gezeichnet (`src/render/frontDecor.ts`),
   einige stehen also vor dem Gebäude. Unter Gebäuden und Straßen wächst nichts: der Wald wird dort gerodet.
 - Alle Varianten sind erzeugt: 16 je Wohnhausstufe, 4 Ruinen, je 4 für Farmen, Forsthaus, Fischerei und Minen.

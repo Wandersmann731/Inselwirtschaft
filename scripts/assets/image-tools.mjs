@@ -1,5 +1,6 @@
 // Image helpers (sharp): padding guides to a square, removing the flat background, masking and fitting.
 import sharp from 'sharp'
+import { greenShare, guideBody, standingMask } from './house-cut.mjs'
 
 export const SIZE = 1024
 const MAGENTA = { r: 255, g: 0, b: 255 }
@@ -388,11 +389,11 @@ export async function shrinkMatte(image, passes = 1) {
   return sharp(data, { raw: { width, height, channels: 4 } })
 }
 
-const BODY_COLORS = [[150, 150, 150], [182, 182, 182], [226, 226, 226]] // wall, wall, roof of the guide block
-
 /**
  * Lets the ground of a plot fade out towards its edge, so it blends into the terrain around it.
- * The building itself (found in the guide: the grey block) stays fully opaque.
+ * The building itself (found in the guide: the grey block) stays fully opaque. With `plot` (the corners of the
+ * painted plot, from cropToPlot), parts of the building that the model painted beyond the block stay too; without
+ * it they are cut off at the block.
  */
 /** Mixes a ground pixel towards the meadow colour (keeping its light and dark), more the more yellow and saturated it is. */
 function tone(data, o, meadow) {
@@ -409,16 +410,26 @@ function tone(data, o, meadow) {
   data[o + 2] = Math.min(255, b * (1 - mix) + meadow[2] * scale * mix)
 }
 
-export async function featherPlot(buffer, guideFile, width, height, meadow = null) {
+/** As tone(), but by colour alone: grass and leaves go towards the meadow, earth a little, walls and paving not at all. */
+function toneGreen(data, o, meadow) {
+  const r = data[o]
+  const g = data[o + 1]
+  const b = data[o + 2]
+  const earth = r > g * 1.3 && g > b * 1.2
+  const mix = earth ? 0.3 : 0.7 * greenShare(r, g, b)
+  if (mix <= 0) return
+  const luma = 0.3 * r + 0.59 * g + 0.11 * b
+  const meadowLuma = 0.3 * meadow[0] + 0.59 * meadow[1] + 0.11 * meadow[2]
+  const scale = Math.pow(Math.max(luma, 1) / meadowLuma, 0.9)
+  data[o] = Math.min(255, r * (1 - mix) + meadow[0] * scale * mix)
+  data[o + 1] = Math.min(255, g * (1 - mix) + meadow[1] * scale * mix)
+  data[o + 2] = Math.min(255, b * (1 - mix) + meadow[2] * scale * mix)
+}
+
+export async function featherPlot(buffer, guideFile, width, height, meadow = null, plot = null) {
   const guide = await sharp(guideFile).resize(width, height, { kernel: 'nearest' }).removeAlpha().raw().toBuffer()
   // body = pixels of the guide block, grown by a margin for roofs and shadows
-  const body = new Uint8Array(width * height)
-  for (let i = 0; i < width * height; i++) {
-    const r = guide[i * 3]
-    const g = guide[i * 3 + 1]
-    const b = guide[i * 3 + 2]
-    if (BODY_COLORS.some(([cr, cg, cb]) => Math.abs(r - cr) < 3 && Math.abs(g - cg) < 3 && Math.abs(b - cb) < 3)) body[i] = 1
-  }
+  const body = guideBody(guide, width, height)
   const grow = 22
   const rows = new Uint8Array(width * height)
   for (let y = 0; y < height; y++) {
@@ -458,10 +469,32 @@ export async function featherPlot(buffer, guideFile, width, height, meadow = nul
   const svg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="#000"/><polygon points="${points}" fill="#fff"/></svg>`)
   const soft = await sharp(svg).blur(6).greyscale().raw().toBuffer()
   const { data, info } = await sharp(buffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+  // Parts of the house that reach beyond the guide block stay as well (see standingMask). Ground may reach above
+  // the back edges as far as the painted plot does: its back corner often lies higher than the footprint's.
+  let standing = null
+  if (plot) {
+    const back = plot.tipL + plot.tipR - plot.front
+    const overhangAt = (x) => {
+      const painted = x < cx ? plot.tipL + ((back - plot.tipL) * x) / cx : plot.tipR + ((back - plot.tipR) * (width - x)) / cx
+      return Math.max(6, top + Math.abs(x + 0.5 - cx) * 0.5 - painted + 6)
+    }
+    standing = standingMask(data, body, width, height, { overhangAt })
+  }
   for (let i = 0; i < width * height; i++) {
-    if (grown[i]) continue
-    if (meadow) tone(data, i * 4, meadow)
-    const f = Math.max(0, Math.min(1, (soft[i * (soft.length / (width * height))] / 255 - 0.08) / 0.4))
+    // Where the house may be wider than the block, walls must not be tinted: only what is green is toned, and that
+    // everywhere, so a tree or a strip of lawn has the same green whether it stands near the house or not.
+    if (meadow && plot) toneGreen(data, i * 4, meadow)
+    // with a measured plot, what stands up is known from the picture: the block of the guide is not needed
+    if (plot ? standing[i] : grown[i]) continue
+    if (meadow && !plot) tone(data, i * 4, meadow)
+    let f = Math.max(0, Math.min(1, (soft[i * (soft.length / (width * height))] / 255 - 0.08) / 0.4))
+    if (plot) {
+      // A picture cut to its own plot fills the footprint exactly: the ground keeps a crisp edge right on the
+      // diamond, so the game has nothing to enlarge. (The game blends the rim into the terrain itself.)
+      const x = i % width
+      const y = (i - x) / width
+      f = Math.max(0, Math.min(1, (1 - Math.abs(x + 0.5 - cx) / (width / 2) - Math.abs(y + 0.5 - cy) / (width / 4)) * (width / 4) + 0.5))
+    }
     data[i * 4 + 3] = Math.round(data[i * 4 + 3] * f)
   }
   return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer()

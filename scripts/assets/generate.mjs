@@ -8,6 +8,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import sharp from 'sharp'
+import { cropToPlot } from './house-cut.mjs'
 import { featherPlot, fitInto, shrinkMatte, maskPolygon, padToSquare, removeBackground, roadTile, smokeFrame, SIZE, tileableTexture, waterFrame } from './image-tools.mjs'
 import { startServer } from './mcp-client.mjs'
 import { loadJobs, ROOT } from './manifest.mjs'
@@ -115,7 +116,12 @@ async function finish(job, rawFile) {
     // cut larger than the footprint and the extra border is written to art/pads.json, so the game places it exactly the same.
     let buffer
     const pads = padsFile()
-    if (job.kind === 'building' && !job.cutSlab) {
+    // a house is cut to the plot it was painted on, not to the guide (see cropToPlot); its earth side is gone then
+    const fitted = job.wide ? await cropToPlot(image, job.width, job.height, job.plotFloor) : null
+    if (fitted) {
+      buffer = fitted.buffer
+      pads.delete(job.id)
+    } else if (job.kind === 'building' && !job.cutSlab) {
       const growX = Math.round(box.width * 0.14)
       const growTop = Math.round(box.height * 0.16)
       const growBottom = Math.round(box.height * 0.05)
@@ -140,15 +146,16 @@ async function finish(job, rawFile) {
     if (job.kind === 'tile') buffer = await maskPolygon(buffer, job.width, job.height, DIAMOND)
     if (job.cutSlab) {
       // Plots must be flat: cut away everything below the lower edges of the ground diamond (the painted earth edge).
-      const lift = 14 // the painted earth edge lies on the guide lines, so cut a little above them
+      const lift = fitted ? 0 : 14 // the painted earth edge lies on the guide lines, so cut a little above them
       const bottom = job.height - 1 - lift
       const edge = job.height - job.width / 2 + job.width / 4 - lift
       buffer = await maskPolygon(buffer, job.width, job.height, [[0, 0], [job.width, 0], [job.width, edge], [job.width / 2, bottom], [0, edge]])
-      buffer = await featherPlot(buffer, path.join(ROOT, job.guide), job.width, job.height, job.meadow ? MEADOW : null)
+      buffer = await featherPlot(buffer, path.join(ROOT, job.guide), job.width, job.height, job.meadow ? MEADOW : null, fitted?.plot ?? null)
     }
     fs.writeFileSync(target, buffer)
     const { channels } = await sharp(buffer).stats()
-    return `deckt ${Math.round((channels[3].mean / 255) * 100)} %`
+    const fitNote = fitted ? `, Maßstab ${fitted.scale.toFixed(3)}, Kantenverhältnis ${fitted.ratio.toFixed(2)}, Sockel ${Math.round(fitted.thick)}` : ''
+    return `deckt ${Math.round((channels[3].mean / 255) * 100)} %${fitNote}`
   }
 
   if (job.kind === 'decor') {
