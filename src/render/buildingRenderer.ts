@@ -82,8 +82,10 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
       drawBox(ctx, rect, dotHeight, house ? houseColor(house) : def.color)
     }
     if (!state.owned) continue // the towns of others show no status
-    if (building.production) drawStatusDot(ctx, rect, dotHeight, STATUS_COLORS[building.production.status.kind])
-    else if (house && !house.ruin && house.residents > 0) drawStatusDot(ctx, rect, dotHeight, houseDotColor(house))
+    // a mark only where something is wrong: a producer that does not run, a house whose residents are leaving.
+    // A town that works shows no marks at all.
+    const mark = building.production ? STATUS_COLORS[building.production.status.kind] : house && !house.ruin && house.residents > 0 ? houseDotColor(house) : null
+    if (mark && mark !== STATUS_COLORS.producing && !(house && mark === STATUS_COLORS.waiting)) drawStatusDot(ctx, rect, dotHeight, mark)
   }
 }
 

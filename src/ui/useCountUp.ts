@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { reducedMotion } from '../save/motion'
 
 /** A number that runs to its new value instead of jumping there, e.g. the coins after the taxes came in. */
 export function useCountUp(target: number, durationMs = 450): number {
@@ -8,7 +9,7 @@ export function useCountUp(target: number, durationMs = 450): number {
   useEffect(() => {
     const from = latest.current
     if (from === target) return
-    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const still = reducedMotion()
     const start = performance.now()
     let frame = 0
     const step = (now: number): void => {

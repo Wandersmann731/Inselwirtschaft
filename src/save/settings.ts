@@ -22,6 +22,10 @@ export interface Settings {
   language: 'de' | 'en'
   /** Beginner tips: what to build next. */
   hints: boolean
+  /** The small overview map in the corner. Folded away it leaves more of the island free. */
+  minimap: boolean
+  /** No animations in the interface and on the map, in addition to what the system asks for. */
+  reducedMotion: boolean
 }
 
 /** German if the browser is set to German, English otherwise. Used until the player picks a language. */
@@ -44,6 +48,8 @@ const DEFAULTS: Settings = {
   keepAwake: true,
   language: browserLanguage(),
   hints: true,
+  minimap: true,
+  reducedMotion: false,
 }
 
 /** Only what the player chose is saved: the browser language and the ?debug switch stay defaults, not choices. */

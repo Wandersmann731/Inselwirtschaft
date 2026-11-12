@@ -5,7 +5,7 @@ import { checkPlacement, footprint } from '../sim/build'
 import { hubReaches, suppliedHouses } from '../sim/coverage'
 import type { IslandState } from '../sim/state'
 import { stockCapacity } from '../sim/storage'
-import { formatStock, placementMessage } from './messages'
+import { placementMessage } from './messages'
 import { Cost } from './Icon'
 import { t } from '../i18n/language'
 
@@ -74,8 +74,7 @@ export function PlaceBar({ tool, snapshot, state }: PlaceBarProps) {
             <Cost cost={scaleCost(def.cost, area.origins.length)} />
           ) : (
             <Cost cost={def.cost} />
-          )}{' '}
-          · {t('Vorrat', 'Stock')}: {formatStock(state)}
+          )}
         </span>
         <span className={hintClass}>{hint}</span>
       </div>

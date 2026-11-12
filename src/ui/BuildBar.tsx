@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { islandName } from '../i18n/dataNames'
 import type { BuildController } from '../game/buildController'
+import type { ChainFocus } from '../game/needsOverview'
 import type { IslandState } from '../sim/state'
 import { BuildingPanel } from './BuildingPanel'
 import { BuildMenu } from './BuildMenu'
@@ -16,10 +17,12 @@ interface BuildBarProps {
   onOpenWorld: () => void
   onOpenTrade: () => void
   onOpenKontor: () => void
+  /** Set when a warning asked to show the chain of a good. */
+  chainFocus: ChainFocus | null
 }
 
 /** Bottom bar: the build menu, or the bar of the active build tool. */
-export function BuildBar({ tool, island, onOpenStats, onOpenWorld, onOpenTrade, onOpenKontor }: BuildBarProps) {
+export function BuildBar({ tool, island, onOpenStats, onOpenWorld, onOpenTrade, onOpenKontor, chainFocus }: BuildBarProps) {
   const snapshot = useSyncExternalStore(tool.subscribe, tool.getSnapshot)
   if (!island.owned) return <ForeignBar island={island} onOpenWorld={onOpenWorld} />
   const undo = snapshot.undo && snapshot.undo.islandId === island.id && snapshot.mode !== 'demolish' ? <UndoChip key={snapshot.undo.at} tool={tool} entry={snapshot.undo} /> : null
@@ -45,7 +48,7 @@ export function BuildBar({ tool, island, onOpenStats, onOpenWorld, onOpenTrade, 
       {snapshot.selectedBuildingId !== null && (
         <BuildingPanel tool={tool} state={island} buildingId={snapshot.selectedBuildingId} onOpenKontor={onOpenKontor} />
       )}
-      <BuildMenu tool={tool} state={island} onOpenStats={onOpenStats} onOpenWorld={onOpenWorld} onOpenTrade={onOpenTrade} />
+      <BuildMenu tool={tool} state={island} onOpenStats={onOpenStats} onOpenWorld={onOpenWorld} onOpenTrade={onOpenTrade} chainFocus={chainFocus} />
     </>
   )
 }

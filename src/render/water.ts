@@ -130,3 +130,26 @@ function makePatches(ctx: CanvasRenderingContext2D): CanvasPattern | null {
   g.putImageData(image, 0, 0)
   return ctx.createPattern(canvas, 'repeat')
 }
+
+/** How dark the open sea gets at the edge of the map, 0 to 1. */
+const DEPTH = 0.42
+
+/**
+ * Deep water: the sea turns darker from the island towards the open sea, so it reads as depth and the repeating
+ * ripples fade into the distance. One gradient over the visible area; `bounds` is the box of the map in world pixels.
+ */
+export function fillDepth(ctx: CanvasRenderingContext2D, area: { x: number; y: number; w: number; h: number }, bounds: { minX: number; maxX: number; minY: number; maxY: number }): void {
+  const cx = (bounds.minX + bounds.maxX) / 2
+  const cy = (bounds.minY + bounds.maxY) / 2
+  const reach = (bounds.maxX - bounds.minX) / 2
+  ctx.save()
+  // the map is a diamond twice as wide as high: squash the circle to match
+  ctx.translate(cx, cy)
+  ctx.scale(1, 0.5)
+  const gradient = ctx.createRadialGradient(0, 0, reach * 0.42, 0, 0, reach * 1.05)
+  gradient.addColorStop(0, 'rgba(6, 28, 66, 0)')
+  gradient.addColorStop(1, `rgba(6, 28, 66, ${DEPTH})`)
+  ctx.fillStyle = gradient
+  ctx.fillRect(area.x - cx, (area.y - cy) * 2, area.w, area.h * 2)
+  ctx.restore()
+}

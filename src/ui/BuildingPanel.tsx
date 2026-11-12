@@ -50,6 +50,11 @@ export function BuildingPanel({
         </button>
       </div>
 
+      {production?.status.kind === 'noRoad' && (
+        <button type="button" className="action-button confirm panel-toggle" onClick={() => tool.startRoadFrom(building.id)}>
+          {t('Straße zum Lager bauen', 'Build a road to the store')}
+        </button>
+      )}
       {production && (
         <>
           <div className="panel-status">

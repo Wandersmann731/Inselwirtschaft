@@ -657,16 +657,49 @@ body,
   font-size: 15px;
 }
 
-.minimap {
+.minimap-box,
+.minimap-open {
   position: fixed;
   left: max(8px, env(safe-area-inset-left));
   top: 64px;
   z-index: 5;
+}
+
+.minimap {
+  display: block;
   border: 2px solid rgba(255, 255, 255, 0.55);
   border-radius: 4px;
   background: #1d4e6b;
-  opacity: 0.92;
   touch-action: none;
+}
+
+/* a small handle on the corner of the map; its touch area reaches beyond what is drawn */
+.minimap-fold {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.minimap-fold::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+}
+
+.minimap-open {
+  width: var(--button-size);
+  height: var(--button-size);
+  padding: 0;
+  border-radius: 8px;
+  font-size: 22px;
+  cursor: pointer;
 }
 
 .icon {
@@ -878,7 +911,8 @@ body,
     padding: 0 4px;
   }
 
-  .minimap {
+  .minimap-box,
+  .minimap-open {
     top: 124px;
   }
 
@@ -1333,3 +1367,130 @@ body,
     align-items: center;
   }
 }
+
+/* Start screen: the seed of the map, folded away */
+.menu-more summary {
+  min-height: 40px;
+  color: var(--muted);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* Phone held sideways: the start menu has little height, so its buttons stand in two columns under a small logo. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .menu-panel {
+    width: min(620px, 94vw);
+    gap: 6px;
+  }
+
+  .menu-logo {
+    max-height: 16vh;
+  }
+
+  .menu-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .menu-buttons > .primary,
+  .menu-buttons > .place-hint {
+    grid-column: 1 / -1;
+  }
+
+  .menu-button {
+    min-height: 48px;
+    font-size: 18px;
+  }
+}
+
+/* The numbers of the top bar are one big button that opens the statistics. */
+button.hud-stats {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* A small ring that fills up until taxes and upkeep are settled again. */
+.cycle-ring {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin: 0 -8px 0 0;
+  border-radius: 50%;
+  vertical-align: -2px;
+  background: conic-gradient(var(--accent) calc(var(--share) * 360deg), var(--track) 0);
+  -webkit-mask: radial-gradient(circle, transparent 4.5px, #000 5px);
+  mask: radial-gradient(circle, transparent 4.5px, #000 5px);
+}
+
+/* Soft dark corners over the map: the eye stays in the middle. */
+.map-shade {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 58%, rgba(24, 14, 6, 0.3) 100%);
+  pointer-events: none;
+}
+
+/* A warning that can be tapped: it leads to the buildings that make the good. */
+button.toast {
+  font-family: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+/* Statistics: small line charts of residents, coins and balance */
+.trends {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.trend {
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--tint);
+}
+
+.trend figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.trend figcaption strong {
+  color: var(--hud-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.trend svg {
+  display: block;
+  width: 100%;
+  height: 56px;
+}
+
+.trend-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.trend-area {
+  stroke: none;
+  opacity: 0.18;
+}
+
+.trend-line.people { stroke: #2f6f9e; }
+.trend-area.people { fill: #2f6f9e; }
+.trend-line.coins { stroke: #a8782a; }
+.trend-area.coins { fill: #a8782a; }
+.trend-line.balance { stroke: #2c7a39; }
+.trend-area.balance { fill: #2c7a39; }

@@ -22,6 +22,8 @@ interface TopHudProps {
   speed: GameSpeed
   onSpeedChange: (speed: GameSpeed) => void
   onOpenMenu: () => void
+  /** A tap on the numbers opens the statistics, where they are explained. */
+  onOpenStats: () => void
   /** Debug mode: also offer the fast speeds and the balancing window. */
   debug: boolean
   onOpenBalance: () => void
@@ -46,6 +48,7 @@ export function TopHud({
   stock,
   owned,
   onOpenMenu,
+  onOpenStats,
   debug,
   onOpenBalance,
 }: TopHudProps) {
@@ -56,11 +59,17 @@ export function TopHud({
   const balanceClass = balance === null ? 'hud-stat' : balance >= 0 ? 'hud-stat positive' : 'hud-stat negative'
   return (
     <div className="top-hud">
-      <div className="hud-stats">
+      <button type="button" className="hud-stats" onClick={onOpenStats} aria-label={t('Statistik öffnen', 'Open the statistics')}>
         <div className="hud-row">
         <span className={coins < 0 ? 'hud-stat negative' : 'hud-stat'}>
           <Icon name="ui/coin" size={20} title={resourceName('coins')} /> {formatWhole(shownCoins)}
         </span>
+        {/* fills up until taxes and upkeep are settled again */}
+        <span
+          className="cycle-ring"
+          style={{ '--share': (tick % config.economyCycleTicks) / config.economyCycleTicks } as React.CSSProperties}
+          title={t('Zeit bis zur nächsten Abrechnung', 'Time until the next settlement')}
+        />
         <span className={balanceClass}><Icon name={balance !== null && balance < 0 ? 'ui/balance_down' : 'ui/balance_up'} size={20} title={t('Bilanz', 'Balance')} />{' '}
           {balance === null ? '–' : `${formatSigned(balance)} ${t('/ Zyklus', '/ cycle')}`}
         </span>
@@ -82,7 +91,7 @@ export function TopHud({
         ))}
         <span className="hud-stat hud-island">{islandName}</span>
         </div>
-      </div>
+      </button>
       <div className="hud-speeds">
         {debug && (
           <button type="button" className="speed-button" onClick={onOpenBalance}>

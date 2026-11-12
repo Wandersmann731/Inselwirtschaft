@@ -22,7 +22,8 @@ import { OverlayRenderer } from './overlayRenderer'
 import { getSettings } from '../save/settings'
 import { findStartSite } from '../world/startSite'
 import { sprites } from './sprites'
-import { WaterPattern } from './water'
+import { fillDepth, WaterPattern } from './water'
+import { MapEffects } from './effects'
 import { Surf } from './surf'
 import { groundTextures } from './groundTextures'
 import { CHUNK_H, CHUNK_W, TerrainCache } from './terrainCache'
@@ -49,6 +50,7 @@ export class MapRenderer {
   private resizeObserver: ResizeObserver
   private cache = new TerrainCache()
   private overlay = new OverlayRenderer()
+  private effects = new MapEffects()
   private water: WaterPattern | null = null
   /** Sprite version the water pattern was made with: it is made again if pictures arrived late. */
   private waterVersion = -1
@@ -214,6 +216,8 @@ export class MapRenderer {
     drawRoads(ctx, state, range)
     drawBuildings(ctx, state, range, now, settings.smoke)
     drawShips(ctx, state, now)
+    this.effects.update(state, now)
+    this.effects.draw(ctx, now)
     this.overlay.draw(ctx, state, this.getTool(), range)
     this.drawSelection()
 
@@ -229,7 +233,9 @@ export class MapRenderer {
       this.waterVersion = sprites.version
     }
     const rect = visibleWorldRect(this.camera, this.viewport)
-    this.water.fill(this.ctx, { x: rect.minX - 2, y: rect.minY - 2, w: rect.maxX - rect.minX + 4, h: rect.maxY - rect.minY + 4 }, now, animated)
+    const area = { x: rect.minX - 2, y: rect.minY - 2, w: rect.maxX - rect.minX + 4, h: rect.maxY - rect.minY + 4 }
+    this.water.fill(this.ctx, area, now, animated)
+    fillDepth(this.ctx, area, this.bounds())
   }
 
   private visibleTileRange(map: GameMap): TileRange {

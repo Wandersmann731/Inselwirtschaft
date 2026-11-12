@@ -2,6 +2,7 @@ import { useState, useSyncExternalStore } from 'react'
 import { buildings } from '../data'
 import type { BuildingCategory } from '../data'
 import type { BuildController } from '../game/buildController'
+import type { ChainFocus } from '../game/needsOverview'
 import type { IslandState } from '../sim/state'
 import { BuildItem } from './BuildItem'
 import { Icon } from './Icon'
@@ -21,10 +22,18 @@ interface BuildMenuProps {
   onOpenStats: () => void
   onOpenWorld: () => void
   onOpenTrade: () => void
+  /** Set when a warning asked to show the chain of a good: the production menu opens at it. */
+  chainFocus: ChainFocus | null
 }
 
-export function BuildMenu({ tool, state, onOpenStats, onOpenWorld, onOpenTrade }: BuildMenuProps) {
+export function BuildMenu({ tool, state, onOpenStats, onOpenWorld, onOpenTrade, chainFocus }: BuildMenuProps) {
   const [open, setOpen] = useState<BuildingCategory | 'recent' | null>(null)
+  // a new request opens the production menu, also when another category was open
+  const [seenFocus, setSeenFocus] = useState(chainFocus?.nonce ?? 0)
+  if (chainFocus && chainFocus.nonce !== seenFocus) {
+    setSeenFocus(chainFocus.nonce)
+    setOpen('production')
+  }
   const { recent } = useSyncExternalStore(tool.subscribe, tool.getSnapshot)
   // ids from older versions may no longer exist
   const recentDefs = recent.flatMap((id) => buildings.find((def) => def.id === id && !def.hidden) ?? [])
@@ -33,7 +42,7 @@ export function BuildMenu({ tool, state, onOpenStats, onOpenWorld, onOpenTrade }
 
   return (
     <div className="build-menu">
-      {open === 'production' && <ProductionMenu tool={tool} state={state} />}
+      {open === 'production' && <ProductionMenu tool={tool} state={state} focus={chainFocus} />}
       {items.length > 0 && (
         <div className="build-items">
           {items.map((def) => (

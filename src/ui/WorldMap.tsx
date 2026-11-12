@@ -1,31 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { islandName } from '../i18n/dataNames'
-import { climates } from '../data'
 import { sprites } from '../render/sprites'
+import { drawChart, drawPlate, islandOutlines } from '../render/worldChart'
 import type { GameState } from '../sim/state'
 import { t } from '../i18n/language'
-
-const SEA = '#1d4e6b'
-
-/** Paints the land once, one pixel per sea cell. It only changes with the world or an island's climate. */
-function paintLand(world: GameState['world'], islands: GameState['islands']): HTMLCanvasElement {
-  const canvas = document.createElement('canvas')
-  canvas.width = world.width
-  canvas.height = world.height
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return canvas
-  const colors = new Map(climates.map((climate) => [climate.id, climate.color]))
-  const colorOf = new Map(islands.map((island) => [island.id, colors.get(island.climate) ?? '#888']))
-  for (let y = 0; y < world.height; y++) {
-    for (let x = 0; x < world.width; x++) {
-      const id = world.cells[y * world.width + x]
-      if (id === 0) continue
-      ctx.fillStyle = colorOf.get(id - 1) ?? '#888'
-      ctx.fillRect(x, y, 1, 1)
-    }
-  }
-  return canvas
-}
 
 interface WorldMapProps {
   state: GameState
@@ -39,9 +17,8 @@ export function WorldMap({ state, activeIsland, onSelect, onClose }: WorldMapPro
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const { width, height } = state.world
   const [size, setSize] = useState('')
-  const climateKey = state.islands.map((island) => `${island.id}:${island.climate}`).join()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const land = useMemo(() => paintLand(state.world, state.islands), [state.world, climateKey])
+  // the coasts only change with the world
+  const outlines = useMemo(() => islandOutlines(state.world), [state.world])
 
   // Size the canvas only when its shown size changes (also on rotation while paused), not on every tick.
   useEffect(() => {
@@ -73,10 +50,7 @@ export function WorldMap({ state, activeIsland, onSelect, onClose }: WorldMapPro
     const offsetX = (canvas.width - width * scale) / 2
     const offsetY = (canvas.height - height * scale) / 2
 
-    ctx.fillStyle = SEA
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-    ctx.imageSmoothingEnabled = false
-    ctx.drawImage(land, offsetX, offsetY, width * scale, height * scale)
+    drawChart(ctx, outlines, state.islands, activeIsland, { scale, offsetX, offsetY }, dpr)
 
     for (const ship of state.ships) {
       const sx = offsetX + (ship.x + 0.5) * scale
@@ -113,27 +87,16 @@ export function WorldMap({ state, activeIsland, onSelect, onClose }: WorldMapPro
       }
     }
 
-    ctx.font = `${Math.round(13 * dpr)}px system-ui, sans-serif`
-    ctx.textAlign = 'center'
     const islandById = new Map(state.islands.map((island) => [island.id, island]))
     for (const placement of state.world.placements) {
       const island = islandById.get(placement.id)
       if (!island) continue
       const x = offsetX + (placement.x + placement.w / 2) * scale
       const y = offsetY + (placement.y + placement.h / 2) * scale
-      if (island.id === activeIsland) {
-        ctx.strokeStyle = '#ffd23f'
-        ctx.lineWidth = 3 * dpr
-        ctx.strokeRect(offsetX + placement.x * scale, offsetY + placement.y * scale, placement.w * scale, placement.h * scale)
-      }
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.55)'
       const label = island.owned ? islandName(island.name) : `${islandName(island.name)} (${island.role === 'trader' ? t('Händler', 'traders') : t('frei', 'free')})`
-      const labelWidth = ctx.measureText(label).width + 10 * dpr
-      ctx.fillRect(x - labelWidth / 2, y - 10 * dpr, labelWidth, 20 * dpr)
-      ctx.fillStyle = '#ffffff'
-      ctx.fillText(label, x, y + 5 * dpr)
+      drawPlate(ctx, label, x, y, dpr)
     }
-  }, [state.world, state.islands, state.ships, activeIsland, width, height, land, size])
+  }, [state.world, state.islands, state.ships, activeIsland, width, height, outlines, size])
 
   const choose = (event: React.PointerEvent<HTMLCanvasElement>): void => {
     const rect = event.currentTarget.getBoundingClientRect()

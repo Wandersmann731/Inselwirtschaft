@@ -5,6 +5,7 @@ import { MapInput } from '../input/touch'
 import { MapRenderer } from '../render/mapRenderer'
 import { getSettings } from '../save/settings'
 import type { IslandState } from '../sim/state'
+import { reducedMotion } from '../save/motion'
 
 
 interface MapCanvasProps {
@@ -30,7 +31,7 @@ function revealBesidePanel(renderer: MapRenderer, x: number, y: number): void {
   const roomLeft = panel.left > REVEAL_MARGIN * 2.5
   const dx = roomLeft ? panel.left - REVEAL_MARGIN - x : 0
   const dy = roomLeft ? 0 : panel.bottom + REVEAL_MARGIN - y
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return renderer.panBy(dx, dy)
+  if (reducedMotion()) return renderer.panBy(dx, dy)
   const start = performance.now()
   let done = 0
   const step = (now: number): void => {

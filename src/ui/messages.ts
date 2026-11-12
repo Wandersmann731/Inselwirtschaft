@@ -2,8 +2,7 @@ import { buildings, goods, landNames } from '../data'
 import type { TierNeed } from '../data'
 import type { BuildingCost } from '../data'
 import type { PlacementError } from '../sim/build'
-import type { IslandState, ProductionStatus } from '../sim/state'
-import { config } from '../data'
+import type { ProductionStatus } from '../sim/state'
 import { numberLocale, oneDecimal, t } from '../i18n/language'
 
 export function resourceName(id: string): string {
@@ -108,14 +107,6 @@ export function shortageText(good: string, cycles: number): string {
   return cycles <= 0
     ? t(`${name} ist ausgegangen`, `${name} has run out`)
     : t(`${name} reicht nur noch für ${oneDecimal(cycles)} Zyklen`, `${name} lasts only ${oneDecimal(cycles)} more cycles`)
-}
-
-/** The building materials in store, e.g. "Münzen 9.800 · Werkzeug 50 · Holz 97". */
-export function formatStock(state: IslandState): string {
-  const materials = goods
-    .filter((good) => good.id in config.startStock)
-    .map((good) => `${good.name} ${formatWhole(state.stock[good.id] ?? 0)}`)
-  return [`${resourceName('coins')} ${formatWhole(state.coins)}`, ...materials].join(' · ')
 }
 
 export function fertilityName(id: string | undefined): string {

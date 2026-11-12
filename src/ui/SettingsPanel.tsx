@@ -4,6 +4,7 @@ import { deleteAllSaves } from '../save/saveGame'
 import { audio } from '../audio/engine'
 import { getSettings, updateSettings, type Settings } from '../save/settings'
 import { applyWakeLock } from './wakeLock'
+import { applyMotionSetting } from '../save/motion'
 import { t } from '../i18n/language'
 import { LanguageSwitch } from './LanguageSwitch'
 
@@ -13,7 +14,7 @@ interface Props {
   onDeleted?: () => void
 }
 
-type Toggle = 'hints' | 'debug' | 'waterAnimation' | 'smoke' | 'muted' | 'autoFullscreen' | 'vibration' | 'keepAwake'
+type Toggle = 'hints' | 'debug' | 'waterAnimation' | 'smoke' | 'muted' | 'autoFullscreen' | 'vibration' | 'keepAwake' | 'minimap' | 'reducedMotion'
 type Volume = 'volumeEffects' | 'volumeAmbience' | 'volumeMusic'
 
 const VOLUMES: { key: Volume; label: () => string }[] = [
@@ -28,6 +29,8 @@ const OPTIONS: { key: Toggle; label: () => string; hint: () => string }[] = [
   { key: 'autoFullscreen', label: () => t('Vollbild beim Start', 'Full screen at start'), hint: () => t('Nur auf Handys und Tablets. Im Spiel gibt es dafür auch eine Schaltfläche.', 'Phones and tablets only. There is also a button for it in the game.') },
   { key: 'vibration', label: () => t('Vibration', 'Vibration'), hint: () => t('Kurzes Rütteln beim Bauen, Abreißen und langen Drücken.', 'A short buzz when building, demolishing and on long press.') },
   { key: 'keepAwake', label: () => t('Bildschirm anlassen', 'Keep screen on'), hint: () => t('Das Handy geht während des Spiels nicht in den Ruhezustand.', 'The phone does not go to sleep while you play.') },
+  { key: 'minimap', label: () => t('Übersichtskarte', 'Overview map'), hint: () => t('Die kleine Karte der Insel in der Ecke.', 'The small map of the island in the corner.') },
+  { key: 'reducedMotion', label: () => t('Weniger Bewegung', 'Less motion'), hint: () => t('Keine Animationen in Fenstern, Leisten und auf der Karte.', 'No animations in windows, bars and on the map.') },
   { key: 'waterAnimation', label: () => t('Bewegtes Wasser', 'Moving water'), hint: () => t('Bei langsamen Handys ausschalten.', 'Switch off on slow phones.') },
   { key: 'smoke', label: () => t('Rauch über Schornsteinen', 'Smoke over chimneys'), hint: () => t('Bei langsamen Handys ausschalten.', 'Switch off on slow phones.') },
   { key: 'debug', label: () => t('Entwickleranzeige', 'Developer display'), hint: () => t('Zeigt Bilder pro Sekunde und das Balancing-Fenster.', 'Shows frames per second and the balancing window.') },
@@ -42,6 +45,7 @@ export function SettingsPanel({ onClose, onDeleted }: Props) {
     setSettings({ ...getSettings() })
     audio.applySettings()
     applyWakeLock()
+    applyMotionSetting()
   }
 
   const setVolume = (key: Volume, value: number): void => {

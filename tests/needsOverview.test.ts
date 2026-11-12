@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { chains } from '../src/data'
-import { builtCount, chainSeparator, chainsFor, MATERIALS, needsByTier, supplyOf } from '../src/game/needsOverview'
+import { builtCount, chainGoodOf, chainSeparator, chainsFor, MATERIALS, needsByTier, supplyOf } from '../src/game/needsOverview'
 import { placeBuilding } from '../src/sim/build'
 import { grassField, patchHouse } from './helpers'
 
@@ -60,3 +60,21 @@ describe('needs overview of the production menu', () => {
     expect(seps('meat')).toEqual(['›', 'oder'])
   })
 })
+
+describe('the chain a warning leads to', () => {
+  it('is the good itself when a chain is named after it', () => {
+    expect(chainGoodOf('food')).toBe('food')
+    expect(chainGoodOf('tools')).toBe('tools')
+  })
+
+  it('is the finished good for something made on the way', () => {
+    expect(chainGoodOf('wool')).toBe('cloth')
+    expect(chainGoodOf('iron')).toBe('tools')
+    expect(chainGoodOf('flour')).toBe('food')
+  })
+
+  it('is nothing for an unknown good', () => {
+    expect(chainGoodOf('moon dust')).toBeNull()
+  })
+})
+

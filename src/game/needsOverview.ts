@@ -118,3 +118,23 @@ export function chainSeparator(chain: ChainDef, index: number): '›' | '+' | 'o
   }
   return 'oder'
 }
+
+/** A request to show the chain of a good in the production menu. The nonce changes with every request. */
+export interface ChainFocus {
+  good: string
+  nonce: number
+}
+
+/**
+ * The good under which the production menu lists the chain that makes `good`: the good itself if a chain is named
+ * after it, else the finished good of the chain one of whose buildings makes it (wool belongs to cloth). Null if no
+ * chain makes it.
+ */
+export function chainGoodOf(good: string): string | null {
+  if (chains.some((chain) => chain.goods.includes(good))) return good
+  const makes = (id: string): boolean => {
+    const def = buildingMap.get(id)
+    return def?.output?.good === good || (def?.byproducts ?? []).some((extra) => extra.good === good)
+  }
+  return chains.find((chain) => chain.buildings.some(makes))?.goods[0] ?? null
+}

@@ -1,4 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { t } from '../i18n/language'
+import { getSettings, updateSettings } from '../save/settings'
 import { drawMiniBuildings, drawMiniTerrain, miniLayout, miniToWorld, worldToMini, type MiniLayout } from '../render/minimap'
 import type { MapRenderer } from '../render/mapRenderer'
 import type { IslandState } from '../sim/state'
@@ -13,11 +15,37 @@ interface MiniMapProps {
   getRenderer: () => MapRenderer | null
 }
 
+/** The overview map with the button that folds it away, or the button that brings it back. */
+export function MiniMap(props: MiniMapProps) {
+  const [shown, setShown] = useState(getSettings().minimap)
+  // the setting can also be changed in the settings window
+  if (shown !== getSettings().minimap) setShown(getSettings().minimap)
+  const toggle = (): void => {
+    updateSettings({ minimap: !shown })
+    setShown(!shown)
+  }
+  if (!shown) {
+    return (
+      <button type="button" className="minimap-open" onClick={toggle} aria-label={t('Übersichtskarte zeigen', 'Show the overview map')}>
+        🗺
+      </button>
+    )
+  }
+  return (
+    <div className="minimap-box">
+      <MiniMapCanvas {...props} />
+      <button type="button" className="minimap-fold" onClick={toggle} aria-label={t('Übersichtskarte einklappen', 'Fold the overview map away')}>
+        –
+      </button>
+    </div>
+  )
+}
+
 /**
  * Small overview of the island on screen with a frame for the visible part. Tap or drag to move the camera.
  * The terrain is drawn once per island, roads and buildings again whenever they change.
  */
-export function MiniMap({ getIsland, getRenderer }: MiniMapProps) {
+function MiniMapCanvas({ getIsland, getRenderer }: MiniMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const layoutRef = useRef<MiniLayout | null>(null)
 

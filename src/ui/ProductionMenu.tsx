@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { getBuilding, tiers } from '../data'
 import type { BuildController } from '../game/buildController'
-import { builtCount, chainSeparator, chainsFor, MATERIALS, needsByTier, supplyOf, type ChainRole, type NeedTile } from '../game/needsOverview'
+import { builtCount, chainGoodOf, chainSeparator, chainsFor, firstTierOf, MATERIALS, needsByTier, supplyOf, type ChainFocus, type ChainRole, type NeedTile } from '../game/needsOverview'
 import type { IslandState } from '../sim/state'
 import { BuildItem } from './BuildItem'
 import { Icon } from './Icon'
@@ -18,6 +18,12 @@ interface Selection {
 const roleLabel = (role: ChainRole): string =>
   role === 'alternative' ? t('oder stattdessen', 'or instead') : role === 'substitute' ? t('Notlösung, wenn es fehlt', 'fallback when it is missing') : ''
 
+/** The chain view a warning asks for: the chain that makes the good, under the finished good it belongs to. */
+function focusSelection(focus: ChainFocus | null | undefined): Selection | null {
+  const good = focus ? chainGoodOf(focus.good) : null
+  return good ? { good, tierId: firstTierOf(good), need: null } : null
+}
+
 function supplyClass(percent: number | null): string {
   if (percent === null) return 'need-tile'
   if (percent >= 99.5) return 'need-tile ok'
@@ -28,8 +34,14 @@ function supplyClass(percent: number | null): string {
  * Production as "who needs what": first the goods each tier asks for (with how well they are supplied) and the
  * building materials; tapping one shows the chains that make it, step by step, with the buildings to place.
  */
-export function ProductionMenu({ tool, state }: { tool: BuildController; state: IslandState }) {
-  const [selected, setSelected] = useState<Selection | null>(null)
+export function ProductionMenu({ tool, state, focus }: { tool: BuildController; state: IslandState; focus?: ChainFocus | null }) {
+  const [selected, setSelected] = useState<Selection | null>(() => focusSelection(focus))
+  // a tapped warning asks for the chain of a good while the menu is open already
+  const [seenFocus, setSeenFocus] = useState(focus?.nonce ?? 0)
+  if (focus && focus.nonce !== seenFocus) {
+    setSeenFocus(focus.nonce)
+    setSelected(focusSelection(focus))
+  }
   if (selected) return <ChainView tool={tool} state={state} selection={selected} onBack={() => setSelected(null)} />
 
   return (

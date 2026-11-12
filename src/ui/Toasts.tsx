@@ -18,21 +18,23 @@ interface Toast {
   text: string
   /** A reached goal is good news and looks different from a warning. */
   good?: boolean
+  /** The good a shortage warning is about: tapping it shows the buildings that make it. */
+  shortage?: string
 }
 
 const SHOW_MS = 6000
 
 /** Short messages at the top: a good about to run out, coins below zero. Checked once per cycle. */
-export function Toasts({ state }: { state: GameState }) {
+export function Toasts({ state, onShortage }: { state: GameState; onShortage?: (good: string) => void }) {
   const [toasts, setToasts] = useState<Toast[]>([])
   const warned = useRef(new Set<string>())
   const wasInDebt = useRef(false)
   const nextId = useRef(1)
   const timers = useRef(new Set<number>())
 
-  const push = (text: string, good = false): void => {
+  const push = (text: string, good = false, shortage?: string): void => {
     const id = nextId.current++
-    setToasts((current) => [...current, { id, text, good }])
+    setToasts((current) => [...current, { id, text, good, shortage }])
     const timer = window.setTimeout(() => {
       setToasts((current) => current.filter((toast) => toast.id !== id))
       timers.current.delete(timer)
@@ -50,7 +52,7 @@ export function Toasts({ state }: { state: GameState }) {
         now.add(key)
         if (!warned.current.has(key)) {
           const text = shortageText(warning.good, warning.cycles)
-          push(owned.length > 1 ? `${islandName(island.name)}: ${text}` : text)
+          push(owned.length > 1 ? `${islandName(island.name)}: ${text}` : text, false, warning.good)
         }
       }
     }
@@ -84,11 +86,17 @@ export function Toasts({ state }: { state: GameState }) {
   if (toasts.length === 0) return null
   return (
     <div className="toasts" aria-live="polite">
-      {toasts.map((toast) => (
-        <div key={toast.id} className={toast.good ? 'toast good' : 'toast'}>
-          {toast.good ? <span aria-hidden="true">✓</span> : <Icon name="ui/warning" size={24} />} {toast.text}
-        </div>
-      ))}
+      {toasts.map((toast) =>
+        toast.shortage && onShortage ? (
+          <button key={toast.id} type="button" className="toast" onClick={() => onShortage(toast.shortage!)}>
+            <Icon name="ui/warning" size={24} /> {toast.text} <span aria-hidden="true">›</span>
+          </button>
+        ) : (
+          <div key={toast.id} className={toast.good ? 'toast good' : 'toast'}>
+            {toast.good ? <span aria-hidden="true">✓</span> : <Icon name="ui/warning" size={24} />} {toast.text}
+          </div>
+        ),
+      )}
     </div>
   )
 }

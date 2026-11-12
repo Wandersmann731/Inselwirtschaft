@@ -6,6 +6,7 @@ import './theme.css'
 import './motion.css'
 import { sprites } from './render/sprites'
 import { initLanguage } from './i18n/language'
+import { applyMotionSetting } from './save/motion'
 
 async function bootstrap(): Promise<void> {
   // Pictures first: the map is drawn with them. Without them (or while they are missing) it falls back to colour shapes.
@@ -15,6 +16,7 @@ async function bootstrap(): Promise<void> {
     if (fill) fill.style.width = `${Math.round((done / total) * 100)}%`
   })
   initLanguage()
+  applyMotionSetting()
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <Root />

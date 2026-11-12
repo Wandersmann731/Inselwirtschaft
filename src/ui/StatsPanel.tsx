@@ -6,10 +6,12 @@ import { residentsOfTier } from '../sim/tiers'
 import { findShortages } from '../sim/warnings'
 import { depositName, fertilityName, formatSigned, formatWhole } from './messages'
 import { Icon } from './Icon'
+import { TrendChart } from './TrendChart'
+import type { CycleSnapshot } from '../game/history'
 import { oneDecimal, t } from '../i18n/language'
 
 /** Statistics window: money of the last cycle, residents per tier and production and use per good on the island on screen. */
-export function StatsPanel({ state, island, onClose }: { state: GameState; island: IslandState; onClose: () => void }) {
+export function StatsPanel({ state, island, history, onClose }: { state: GameState; island: IslandState; history: CycleSnapshot[]; onClose: () => void }) {
   const last = island.economy.last
   const warned = new Map(findShortages(island).map((warning) => [warning.good, warning.cycles]))
   const rows = goods.filter(
@@ -56,6 +58,9 @@ export function StatsPanel({ state, island, onClose }: { state: GameState; islan
           ) : (
             <p className="stats-note">{t('Die Zahlen erscheinen nach dem ersten Wirtschaftszyklus, nach einer Minute Spielzeit.', 'The numbers appear after the first economy cycle, after one minute of play.')}</p>
           )}
+
+          <h3>{t('Verlauf (alle Inseln)', 'Trend (all islands)')}</h3>
+          <TrendChart history={history} />
 
           <h3>{t('Einwohner (alle Inseln)', 'Residents (all islands)')}</h3>
           <table className="stats-table">

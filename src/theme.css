@@ -90,6 +90,8 @@
 .tier-tab,
 .step-button,
 .menu-button,
+.minimap-fold,
+.minimap-open,
 .hint-chip,
 .undo-chip {
   /* light text again, also inside a parchment window */

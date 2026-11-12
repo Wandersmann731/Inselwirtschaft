@@ -79,10 +79,13 @@ export function MainMenu({ onStart }: MainMenuProps) {
         <img className="menu-logo" src={`${import.meta.env.BASE_URL}sprites/app/${logoFile()}`} alt={gameTitle()} />
         {screen === 'main' && (
           <div className="menu-buttons">
-            <button type="button" className="menu-button primary" disabled={!hasAutosave} onClick={() => void load(AUTOSAVE_SLOT)}>
-              {t('Weiterspielen', 'Continue')}
-            </button>
-            <button type="button" className="menu-button" onClick={() => show('new')}>
+            {/* without a saved game there is nothing to go on with: "new game" is the first button then */}
+            {hasAutosave && (
+              <button type="button" className="menu-button primary" onClick={() => void load(AUTOSAVE_SLOT)}>
+                {t('Weiterspielen', 'Continue')}
+              </button>
+            )}
+            <button type="button" className={hasAutosave ? 'menu-button' : 'menu-button primary'} onClick={() => show('new')}>
               {t('Neues Spiel', 'New game')}
             </button>
             <button type="button" className="menu-button" onClick={() => show('load')}>
@@ -101,16 +104,6 @@ export function MainMenu({ onStart }: MainMenuProps) {
         )}
         {screen === 'new' && (
           <div className="menu-form">
-            <label className="menu-field">
-              <span>{t('Karten-Startwert (Seed)', 'Map seed')}</span>
-              <span className="menu-seed">
-                <input inputMode="numeric" value={seed} onChange={(event) => setSeed(event.target.value.replace(/\D/g, '').slice(0, 9))} />
-                <button type="button" className="action-button" onClick={() => setSeed(String(randomSeed()))}>
-                  {t('Zufall', 'Random')}
-                </button>
-              </span>
-              <span className="stats-note">{t('Derselbe Wert ergibt immer dieselben Inseln.', 'The same value always gives the same islands.')}</span>
-            </label>
             <div className="menu-field">
               <span>{t('Startgeld', 'Starting coins')}</span>
               <span className="coin-options">
@@ -122,6 +115,20 @@ export function MainMenu({ onStart }: MainMenuProps) {
                 ))}
               </span>
             </div>
+            {/* most players never need another map: the seed stays folded away */}
+            <details className="menu-more">
+              <summary>{t('Andere Inselwelt wählen', 'Choose another island world')}</summary>
+              <label className="menu-field">
+                <span>{t('Karten-Startwert (Seed)', 'Map seed')}</span>
+                <span className="menu-seed">
+                  <input inputMode="numeric" value={seed} onChange={(event) => setSeed(event.target.value.replace(/\D/g, '').slice(0, 9))} />
+                  <button type="button" className="action-button" onClick={() => setSeed(String(randomSeed()))}>
+                    {t('Zufall', 'Random')}
+                  </button>
+                </span>
+                <span className="stats-note">{t('Derselbe Wert ergibt immer dieselben Inseln.', 'The same value always gives the same islands.')}</span>
+              </label>
+            </details>
             <div className="menu-row">
               <button type="button" className="menu-button" onClick={() => show('main')}>
                 {t('Zurück', 'Back')}

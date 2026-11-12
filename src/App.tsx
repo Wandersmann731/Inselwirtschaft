@@ -22,6 +22,8 @@ import { TopHud } from './ui/TopHud'
 import { TradePanel } from './ui/TradePanel'
 import { WorldMap } from './ui/WorldMap'
 import { setWakeLockActive } from './ui/wakeLock'
+import { useKeyboard } from './ui/useKeyboard'
+import type { ChainFocus } from './game/needsOverview'
 
 export function App({ loop, onQuit }: { loop: GameLoop; onQuit: () => void }) {
   const { state, activeIsland } = useSyncExternalStore(loop.subscribe, loop.getView)
@@ -42,6 +44,27 @@ export function App({ loop, onQuit }: { loop: GameLoop; onQuit: () => void }) {
   const island = toIslandState(state, activeIsland)
   const residentsByTier = Object.fromEntries(tiers.map((tier) => [tier.id, residentsOfTier(state, tier.id)]))
 
+  useKeyboard({
+    loop,
+    getRenderer,
+    onEscape: () => {
+      const windows = [showKontor, showTrade, showWorld, showStats, showBalance, showMenu]
+      if (!windows.some(Boolean)) return tool.cancel()
+      setShowKontor(false)
+      setShowTrade(false)
+      setShowWorld(false)
+      setShowStats(false)
+      setShowBalance(false)
+      setShowMenu(false)
+    },
+  })
+  // A tapped shortage warning opens the production menu at the chain of the good.
+  const [chainFocus, setChainFocus] = useState<ChainFocus | null>(null)
+  const showChain = (good: string): void => {
+    tool.cancel()
+    setChainFocus((previous) => ({ good, nonce: (previous?.nonce ?? 0) + 1 }))
+  }
+
   // Looking at another island drops the current tool and selection.
   useEffect(() => tool.cancel(), [tool, activeIsland])
   // keep the screen on while playing (setting "Bildschirm anlassen")
@@ -56,6 +79,7 @@ export function App({ loop, onQuit }: { loop: GameLoop; onQuit: () => void }) {
   return (
     <>
       <MapCanvas getState={loop.getIslandState} tool={tool} onRenderer={setRenderer} />
+      <div className="map-shade" />
       <MiniMap getIsland={loop.getIslandState} getRenderer={getRenderer} />
       <TopHud
         tick={state.tick}
@@ -69,17 +93,18 @@ export function App({ loop, onQuit }: { loop: GameLoop; onQuit: () => void }) {
         owned={island.owned}
         onSpeedChange={(speed) => loop.setSpeed(speed)}
         onOpenMenu={() => setShowMenu(true)}
+        onOpenStats={() => setShowStats(true)}
         debug={debug}
         onOpenBalance={() => setShowBalance(true)}
       />
       {/* messages and the goals share one column under the top bar, so they never lie on top of each other */}
       <div className="notices">
-        <Toasts state={state} />
+        <Toasts state={state} onShortage={showChain} />
         <HintCard loop={loop} state={state} island={island} tool={tool} />
       </div>
       {showMenu && <GameMenu loop={loop} onClose={() => setShowMenu(false)} onQuit={onQuit} />}
       {showBalance && <BalancePanel loop={loop} onClose={() => setShowBalance(false)} />}
-      {showStats && <StatsPanel state={state} island={island} onClose={() => setShowStats(false)} />}
+      {showStats && <StatsPanel state={state} island={island} history={loop.getHistory()} onClose={() => setShowStats(false)} />}
       {showWorld && (
         <WorldMap
           state={state}
@@ -100,6 +125,7 @@ export function App({ loop, onQuit }: { loop: GameLoop; onQuit: () => void }) {
         onOpenWorld={() => setShowWorld(true)}
         onOpenTrade={() => setShowTrade(true)}
         onOpenKontor={() => setShowKontor(true)}
+        chainFocus={chainFocus}
       />
     </>
   )
