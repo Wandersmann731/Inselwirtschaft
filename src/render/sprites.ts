@@ -2,6 +2,8 @@
 
 import { buildings } from '../data'
 import { cleanPlotPixels, measurePlot } from './plotCleanup'
+import { isCutOff } from './cutCheck'
+import { growPlot, planFit } from './plotFit'
 import { clearPaintedWater } from './waterPlot'
 
 const BASE = `${import.meta.env.BASE_URL}sprites/`
@@ -24,6 +26,8 @@ export interface Pads {
 class SpriteStore {
   private padData: Record<string, Pads> = {}
   private images = new Map<string, SpriteImage>()
+  /** House pictures with cropped walls: loaded, but not chosen while a whole picture of the same house exists. */
+  private flawed = new Set<string>()
   /** True once loading finished (also if some sprites are missing: drawing then falls back to colour shapes). */
   ready = false
   /** Counts the pictures that arrived. Caches built from missing pictures are made again when it changes. */
@@ -86,20 +90,27 @@ class SpriteStore {
     let ctx = canvas.getContext('2d', { willReadFrequently: true })
     if (!ctx) return image
     ctx.drawImage(image, 0, 0)
+    // a house whose walls were cropped when the picture was made is left out of the choice (see cutCheck.ts)
+    if (tier && isCutOff(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height)) this.flawed.add(key)
     // A painted plot is often smaller than the footprint and floats above the bottom of the picture: then the ground
-    // of the island shows around it. Scale the picture so that its plot covers the footprint exactly.
+    // of the island shows around it. The picture is fitted so that its plot covers the footprint.
     const square = def.size[0] === def.size[1]
     if (square && !padded && !/_q(_\d+)?$/.test(name)) {
       const measured = measurePlot(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height)
       if (measured) {
-        const scale = canvas.width / (measured.right - measured.left + 1)
+        // enlarged only a little (see plotFit.ts); a plot that stays too small gets ground added around it
+        const plan = planFit(measured, canvas.width)
         const fitted = document.createElement('canvas')
         fitted.width = canvas.width
-        fitted.height = Math.ceil((measured.bottom + 1) * scale)
+        fitted.height = plan.height
         const fittedCtx = fitted.getContext('2d', { willReadFrequently: true })
         if (fittedCtx) {
           fittedCtx.imageSmoothingQuality = 'high'
-          fittedCtx.drawImage(image, -measured.left * scale, 0, image.naturalWidth * scale, image.naturalHeight * scale)
+          fittedCtx.drawImage(image, plan.dx, 0, image.naturalWidth * plan.scale, image.naturalHeight * plan.scale)
+          if (plan.plot) {
+            const grown = fittedCtx.getImageData(0, 0, fitted.width, fitted.height)
+            if (growPlot(grown.data, fitted.width, fitted.height, plan.plot, name.length * 31 + name.charCodeAt(name.length - 1))) fittedCtx.putImageData(grown, 0, 0)
+          }
           canvas = fitted
           ctx = fittedCtx
         }
@@ -133,6 +144,9 @@ class SpriteStore {
       list = []
       if (this.images.has(base)) list.push(base)
       for (let n = 1; n <= 32; n++) if (this.images.has(`${base}_${n}`)) list.push(`${base}_${n}`)
+      // cropped pictures are not offered, unless there is nothing else
+      const whole = list.filter((key) => !this.flawed.has(key))
+      if (whole.length > 0) list = whole
       if (this.ready) this.variantCache.set(base, list)
     }
     return list
