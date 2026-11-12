@@ -25,6 +25,8 @@ import { sprites } from './sprites'
 import { fillDepth, WaterPattern } from './water'
 import { MapEffects } from './effects'
 import { Carts } from './carts'
+import { TickClock } from './tickClock'
+import { drawWalkers } from './walkers'
 import { Surf } from './surf'
 import { groundTextures } from './groundTextures'
 import { CHUNK_H, CHUNK_W, TerrainCache } from './terrainCache'
@@ -53,6 +55,7 @@ export class MapRenderer {
   private overlay = new OverlayRenderer()
   private effects = new MapEffects()
   private carts = new Carts()
+  private clock = new TickClock()
   private water: WaterPattern | null = null
   /** Sprite version the water pattern was made with: it is made again if pictures arrived late. */
   private waterVersion = -1
@@ -216,7 +219,10 @@ export class MapRenderer {
     this.drawTerrain(map, state)
     drawYards(ctx, state, range)
     drawRoads(ctx, state, range)
-    this.carts.draw(ctx, state, range, now)
+    // carts and residents move with the game time: faster at 4x, still in a pause
+    const ticks = this.clock.ticks(state.tick, now)
+    this.carts.draw(ctx, state, range, ticks)
+    drawWalkers(ctx, state, range, ticks)
     drawBuildings(ctx, state, range, now, settings.smoke)
     drawShips(ctx, state, now)
     this.effects.update(state, now)

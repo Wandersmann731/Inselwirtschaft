@@ -9,6 +9,7 @@ import type { IslandState } from '../sim/state'
 import { adjacentRoadTiles, roadDistances } from '../world/pathfinding'
 import type { TileRange } from './buildingRenderer'
 import { tileToWorld } from './iso'
+import { drawCartBody, drawOx, drawPerson, FIGURE_SCALE } from './figures'
 import { sprites } from './sprites'
 
 /** No more than this many carts are drawn at once. */
@@ -66,22 +67,22 @@ export function shipmentShare(arrive: number, delay: number, ticks: number): num
   return Math.max(0, Math.min(1, 1 - (arrive - ticks) / delay))
 }
 
-/** Draws the carts of the island. Keeps time between two ticks, so the carts roll instead of jumping from tile to tile. */
-export class Carts {
-  private tick = -1
-  private tickAt = 0
-  private tickLength = 1000
+const HANDS: { shirt: string; top: string }[] = [
+  { shirt: '#7a8f4e', top: '#5a4326' },
+  { shirt: '#8a5f3c', top: '#c9a66b' },
+  { shirt: '#5d7fa3', top: '#3b2717' },
+]
+const COATS = ['#8a5a36', '#c8b08a', '#5e4630']
 
-  draw(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange, now: number): void {
-    if (state.tick !== this.tick) {
-      // how long the last tick took tells how fast the game runs
-      if (this.tick >= 0 && state.tick > this.tick) this.tickLength = Math.max(40, Math.min(1500, (now - this.tickAt) / (state.tick - this.tick)))
-      this.tick = state.tick
-      this.tickAt = now
-    }
+/**
+ * Draws the carts of the island. Farms, mines and other producers of raw goods send an ox cart; a workshop's goods,
+ * and the materials brought to it, come on a hand cart that somebody pushes.
+ */
+export class Carts {
+  /** `ticks` is the game time with its fraction (see TickClock), so the carts roll instead of jumping from tile to tile. */
+  draw(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange, ticks: number): void {
     // carts belong to the town like the smoke: only the game's own setting hides them, not the system's wish for calm windows
     if (!state.owned || getSettings().reducedMotion) return
-    const ticks = state.tick + Math.min(1, (now - this.tickAt) / this.tickLength)
     const paths = deliveryPaths(state)
     const links = getLinks(state)
     const { width } = state.map
@@ -91,49 +92,62 @@ export class Carts {
       const path = paths.get(building.id)
       const link = links.get(building.id)
       if (!shipments || shipments.length === 0 || !path || path.length < 2 || link?.kind !== 'ok') continue
+      const raw = (getBuilding(building.type).inputs ?? []).length === 0
       for (const shipment of shipments) {
         const share = shipmentShare(shipment.arrive, link.delay, ticks)
         // goods leave the producer along the path, materials come the other way
-        const along = (shipment.kind === 'out' ? share : 1 - share) * (path.length - 1)
+        const out = shipment.kind === 'out'
+        const along = (out ? share : 1 - share) * (path.length - 1)
         const from = path[Math.floor(along)]
         const to = path[Math.min(path.length - 1, Math.floor(along) + 1)]
         const part = along - Math.floor(along)
-        const x = (from % width) + ((to % width) - (from % width)) * part
-        const y = Math.floor(from / width) + (Math.floor(to / width) - Math.floor(from / width)) * part
+        const fx = from % width
+        const fy = Math.floor(from / width)
+        const dx = (to % width) - fx
+        const dy = Math.floor(to / width) - fy
+        const x = fx + dx * part
+        const y = fy + dy * part
         if (x < range.minI - 1 || x > range.maxI + 1 || y < range.minJ - 1 || y > range.maxJ + 1) continue
         const at = tileToWorld(x + 0.5, y + 0.5)
-        drawCart(ctx, at.x, at.y, shipment.good, (to % width) - (from % width) - (Math.floor(to / width) - Math.floor(from / width)) < 0)
+        // direction on screen: one tile along x goes right and down, one along y left and down
+        const sign = out ? 1 : -1
+        const sx = (dx - dy) * sign
+        const sy = ((dx + dy) / 2) * sign
+        const length = Math.hypot(sx, sy) || 1
+        drawTeam(ctx, at.x, at.y, sx / length, sy / length, shipment.good, raw && out, building.id, ticks)
         if (++drawn >= MAX_CARTS) return
       }
     }
   }
 }
 
-/** A small hand cart with its load on top. `leftward`: it rolls to the left on screen, so the shaft points there. */
-function drawCart(ctx: CanvasRenderingContext2D, x: number, y: number, good: string, leftward: boolean): void {
-  const dir = leftward ? -1 : 1
-  // shadow on the road
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.22)'
-  ctx.beginPath()
-  ctx.ellipse(x, y + 1, 8, 3, 0, 0, Math.PI * 2)
-  ctx.fill()
-  // shaft, body and wheel
-  ctx.strokeStyle = '#3b2717'
-  ctx.lineWidth = 1.5
-  ctx.beginPath()
-  ctx.moveTo(x + 5 * dir, y - 4)
-  ctx.lineTo(x + 10 * dir, y - 2)
-  ctx.stroke()
-  ctx.fillStyle = '#9a6b3c'
-  ctx.lineWidth = 1
-  ctx.beginPath()
-  ctx.rect(x - 6, y - 7, 12, 5)
-  ctx.fill()
-  ctx.stroke()
-  ctx.fillStyle = '#3b2717'
-  ctx.beginPath()
-  ctx.arc(x - 1 * dir, y - 1, 2.6, 0, Math.PI * 2)
-  ctx.fill()
-  const icon = sprites.get(`icons/goods/${good}`)
-  if (icon) ctx.drawImage(icon, x - 6, y - 18, 12, 12)
+/** A cart with who moves it: an ox in front, or a person pushing from behind. (ux, uy) is the direction on screen. */
+function drawTeam(ctx: CanvasRenderingContext2D, x: number, y: number, ux: number, uy: number, good: string, ox: boolean, id: number, ticks: number): void {
+  const facing = ux >= 0 ? 1 : -1
+  const stride = ticks * 7 + id
+  const load = sprites.get(`icons/goods/${good}`)
+  const cart = (): void => drawCartBody(ctx, x, y, load, ox)
+  const mover = ox
+    ? (): void => {
+        const ax = x + ux * 14 * FIGURE_SCALE
+        const ay = y + uy * 14 * FIGURE_SCALE
+        // the shaft from the cart to the ox
+        ctx.strokeStyle = '#3b2717'
+        ctx.lineWidth = 1.2
+        ctx.beginPath()
+        ctx.moveTo(x + ux * 6 * FIGURE_SCALE, y + (uy * 6 - 5) * FIGURE_SCALE)
+        ctx.lineTo(ax - ux * 4 * FIGURE_SCALE, ay - (uy * 4 + 5) * FIGURE_SCALE)
+        ctx.stroke()
+        drawOx(ctx, ax, ay, facing, stride, COATS[id % COATS.length])
+      }
+    : (): void => drawPerson(ctx, x - ux * 9.5 * FIGURE_SCALE, y - uy * 9.5 * FIGURE_SCALE, facing, stride, { ...HANDS[id % HANDS.length], pushing: true })
+  // what stands lower on the screen is nearer and drawn last: the ox walks in front, the pusher behind
+  const moverInFront = ox ? uy > 0 : uy < 0
+  if (moverInFront) {
+    cart()
+    mover()
+  } else {
+    mover()
+    cart()
+  }
 }
