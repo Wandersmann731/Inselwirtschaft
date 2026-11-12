@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { chains } from '../src/data'
-import { builtCount, chainGoodOf, chainSeparator, chainsFor, MATERIALS, needsByTier, supplyOf } from '../src/game/needsOverview'
+import { builtCount, chainGoodOf, chainSeparator, chainsFor, MATERIALS, needsByTier, supplyOf, waitingToRise } from '../src/game/needsOverview'
 import { placeBuilding } from '../src/sim/build'
 import { grassField, patchHouse } from './helpers'
 
@@ -75,6 +75,29 @@ describe('the chain a warning leads to', () => {
 
   it('is nothing for an unknown good', () => {
     expect(chainGoodOf('moon dust')).toBeNull()
+  })
+})
+
+describe('houses waiting to rise', () => {
+  const village = () => {
+    let state = grassField(20, 20, { ...rich })
+    state = placeBuilding(state, 'house_pioneers', 2, 2, false)
+    state = placeBuilding(state, 'house_pioneers', 6, 2, false)
+    return state
+  }
+
+  it('counts the houses that lack materials and names what the store is short of', () => {
+    let state = village()
+    state = patchHouse(state, 1, { missingMaterials: true })
+    state = patchHouse(state, 2, { missingMaterials: true })
+    // rising to settlers takes tools and wood: no tools left, plenty of wood
+    const waiting = waitingToRise({ ...state, stock: { ...state.stock, tools: 0 } })
+    expect(waiting.houses).toBe(2)
+    expect(waiting.goods).toEqual(['tools'])
+  })
+
+  it('is empty when no house waits', () => {
+    expect(waitingToRise(village())).toEqual({ houses: 0, goods: [] })
   })
 })
 

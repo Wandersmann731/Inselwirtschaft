@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { buildings, chains, climates, goods, landNames, tiers } from '../src/data'
-import { applyDataLanguage } from '../src/i18n/dataNames'
+import { applyDataLanguage, shipName } from '../src/i18n/dataNames'
 import { gameTitle, logoFile, t } from '../src/i18n/language'
 import { updateSettings } from '../src/save/settings'
 
@@ -31,5 +31,12 @@ describe('language', () => {
     expect(goods.find((g) => g.id === 'food')!.name).toBe('Food')
     applyDataLanguage('de')
     for (const [entry, de] of german) expect(entry.name).toBe(de)
+  })
+
+  it('shows the built-in ship name in English, and leaves other names alone', () => {
+    expect(shipName('Handelsschiff 3')).toBe('Handelsschiff 3')
+    updateSettings({ language: 'en' })
+    expect(shipName('Handelsschiff 3')).toBe('Trading ship 3')
+    expect(shipName('Seeadler')).toBe('Seeadler')
   })
 })

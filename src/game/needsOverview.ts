@@ -138,3 +138,22 @@ export function chainGoodOf(good: string): string | null {
   }
   return chains.find((chain) => chain.buildings.some(makes))?.goods[0] ?? null
 }
+
+/**
+ * Houses that are ready to rise but wait for building materials, and the materials the store is short of for it.
+ * One answer for the whole island instead of tapping house after house.
+ */
+export function waitingToRise(state: IslandState): { houses: number; goods: string[] } {
+  let houses = 0
+  const short = new Set<string>()
+  for (const building of state.buildings) {
+    const house = building.house
+    if (!house?.missingMaterials || house.ruin) continue
+    houses += 1
+    const cost = tiers[tierIndex(house.tier) + 1]?.upgradeCost
+    for (const [good, amount] of Object.entries(cost ?? {})) {
+      if (good !== 'coins' && amount > 0 && (state.stock[good] ?? 0) < amount) short.add(good)
+    }
+  }
+  return { houses, goods: MATERIALS.filter((good) => short.has(good)) }
+}

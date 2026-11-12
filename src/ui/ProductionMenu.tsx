@@ -6,6 +6,8 @@ import type { IslandState } from '../sim/state'
 import { BuildItem } from './BuildItem'
 import { Icon } from './Icon'
 import { formatWhole, resourceName } from './messages'
+import { traderSells } from '../sim/trade'
+import { inText } from './hintTexts'
 import { t } from '../i18n/language'
 
 interface Selection {
@@ -106,6 +108,14 @@ function ChainView({ tool, state, selection, onBack }: { tool: BuildController; 
           {need?.optional && t(' · Bonus: bringt mehr Steuer', ' · bonus: brings more tax')}
         </span>
       </div>
+      {traderSells(good) && (
+        <p className="chain-note">
+          {t(
+            `Schneller geht es mit dem Händler: Er verkauft ${resourceName(good)}. Tippe das Kontor an, wähle „Handel einstellen“ und setze eine Ankaufgrenze.`,
+            `The trader is the quick way: he sells ${inText(resourceName(good))}. Tap the trading post, choose "Set up trade" and set a buy limit.`,
+          )}
+        </p>
+      )}
       <div className="build-items">
         {found.map(({ chain, role }) => (
           <section key={chain.id} className="build-group">

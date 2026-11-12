@@ -16,6 +16,7 @@ import { KontorPanel } from './ui/KontorPanel'
 import type { MapRenderer } from './render/mapRenderer'
 import { MapCanvas } from './ui/MapCanvas'
 import { MiniMap } from './ui/MiniMap'
+import { RiseNotice } from './ui/RiseNotice'
 import { StatsPanel } from './ui/StatsPanel'
 import { Toasts } from './ui/Toasts'
 import { TopHud } from './ui/TopHud'
@@ -100,6 +101,7 @@ export function App({ loop, onQuit }: { loop: GameLoop; onQuit: () => void }) {
       {/* messages and the goals share one column under the top bar, so they never lie on top of each other */}
       <div className="notices">
         <Toasts state={state} onShortage={showChain} />
+        <RiseNotice island={island} onShow={showChain} />
         <HintCard loop={loop} state={state} island={island} tool={tool} />
       </div>
       {showMenu && <GameMenu loop={loop} onClose={() => setShowMenu(false)} onQuit={onQuit} />}

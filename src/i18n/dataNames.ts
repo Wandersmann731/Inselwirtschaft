@@ -1,4 +1,4 @@
-import { buildings, chains, climates, goods, landNames, tiers } from '../data'
+import { buildings, chains, climates, goods, landNames, tiers, trade } from '../data'
 import { getSettings } from '../save/settings'
 
 /** English names of the game data by id. The German names stay in the JSON files. */
@@ -63,6 +63,15 @@ const ISLANDS_EN: Record<string, string> = {
 /** The name of an island in the current language. */
 export function islandName(name: string): string {
   return getSettings().language === 'en' ? (ISLANDS_EN[name] ?? name) : name
+}
+
+/**
+ * The name of a ship in the current language. Ships are named when they are built ("Handelsschiff 2") and keep
+ * that name in the saved game, so the English name is put in when it is shown.
+ */
+export function shipName(name: string): string {
+  if (getSettings().language !== 'en') return name
+  return name.startsWith(`${trade.ship.name} `) ? `Trading ship ${name.slice(trade.ship.name.length + 1)}` : name
 }
 
 /** Switches the `name` of all game data between German (the JSON) and English. */

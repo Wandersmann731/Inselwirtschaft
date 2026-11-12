@@ -1494,3 +1494,10 @@ button.toast {
 .trend-area.coins { fill: #a8782a; }
 .trend-line.balance { stroke: #2c7a39; }
 .trend-area.balance { fill: #2c7a39; }
+
+/* Production menu: a line under the head of a chain, e.g. that the trader sells the good */
+.chain-note {
+  margin: -2px 0 6px;
+  font-size: 13px;
+  color: var(--muted);
+}

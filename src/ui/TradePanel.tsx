@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { islandName as translatedIsland } from '../i18n/dataNames'
+import { islandName as translatedIsland, shipName } from '../i18n/dataNames'
 import { goods, trade } from '../data'
 import type { GameLoop } from '../game/gameLoop'
 import { addOrder, addStop, createRoute, deleteRoute, removeOrder, removeStop } from '../sim/routes'
@@ -104,7 +104,7 @@ function ShipCard({
   return (
     <div className="ship-card">
       <div className="ship-head">
-        <strong>{ship.name}</strong>
+        <strong>{shipName(ship.name)}</strong>
         <span>
           {docked
             ? t(`Im Hafen: ${islandName(ship.island)}`, `In port: ${islandName(ship.island)}`)

@@ -244,6 +244,12 @@
     0 3px 10px rgba(0, 0, 0, 0.45);
 }
 
+.toast.wait {
+  flex: 0 0 auto;
+  border-color: #5a3d12;
+  background: linear-gradient(180deg, #c08a2e 0%, #94661c 100%);
+}
+
 .toast.good {
   border-color: #173d1f;
   background: linear-gradient(180deg, #4f9c57 0%, #2c6a37 100%);
