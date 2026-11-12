@@ -3,8 +3,13 @@ import { App } from './App'
 import { GameLoop } from './game/gameLoop'
 import { getLanguage, subscribeLanguage } from './i18n/language'
 import { startAutosave, saveNow } from './save/autosave'
+import { AUTOSAVE_SLOT, loadState } from './save/saveGame'
+import { createNewGame } from './sim/newGame'
 import type { GameState } from './sim/state'
 import { MainMenu } from './ui/MainMenu'
+
+/** True when the page was opened with ?embed, as the game is shown inside another page. */
+const EMBEDDED = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('embed')
 
 interface Running {
   loop: GameLoop
@@ -44,5 +49,23 @@ export function Root() {
     [],
   )
 
+  // Embedded in another page (?embed): no start screen first. The saved game goes on, or a new one begins.
+  const [opening, setOpening] = useState(EMBEDDED)
+  useEffect(() => {
+    if (!EMBEDDED) return
+    let cancelled = false
+    loadState(AUTOSAVE_SLOT)
+      .catch(() => null)
+      .then((saved) => {
+        if (cancelled) return
+        start(saved ?? createNewGame())
+        setOpening(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [start])
+
+  if (opening && !running) return null
   return running ? <App loop={running.loop} onQuit={quit} /> : <MainMenu onStart={start} />
 }

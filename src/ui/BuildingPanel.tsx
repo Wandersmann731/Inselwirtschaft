@@ -9,7 +9,7 @@ import { taxOf } from '../sim/market'
 import type { HouseState, IslandState } from '../sim/state'
 import { housesLosingSupply } from '../sim/coverage'
 import { hubCount, stockCapacity } from '../sim/storage'
-import { formatCost, formatWhole, needLabel, resourceName, statusText } from './messages'
+import { formatCost, formatWhole, houseName, needLabel, resourceName, statusText } from './messages'
 import { Icon } from './Icon'
 import { STATUS_ICONS } from './statusIcons'
 import { t } from '../i18n/language'
@@ -44,7 +44,7 @@ export function BuildingPanel({
   return (
     <div className="building-panel">
       <div className="panel-title">
-        <strong>{def.name}</strong>
+        <strong>{building.house ? (building.house.ruin ? t('Ruine', 'Ruin') : houseName(building.house.tier)) : def.name}</strong>
         <button type="button" className="panel-close" onClick={() => tool.selectBuilding(null)} aria-label={t('Schließen', 'Close')}>
           ×
         </button>

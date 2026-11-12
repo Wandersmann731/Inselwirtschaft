@@ -1,8 +1,9 @@
 // Beginner tips: the next thing a new player should build, in the order of tutorial.json.
-import { tutorial } from '../data'
-import type { TutorialCondition, TutorialStep } from '../data'
+import { buildings, getBuilding, tutorial } from '../data'
+import type { BuildingDef, TutorialCondition, TutorialStep } from '../data'
+import { buildingBlocker } from './build'
 import { isBuildingUnlocked, tierIndex } from './tiers'
-import type { GameState, PlacedBuilding } from './state'
+import type { GameState, IslandState, PlacedBuilding } from './state'
 
 /** What the conditions look at, gathered once over the player's islands. */
 interface Realm {
@@ -76,4 +77,45 @@ export function skipHint(state: GameState, stepId: string): GameState {
 /** Position of the tip in the list, counting from 1, and the number of tips. */
 export function hintProgress(stepId: string): { index: number; total: number } {
   return { index: tutorial.findIndex((step) => step.id === stepId) + 1, total: tutorial.length }
+}
+
+/** True if the building could be placed on the island as far as unlocks, land and deposits go (debt aside). */
+function canBuildHere(island: IslandState, def: BuildingDef): boolean {
+  const blocker = buildingBlocker(island, def)
+  return blocker === null || blocker.code === 'debt'
+}
+
+/**
+ * True if every input of the building can be had on this island: it lies in the store, a producer of it stands
+ * here or one could be built here. A tobacco factory on an island without tobacco land has nothing to work with.
+ */
+function hasSupply(island: IslandState, def: BuildingDef): boolean {
+  return (def.inputs ?? []).every((input) =>
+    [input.good, ...(input.alternatives ?? [])].some((good) => {
+      if ((island.stock[good] ?? 0) > 0) return true
+      const makers = buildings.filter((maker) => maker.output?.good === good || (maker.byproducts ?? []).some((extra) => extra.good === good))
+      return makers.some((maker) => island.buildings.some((building) => building.type === maker.id) || canBuildHere(island, maker))
+    }),
+  )
+}
+
+/**
+ * The building a tip offers on the island on screen: the first of its list that is missing here, can be built here
+ * and would get its inputs here; else the first that can be built at all. Null if none fits (other island needed).
+ */
+export function offeredBuilding(step: TutorialStep, island: IslandState): string | null {
+  const fitting = (step.build ?? []).filter((id) => {
+    const def = getBuilding(id)
+    return canBuildHere(island, def) && hasSupply(island, def)
+  })
+  return fitting.find((id) => !island.buildings.some((building) => building.type === id)) ?? fitting[0] ?? null
+}
+
+/** The tips that belong together: all of the tier of the given one, in order, each with whether it is done. */
+export function chapterOf(state: GameState, stepId: string): { step: TutorialStep; done: boolean }[] {
+  const tier = tutorial.find((step) => step.id === stepId)?.tier
+  const realm = survey(state)
+  return tutorial
+    .filter((step) => step.tier === tier && step.done.length > 0)
+    .map((step) => ({ step, done: state.hintsDone.includes(step.id) || met(realm, step) }))
 }

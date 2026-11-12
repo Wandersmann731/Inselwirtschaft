@@ -1,7 +1,4 @@
 :root {
-  --hud-bg: rgba(10, 20, 30, 0.8);
-  --hud-text: #f2efe6;
-  --accent: #e0a63a;
   --button-size: 48px;
 }
 
@@ -65,7 +62,7 @@ body,
   padding: 0 14px;
   border: 2px solid transparent;
   border-radius: 8px;
-  background: #2b4254;
+  background: var(--button-bg);
   color: var(--hud-text);
   font-size: 18px;
   cursor: pointer;
@@ -73,7 +70,7 @@ body,
 
 .speed-button.active {
   border-color: var(--accent);
-  background: #3d5a72;
+  background: var(--button-active);
 }
 
 .hud-stats {
@@ -111,7 +108,7 @@ body,
   flex-direction: column;
   gap: 4px;
   padding-right: 10px;
-  border-right: 1px solid #3a5266;
+  border-right: 1px solid var(--line);
 }
 
 .build-group:last-child {
@@ -122,12 +119,12 @@ body,
   margin: 0;
   font-size: 13px;
   font-weight: 700;
-  color: #ffd23f;
+  color: var(--highlight);
 }
 
 .build-group-users {
   font-weight: 400;
-  color: #b8c7d3;
+  color: var(--muted);
 }
 
 .build-group-row,
@@ -139,7 +136,7 @@ body,
 
 .chain-arrow {
   font-size: 22px;
-  color: #8ba3b5;
+  color: var(--muted);
 }
 
 .build-thumb {
@@ -169,7 +166,7 @@ body,
 }
 
 .flow-arrow {
-  color: #8ba3b5;
+  color: var(--muted);
   font-size: 14px;
 }
 
@@ -185,7 +182,7 @@ body,
   padding: 6px 10px;
   border: 2px solid transparent;
   border-radius: 8px;
-  background: #2b4254;
+  background: var(--button-bg);
   color: var(--hud-text);
   font-size: 14px;
   text-align: left;
@@ -199,7 +196,7 @@ body,
 
 .build-item-size,
 .build-item-cost {
-  color: #b8c7d3;
+  color: var(--muted);
   font-size: 12px;
 }
 
@@ -214,7 +211,7 @@ body,
   padding: 0 14px;
   border: 2px solid transparent;
   border-radius: 8px;
-  background: #2b4254;
+  background: var(--button-bg);
   color: var(--hud-text);
   font-size: 16px;
   cursor: pointer;
@@ -226,7 +223,7 @@ body,
 
 .category-button.active {
   border-color: var(--accent);
-  background: #3d5a72;
+  background: var(--button-active);
 }
 
 .category-button.demolish {
@@ -249,7 +246,7 @@ body,
 }
 
 .place-cost {
-  color: #b8c7d3;
+  color: var(--muted);
   font-size: 13px;
 }
 
@@ -258,7 +255,7 @@ body,
 }
 
 .place-hint.invalid {
-  color: #ff8a80;
+  color: var(--bad);
 }
 
 .place-actions {
@@ -269,7 +266,7 @@ body,
 
 .action-button.active {
   border-color: var(--accent);
-  background: #3d5a72;
+  background: var(--button-active);
 }
 
 .action-button.confirm {
@@ -333,7 +330,7 @@ body,
   height: 6px;
   margin: 4px 0 8px;
   border-radius: 3px;
-  background: #2b4254;
+  background: var(--track);
   overflow: hidden;
 }
 
@@ -344,7 +341,7 @@ body,
 
 .panel-line {
   margin: 2px 0;
-  color: #d0dae2;
+  color: var(--text-soft);
 }
 
 .panel-toggle {
@@ -384,7 +381,7 @@ body,
 }
 
 .panel-line.invalid {
-  color: #ff8a80;
+  color: var(--bad);
 }
 
 .need-bar .panel-bar-fill {
@@ -392,11 +389,11 @@ body,
 }
 
 .positive {
-  color: #6bdc84;
+  color: var(--good);
 }
 
 .negative {
-  color: #ff7b72;
+  color: var(--bad);
 }
 
 .hud-stats {
@@ -410,7 +407,7 @@ body,
 }
 
 .hud-tier {
-  color: #c4d2dc;
+  color: var(--muted);
   font-size: 14px;
 }
 
@@ -435,7 +432,7 @@ body,
   max-height: 88vh;
   padding: 8px 14px 12px;
   border-radius: 10px;
-  background: #14222e;
+  background: var(--panel-bg);
   font-size: 15px;
 }
 
@@ -447,7 +444,7 @@ body,
 .stats-scroll h3 {
   margin: 10px 0 4px;
   font-size: 15px;
-  color: #b8c7d3;
+  color: var(--muted);
 }
 
 .stats-table {
@@ -467,33 +464,54 @@ body,
 }
 
 .stats-table tbody tr:nth-child(odd) {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--tint);
 }
 
 .stats-table tr.warned {
-  color: #ff7b72;
+  color: var(--bad);
 }
 
 .stats-sum td {
-  border-top: 1px solid #3d5a72;
+  border-top: 1px solid var(--line);
   font-weight: 600;
 }
 
 .stats-note {
   margin: 6px 0 0;
-  color: #9fb0bd;
+  color: var(--muted);
   font-size: 13px;
 }
 
-.toasts {
-  z-index: 15;
+/* Messages and the goal card: one column under the top bar, so they never lie on top of each other. */
+.notices {
   position: fixed;
-  top: 66px;
-  left: 50%;
+  top: 64px;
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 14;
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   gap: 6px;
-  transform: translateX(-50%);
+  /* stays above the build menu bar */
+  max-height: calc(100dvh - 64px - 72px);
+  pointer-events: none;
+}
+
+.notices > * {
+  pointer-events: auto;
+}
+
+/* the info panel of a building sits in the same corner: the messages move beside it */
+:root:has(.building-panel) .notices {
+  right: calc(270px + 24px + env(safe-area-inset-right));
+}
+
+.toasts {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
   pointer-events: none;
 }
 
@@ -505,6 +523,10 @@ body,
   font-size: 16px;
   text-align: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.toast.good {
+  background: rgba(40, 110, 60, 0.96);
 }
 
 .world-backdrop {
@@ -524,7 +546,7 @@ body,
   height: 92vh;
   padding: 8px 12px 12px;
   border-radius: 10px;
-  background: #14222e;
+  background: var(--panel-bg);
 }
 
 .world-canvas {
@@ -536,7 +558,7 @@ body,
 }
 
 .hud-island {
-  color: #ffd23f;
+  color: var(--highlight);
 }
 
 .kontor-panel,
@@ -551,7 +573,7 @@ body,
 }
 
 .kontor-price {
-  color: #8fa2b0;
+  color: var(--muted);
   font-size: 12px;
 }
 
@@ -566,7 +588,7 @@ body,
   min-height: var(--button-size);
   border: 0;
   border-radius: 6px;
-  background: #2b4254;
+  background: var(--button-bg);
   color: var(--hud-text);
   font-size: 20px;
   cursor: pointer;
@@ -588,11 +610,11 @@ body,
   margin: 8px 0;
   padding: 8px 10px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--tint);
 }
 
 .stop-box {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--tint);
 }
 
 .ship-head {
@@ -615,8 +637,8 @@ body,
   min-height: 44px;
   padding: 0 8px;
   border-radius: 6px;
-  border: 1px solid #3d5a72;
-  background: #1c2f3d;
+  border: 1px solid var(--line);
+  background: var(--field-bg);
   color: var(--hud-text);
   font-size: 15px;
 }
@@ -645,14 +667,6 @@ body,
   background: #1d4e6b;
   opacity: 0.92;
   touch-action: none;
-}
-
-.boot {
-  margin: 0;
-  padding-top: 40vh;
-  text-align: center;
-  font-size: 22px;
-  color: #cfe3ee;
 }
 
 .icon {
@@ -729,7 +743,7 @@ body,
   min-height: 52px;
   border: 2px solid transparent;
   border-radius: 10px;
-  background: #2b4254;
+  background: var(--button-bg);
   color: var(--hud-text);
   font-size: 20px;
   cursor: pointer;
@@ -773,9 +787,9 @@ body,
   min-width: 0;
   min-height: 48px;
   padding: 0 12px;
-  border: 1px solid #3d5a72;
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: #1c2f3d;
+  background: var(--field-bg);
   color: var(--hud-text);
   font-size: 20px;
 }
@@ -803,7 +817,7 @@ body,
   gap: 10px;
   padding: 8px 10px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--tint);
 }
 
 .slot-text {
@@ -819,7 +833,7 @@ body,
   justify-content: space-between;
   gap: 12px;
   padding: 10px 4px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--rule);
   font-size: 16px;
 }
 
@@ -925,7 +939,7 @@ body,
   padding: 0 12px;
   border: 2px solid transparent;
   border-radius: 8px;
-  background: #2b4254;
+  background: var(--button-bg);
   color: var(--hud-text);
   font-size: 14px;
   cursor: pointer;
@@ -933,7 +947,7 @@ body,
 
 .tier-tab.active {
   border-color: var(--accent);
-  background: #3d5a72;
+  background: var(--button-active);
 }
 
 .panel-confirm {
@@ -961,7 +975,7 @@ body,
   padding: 6px 8px;
   border: 2px solid transparent;
   border-radius: 10px;
-  background: #2b4254;
+  background: var(--button-bg);
   color: var(--hud-text);
   cursor: pointer;
 }
@@ -985,7 +999,7 @@ body,
 
 .need-tile-state {
   font-size: 12px;
-  color: #b8c7d3;
+  color: var(--muted);
 }
 
 .build-group.locked {
@@ -1023,7 +1037,7 @@ body,
 
 .chain-head-text {
   font-size: 14px;
-  color: #d6e0e8;
+  color: var(--text-soft);
 }
 
 .chain-arrow.word {
@@ -1038,7 +1052,7 @@ body,
 }
 
 .hud-material.low {
-  color: #ff6b5b;
+  color: var(--bad);
 }
 
 .upgrade-stops {
@@ -1062,7 +1076,7 @@ body,
 }
 
 .action-button.upgrade-stop small {
-  color: #b8c7d3;
+  color: var(--muted);
 }
 
 /* Take the last build action back: low on the screen, where the thumb is. */
@@ -1095,15 +1109,11 @@ body,
   font-size: 18px;
 }
 
-/* Beginner tip: top right like the info panel, which hides it while open. */
+/* The goals of the beginner: in the column of messages (see .notices), hidden while an info panel is open. */
 .hint-card {
-  position: fixed;
-  top: 64px;
-  right: max(12px, env(safe-area-inset-right));
-  z-index: 14;
-  width: min(560px, calc(100vw - 24px));
-  /* stays above the build menu bar and scrolls if the text is long */
-  max-height: calc(100dvh - 64px - 72px);
+  flex: 0 1 auto;
+  min-height: 0;
+  width: min(460px, calc(100vw - 24px));
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 8px 12px 12px;
@@ -1122,8 +1132,30 @@ body,
 
 .hint-count {
   margin-left: 8px;
-  color: #b8c7d3;
+  color: var(--muted);
   font-size: 14px;
+  white-space: nowrap;
+}
+
+/* only on small screens, where the text is folded away */
+.hint-more {
+  display: none;
+  font-size: 20px;
+}
+
+.hint-progress {
+  height: 4px;
+  margin: 2px 0 8px;
+  border-radius: 2px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.hint-progress span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent);
 }
 
 .hint-body {
@@ -1149,11 +1181,50 @@ body,
   flex: 1 1 auto;
 }
 
+.hint-goals {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.hint-goals summary {
+  min-height: 32px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.hint-goals ol {
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hint-goals li {
+  display: flex;
+  gap: 8px;
+  padding: 3px 0;
+  color: var(--muted);
+}
+
+.hint-goals li.done {
+  text-decoration: line-through;
+}
+
+.hint-goals li.current {
+  color: inherit;
+  font-weight: 600;
+}
+
+.goal-mark {
+  flex: 0 0 1.1em;
+  text-align: center;
+}
+
+.hint-goals li.done .goal-mark {
+  color: var(--good);
+}
+
 .hint-chip {
-  position: fixed;
-  top: 64px;
-  right: max(12px, env(safe-area-inset-right));
-  z-index: 14;
+  flex: 0 0 auto;
   min-width: var(--button-size);
   min-height: var(--button-size);
   padding: 0 14px;
@@ -1166,18 +1237,99 @@ body,
   cursor: pointer;
 }
 
+/* nothing to do for this goal on this island (and "skip" folded away): no empty row */
+.hint-actions:not(:has(> .action-button)) {
+  display: none;
+}
+
 /* An open build menu category needs the room. */
 :root:has(.build-menu > :not(.build-categories)) :is(.hint-card, .hint-chip) {
   display: none;
 }
 
-@media (orientation: portrait) {
-  .hint-card,
-  .hint-chip {
-    top: 124px;
+/* Phone held sideways: little height. The card shows its title and the buttons, "▾" unfolds the text and the list. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .hint-card {
+    width: min(340px, 42vw);
   }
 
-  .hint-card {
+  .hint-card.open {
+    width: min(420px, 52vw);
+  }
+
+  .hint-title {
+    font-size: 16px;
+  }
+
+  .hint-more {
+    display: block;
+  }
+
+  /* folded: the title and the one thing to do; the text, the list, "skip" and "–" come with "▾" */
+  .hint-card:not(.open) :is(.hint-details, .hint-skip, .hint-fold) {
+    display: none;
+  }
+
+  .hint-card:not(.open) .hint-actions:not(:has(> .action-button:not(.hint-skip))) {
+    display: none;
+  }
+
+  .building-panel {
+    max-height: calc(100dvh - 64px - 72px);
+  }
+
+  /* an open category of the build menu is higher than the bar alone */
+  :root:has(.build-menu > :not(.build-categories)) .building-panel {
+    max-height: calc(100dvh - 64px - 150px);
+  }
+}
+
+@media (orientation: portrait) {
+  .notices {
+    top: 124px;
     max-height: calc(100dvh - 124px - 150px);
+  }
+
+  /* folded, the card leaves the overview map on the left free */
+  .hint-card {
+    width: min(460px, calc(100vw - 150px));
+  }
+
+  .hint-card.open {
+    width: min(460px, calc(100vw - 24px));
+  }
+
+  .hint-title {
+    font-size: 16px;
+  }
+
+  .hint-bulb {
+    display: none;
+  }
+
+  .hint-more {
+    display: block;
+  }
+
+  .hint-card:not(.open) :is(.hint-details, .hint-skip, .hint-fold) {
+    display: none;
+  }
+
+  .hint-card:not(.open) .hint-actions:not(:has(> .action-button:not(.hint-skip))) {
+    display: none;
+  }
+
+  /* beside the overview map, not over it */
+  .building-panel {
+    width: min(270px, calc(100vw - 150px));
+  }
+
+  /* the info panel fills the corner: messages go to the bottom, above the build menu */
+  :root:has(.building-panel) .notices {
+    top: auto;
+    right: 12px;
+    bottom: 150px;
+    left: 12px;
+    align-items: center;
   }
 }

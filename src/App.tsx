@@ -72,8 +72,11 @@ export function App({ loop, onQuit }: { loop: GameLoop; onQuit: () => void }) {
         debug={debug}
         onOpenBalance={() => setShowBalance(true)}
       />
-      <HintCard loop={loop} state={state} island={island} tool={tool} />
-      <Toasts state={state} />
+      {/* messages and the goals share one column under the top bar, so they never lie on top of each other */}
+      <div className="notices">
+        <Toasts state={state} />
+        <HintCard loop={loop} state={state} island={island} tool={tool} />
+      </div>
       {showMenu && <GameMenu loop={loop} onClose={() => setShowMenu(false)} onQuit={onQuit} />}
       {showBalance && <BalancePanel loop={loop} onClose={() => setShowBalance(false)} />}
       {showStats && <StatsPanel state={state} island={island} onClose={() => setShowStats(false)} />}

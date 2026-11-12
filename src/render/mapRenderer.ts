@@ -185,8 +185,12 @@ export class MapRenderer {
         // islands of others: look at their town
         const at = tileToWorld(market.x + 1, market.y + 1)
         this.camera = clampCamera({ ...this.camera, x: at.x, y: at.y }, viewport, mapBounds(map))
-      } else if (shown.owned && !shown.buildings.some((b) => b.house)) {
-        const site = findStartSite(map)
+      } else if (shown.owned) {
+        // your own island: a settlement is shown at its trading post; before the first house the free ground
+        // beside it, where the first houses go (the ghost building starts in the middle of the screen)
+        const kontor = shown.buildings.find((b) => b.type === 'kontor') ?? market
+        const settled = shown.buildings.some((b) => b.house)
+        const site = settled && kontor ? { x: kontor.x + 0.5, y: kontor.y + 0.5 } : findStartSite(map)
         const at = tileToWorld(site.x + 0.5, site.y + 0.5)
         this.camera = clampCamera({ ...this.camera, x: at.x, y: at.y }, viewport, mapBounds(map))
       }

@@ -1,0 +1,106 @@
+/*
+ * Movement in the interface: windows and bars come in softly, buttons give way when pressed, bars fill smoothly.
+ * Everything here is switched off for people who asked their system for less motion.
+ */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.stats-backdrop,
+.world-backdrop {
+  animation: fade-in 0.16s ease-out;
+}
+
+.stats-panel,
+.world-panel,
+.menu-panel,
+.undo-chip {
+  animation: pop-in 0.2s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.building-panel,
+.hint-card,
+.hint-chip {
+  animation: slide-in-right 0.2s ease-out;
+}
+
+.build-items,
+.chain-head,
+.place-bar {
+  animation: slide-up 0.16s ease-out;
+}
+
+.toast {
+  animation: drop-in 0.22s ease-out;
+}
+
+button {
+  transition:
+    transform 0.08s ease-out,
+    filter 0.12s ease-out,
+    border-color 0.12s ease-out,
+    box-shadow 0.12s ease-out;
+}
+
+button:active:not(:disabled) {
+  transform: translateY(1px) scale(0.98);
+  filter: brightness(0.92);
+}
+
+@media (hover: hover) {
+  button:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+}
+
+.panel-bar-fill,
+.hint-progress span {
+  transition: width 0.4s ease;
+}
+
+.setting-row input[type='checkbox'],
+.setting-row input[type='checkbox']::after {
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

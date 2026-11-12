@@ -10,9 +10,80 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/png" href="/icons/favicon.png" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <style>
+      .boot {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        background:
+          linear-gradient(rgba(20, 13, 8, 0.55), rgba(20, 13, 8, 0.8)),
+          #0d2433 center / cover no-repeat url('/sprites/app/splash.webp');
+        color: #f6ecd6;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      }
+      .boot-logo {
+        max-width: min(420px, 78vw);
+        max-height: 30vh;
+        object-fit: contain;
+        filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
+      }
+      .boot-bar {
+        width: min(320px, 70vw);
+        height: 14px;
+        padding: 2px;
+        border: 1px solid #1c120b;
+        border-radius: 8px;
+        background: #2a1d14;
+        box-shadow: 0 0 0 1px #a8843f, 0 2px 6px rgba(0, 0, 0, 0.5);
+      }
+      #boot-fill {
+        display: block;
+        width: 4%;
+        height: 100%;
+        border-radius: 5px;
+        background: linear-gradient(180deg, #f3cf7a, #c98f2b);
+        transition: width 0.2s ease-out;
+      }
+      .boot-text {
+        margin: 0;
+        font-size: 17px;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+      }
+    </style>
   </head>
   <body>
-    <div id="root"><p class="boot">Inselwirtschaft wird geladen …</p></div>
+    <!-- Loading screen: shown until the pictures are loaded, then React takes over #root. Styled here, so it shows at once. -->
+    <div id="root">
+      <div class="boot">
+        <img class="boot-logo" id="boot-logo" alt="" />
+        <div class="boot-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><span id="boot-fill"></span></div>
+        <p class="boot-text" id="boot-text"></p>
+      </div>
+    </div>
+    <script>
+      // same choice as the game: the saved language, else German for a German browser and English otherwise
+      ;(function () {
+        var language = null
+        try {
+          language = JSON.parse(localStorage.getItem('inselwirtschaft:settings') || '{}').language
+        } catch (error) {
+          /* no saved settings */
+        }
+        if (language !== 'de' && language !== 'en') {
+          var preferred = ((navigator.languages && navigator.languages[0]) || navigator.language || '').toLowerCase()
+          language = preferred.indexOf('de') === 0 ? 'de' : 'en'
+        }
+        var english = language === 'en'
+        document.documentElement.lang = language
+        document.title = english ? 'Island Economy' : 'Inselwirtschaft'
+        document.getElementById('boot-logo').src = english ? '/sprites/app/logo_en.webp' : '/sprites/app/logo.webp'
+        document.getElementById('boot-text').textContent = english ? 'Loading the island …' : 'Die Insel wird geladen …'
+      })()
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

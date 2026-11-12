@@ -2,12 +2,18 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Root } from './Root'
 import './index.css'
+import './theme.css'
+import './motion.css'
 import { sprites } from './render/sprites'
 import { initLanguage } from './i18n/language'
 
 async function bootstrap(): Promise<void> {
   // Pictures first: the map is drawn with them. Without them (or while they are missing) it falls back to colour shapes.
-  await sprites.load()
+  // the loading screen of index.html shows how far it is
+  const fill = document.getElementById('boot-fill')
+  await sprites.load(undefined, (done, total) => {
+    if (fill) fill.style.width = `${Math.round((done / total) * 100)}%`
+  })
   initLanguage()
   createRoot(document.getElementById('root')!).render(
     <StrictMode>

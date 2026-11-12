@@ -4,6 +4,7 @@ import { MATERIALS } from '../game/needsOverview'
 import { formatSigned, formatWhole, resourceName } from './messages'
 import { toggleFullscreen, useFullscreen } from './fullscreen'
 import { Icon } from './Icon'
+import { useCountUp } from './useCountUp'
 import { numberLocale, t } from '../i18n/language'
 
 interface TopHudProps {
@@ -49,6 +50,8 @@ export function TopHud({
   onOpenBalance,
 }: TopHudProps) {
   const fullscreen = useFullscreen()
+  // the coins run to their new value when taxes come in or something is paid
+  const shownCoins = useCountUp(coins)
   const total = Object.values(residentsByTier).reduce((sum, value) => sum + value, 0)
   const balanceClass = balance === null ? 'hud-stat' : balance >= 0 ? 'hud-stat positive' : 'hud-stat negative'
   return (
@@ -56,7 +59,7 @@ export function TopHud({
       <div className="hud-stats">
         <div className="hud-row">
         <span className={coins < 0 ? 'hud-stat negative' : 'hud-stat'}>
-          <Icon name="ui/coin" size={20} title={resourceName('coins')} /> {formatWhole(coins)}
+          <Icon name="ui/coin" size={20} title={resourceName('coins')} /> {formatWhole(shownCoins)}
         </span>
         <span className={balanceClass}><Icon name={balance !== null && balance < 0 ? 'ui/balance_down' : 'ui/balance_up'} size={20} title={t('Bilanz', 'Balance')} />{' '}
           {balance === null ? '–' : `${formatSigned(balance)} ${t('/ Zyklus', '/ cycle')}`}

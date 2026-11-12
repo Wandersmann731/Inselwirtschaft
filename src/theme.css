@@ -1,0 +1,340 @@
+/*
+ * The look of the interface: wooden bars and buttons, parchment windows, brass accents. All of it is CSS, there are
+ * no pictures behind it. The layout stays in index.css, which uses the colours named here.
+ */
+:root {
+  --cream: #f6ecd6;
+  --ink: #2e2219;
+  --ink-soft: #6b5840;
+  --brass: #dba744;
+  --brass-dark: #a8843f;
+  --brass-light: #f5d789;
+  --wood-edge: #1c120b;
+  --frame: #3b2717;
+
+  /* Colours on wood: the bars, the buttons and the start menu. Parchment windows change them below. */
+  --hud-text: var(--cream);
+  --accent: var(--brass);
+  --text-soft: #e7d9bb;
+  --muted: #cdb893;
+  --highlight: #f5cf6b;
+  --good: #8fdc8a;
+  --bad: #ff9580;
+  --line: rgba(245, 215, 137, 0.28);
+  --rule: rgba(246, 236, 214, 0.12);
+  --tint: rgba(246, 236, 214, 0.07);
+  --track: rgba(0, 0, 0, 0.35);
+  --field-bg: #2a1d14;
+  --button-bg: #5d4029;
+  --button-active: #7d5836;
+  --panel-bg: #efe2c2;
+  --hud-bg: rgba(42, 29, 20, 0.95);
+
+  --font-display: 'Palatino Linotype', Palatino, 'Book Antiqua', 'URW Palladio L', Georgia, serif;
+  /* fine lines along the wood */
+  --grain: repeating-linear-gradient(
+    91deg,
+    rgba(255, 240, 210, 0.03) 0 2px,
+    transparent 2px 9px,
+    rgba(0, 0, 0, 0.06) 9px 11px,
+    transparent 11px 27px
+  );
+  --wood: var(--grain), linear-gradient(180deg, rgba(64, 44, 29, 0.96), rgba(38, 26, 17, 0.97));
+  --plank: linear-gradient(180deg, #7b5739 0%, #5f422b 55%, #4c3421 100%);
+  --plank-active: linear-gradient(180deg, #9a6f45 0%, #7a5534 55%, #624327 100%);
+  /* light from the top left, a darker worn corner at the bottom right */
+  --parchment:
+    radial-gradient(120% 90% at 0% 0%, rgba(255, 250, 235, 0.55), transparent 55%),
+    radial-gradient(120% 100% at 100% 100%, rgba(150, 105, 50, 0.22), transparent 60%),
+    linear-gradient(180deg, #f1e4c3, #e6d5ad);
+}
+
+:focus-visible {
+  outline: 2px solid var(--brass-light);
+  outline-offset: 2px;
+}
+
+/* ---- Bars -------------------------------------------------------------------------------------------------- */
+
+.top-hud,
+.build-menu,
+.place-bar {
+  background: var(--wood);
+}
+
+.top-hud {
+  border-bottom: 2px solid var(--brass-dark);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  font-variant-numeric: tabular-nums;
+}
+
+.build-menu,
+.place-bar {
+  border-top: 2px solid var(--brass-dark);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.hud-island,
+.build-group-title {
+  font-family: var(--font-display);
+  letter-spacing: 0.2px;
+}
+
+/* ---- Buttons: wooden planks -------------------------------------------------------------------------------- */
+
+.speed-button,
+.category-button,
+.action-button,
+.build-item,
+.need-tile,
+.tier-tab,
+.step-button,
+.menu-button,
+.hint-chip,
+.undo-chip {
+  /* light text again, also inside a parchment window */
+  --text-soft: #e7d9bb;
+  --muted: #d6c4a0;
+  --good: #8fdc8a;
+  --bad: #ff9580;
+  border: 2px solid var(--wood-edge);
+  background: var(--plank);
+  color: var(--cream);
+  font-family: inherit;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 236, 200, 0.22),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.28),
+    0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.speed-button.active,
+.category-button.active,
+.action-button.active,
+.tier-tab.active {
+  border-color: var(--brass);
+  background: var(--plank-active);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 236, 200, 0.3),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.25),
+    0 0 8px rgba(219, 167, 68, 0.5);
+}
+
+.action-button.confirm,
+.menu-button.primary {
+  border-color: #173d1f;
+  background: linear-gradient(180deg, #5cab63 0%, #3a8546 55%, #2c6a37 100%);
+}
+
+.action-button.danger,
+.category-button.demolish {
+  border-color: #3d130c;
+  background: linear-gradient(180deg, #b9553f 0%, #93382a 55%, #762a1f 100%);
+}
+
+.speed-button:disabled,
+.category-button:disabled,
+.action-button:disabled,
+.build-item:disabled,
+.menu-button:disabled {
+  filter: saturate(0.55);
+}
+
+.hint-chip,
+.undo-chip {
+  border-color: var(--brass);
+}
+
+.menu-button {
+  font-family: var(--font-display);
+  letter-spacing: 0.3px;
+}
+
+.panel-close {
+  color: inherit;
+}
+
+/* ---- Windows: parchment in a wooden frame ------------------------------------------------------------------ */
+
+.stats-panel,
+.world-panel,
+.building-panel,
+.hint-card {
+  --hud-text: var(--ink);
+  --text-soft: #4a3a2a;
+  --muted: var(--ink-soft);
+  --highlight: #8a5a12;
+  --good: #2c7a39;
+  --bad: #b0341f;
+  --line: rgba(110, 80, 40, 0.45);
+  --rule: rgba(110, 80, 40, 0.22);
+  --tint: rgba(120, 85, 40, 0.1);
+  --track: rgba(90, 62, 30, 0.25);
+  --field-bg: #fbf4de;
+  border: 1px solid #8f6f3e;
+  background: var(--parchment);
+  color: var(--ink);
+  box-shadow:
+    0 0 0 3px var(--frame),
+    0 0 0 4px var(--brass-dark),
+    0 10px 28px rgba(0, 0, 0, 0.5);
+  scrollbar-color: var(--brass-dark) transparent;
+  scrollbar-width: thin;
+}
+
+.stats-backdrop,
+.world-backdrop {
+  background: rgba(20, 12, 6, 0.55);
+}
+
+.panel-title strong {
+  font-family: var(--font-display);
+  font-size: 19px;
+  letter-spacing: 0.2px;
+}
+
+.stats-scroll h3 {
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-display);
+  font-size: 16px;
+  color: var(--text-soft);
+}
+
+.hint-note {
+  border-left: 3px solid var(--brass-dark);
+  background: rgba(200, 140, 30, 0.2);
+}
+
+.ship-actions select,
+.menu-seed input {
+  font-family: inherit;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+/* ---- Start screen ------------------------------------------------------------------------------------------ */
+
+.menu-panel {
+  border: 1px solid var(--wood-edge);
+  background: var(--grain), linear-gradient(180deg, rgba(58, 40, 26, 0.93), rgba(30, 20, 12, 0.95));
+  box-shadow:
+    0 0 0 2px var(--brass-dark),
+    0 12px 36px rgba(0, 0, 0, 0.6);
+}
+
+.menu-logo {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.55));
+}
+
+/* ---- Small parts ------------------------------------------------------------------------------------------- */
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #4a120b;
+  background: linear-gradient(180deg, #a84030 0%, #7d2419 100%);
+  color: var(--cream);
+  text-align: left;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 200, 180, 0.25),
+    0 3px 10px rgba(0, 0, 0, 0.45);
+}
+
+.toast.good {
+  border-color: #173d1f;
+  background: linear-gradient(180deg, #4f9c57 0%, #2c6a37 100%);
+}
+
+.minimap {
+  border: 2px solid var(--brass-dark);
+  border-radius: 6px;
+  box-shadow:
+    0 0 0 2px var(--frame),
+    0 2px 8px rgba(0, 0, 0, 0.5);
+  opacity: 1;
+}
+
+.build-count {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  text-shadow: none;
+}
+
+/* ---- Settings: a switch and a slider instead of the browser's own controls --------------------------------- */
+
+.setting-row input[type='checkbox'] {
+  position: relative;
+  width: 54px;
+  height: 30px;
+  margin: 0;
+  border: 1px solid #5a4226;
+  border-radius: 15px;
+  background: var(--track);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.setting-row input[type='checkbox']::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #fff8e6, #d9c7a0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.setting-row input[type='checkbox']:checked {
+  background: linear-gradient(180deg, #5cab63, #3a8546);
+}
+
+.setting-row input[type='checkbox']:checked::after {
+  transform: translateX(24px);
+}
+
+.volume-slider {
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.volume-slider::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--track);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.volume-slider::-moz-range-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--track);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.volume-slider::-webkit-slider-thumb {
+  width: 26px;
+  height: 26px;
+  margin-top: -9px;
+  border: 2px solid #6b4a1e;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fbe6a8, #d9a441 60%, #a8782a);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #6b4a1e;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fbe6a8, #d9a441 60%, #a8782a);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}

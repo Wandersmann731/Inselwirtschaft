@@ -29,7 +29,7 @@ class SpriteStore {
   version = 0
 
   /** Loads every sprite listed in sprites/index.json. Gives up waiting after timeoutMs. */
-  async load(timeoutMs = 20000): Promise<void> {
+  async load(timeoutMs = 20000, onProgress?: (done: number, total: number) => void): Promise<void> {
     let keys: string[] = []
     try {
       const list = (await (await fetch(`${BASE}index.json`)).json()) as string[]
@@ -43,9 +43,15 @@ class SpriteStore {
     } catch {
       this.padData = {}
     }
+    let done = 0
+    const settled = (): void => onProgress?.(++done, keys.length)
     const loading = keys.map(
       (key) =>
-        new Promise<void>((resolve) => {
+        new Promise<void>((finish) => {
+          const resolve = (): void => {
+            settled()
+            finish()
+          }
           const image = new Image()
           image.onload = () => {
             this.images.set(key, key.startsWith('buildings/') ? this.cleaned(key, image) : image)

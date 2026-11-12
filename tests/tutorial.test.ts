@@ -7,7 +7,8 @@ import { createRng } from '../src/sim/rng'
 import { CURRENT_SAVE_VERSION, type GameState, type PlacedBuilding } from '../src/sim/state'
 import { tick } from '../src/sim/tick'
 import { createHouse, tierIndex } from '../src/sim/tiers'
-import { currentHint, hintProgress, recordHints, skipHint } from '../src/sim/tutorial'
+import { toIslandState } from '../src/sim/islands'
+import { chapterOf, currentHint, hintProgress, offeredBuilding, recordHints, skipHint } from '../src/sim/tutorial'
 
 /** Puts buildings on the home island. The tips only look at their types and houses, not at the spot. */
 function withBuildings(game: GameState, types: string[], residents = 0): GameState {
@@ -146,3 +147,41 @@ describe('beginner tips', () => {
     expect(migrateState(old).hintsDone).toEqual([])
   })
 })
+
+describe('what a tip offers to build', () => {
+  const step = (id: string) => tutorial.find((entry) => entry.id === id)!
+  const home = (game: GameState) => toIslandState({ ...game, highestTier: tierIndex('citizens') }, 0)
+
+  it('offers the first building of the tip that is missing', () => {
+    const game = createNewGame(1)
+    expect(offeredBuilding(step('cloth'), home(game))).toBe('sheep_farm')
+    expect(offeredBuilding(step('cloth'), home(withBuildings(game, ['sheep_farm'])))).toBe('weaver')
+  })
+
+  it('offers no tobacco factory where no tobacco grows', () => {
+    // the home island lies in the north: no tobacco land, no spices
+    expect(offeredBuilding(step('citizenGoods'), home(createNewGame(1)))).toBeNull()
+  })
+
+  it('offers the factory once tobacco leaves are in the store', () => {
+    const game = createNewGame(1)
+    const stocked = { ...game, islands: [{ ...game.islands[0], stock: { ...game.islands[0].stock, tobacco_leaf: 10 } }, ...game.islands.slice(1)] }
+    expect(offeredBuilding(step('citizenGoods'), home(stocked))).toBe('tobacco_factory')
+  })
+})
+
+describe('the goals of a chapter', () => {
+  it('lists the tips of the same tier and ticks the reached ones', () => {
+    const game = withBuildings(createNewGame(1), houses(4))
+    const chapter = chapterOf(game, 'food')
+    expect(chapter.map((entry) => entry.step.tier)).toEqual(new Array(chapter.length).fill('pioneers'))
+    expect(chapter.find((entry) => entry.step.id === 'houses')!.done).toBe(true)
+    expect(chapter.find((entry) => entry.step.id === 'food')!.done).toBe(false)
+  })
+
+  it('counts a skipped tip as done', () => {
+    const chapter = chapterOf(skipHint(createNewGame(1), 'houses'), 'houses')
+    expect(chapter[0].done).toBe(true)
+  })
+})
+

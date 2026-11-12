@@ -14,6 +14,35 @@ interface MapCanvasProps {
   onRenderer?: (renderer: MapRenderer | null) => void
 }
 
+/** Room kept between a tapped building and its info panel, and the time the map takes to slide there. */
+const REVEAL_MARGIN = 72
+const REVEAL_MS = 220
+
+/**
+ * Slides the map so the building tapped at (x, y) is not hidden under its info panel: to the left of the panel
+ * if there is room, else below it. Runs once the panel is on screen.
+ */
+function revealBesidePanel(renderer: MapRenderer, x: number, y: number): void {
+  const panel = document.querySelector('.building-panel')?.getBoundingClientRect()
+  if (!panel) return
+  const covered = x > panel.left - REVEAL_MARGIN && x < panel.right + REVEAL_MARGIN && y > panel.top - REVEAL_MARGIN && y < panel.bottom + REVEAL_MARGIN
+  if (!covered) return
+  const roomLeft = panel.left > REVEAL_MARGIN * 2.5
+  const dx = roomLeft ? panel.left - REVEAL_MARGIN - x : 0
+  const dy = roomLeft ? 0 : panel.bottom + REVEAL_MARGIN - y
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return renderer.panBy(dx, dy)
+  const start = performance.now()
+  let done = 0
+  const step = (now: number): void => {
+    const share = Math.min(1, (now - start) / REVEAL_MS)
+    const eased = 1 - (1 - share) * (1 - share)
+    renderer.panBy(dx * (eased - done), dy * (eased - done))
+    done = eased
+    if (share < 1) requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
+}
+
 export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -41,6 +70,8 @@ export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
         if (id) renderer.selectAt(x, y)
         else renderer.clearSelection()
         tool.selectBuilding(id || null)
+        // after React has put the panel on screen
+        if (id) requestAnimationFrame(() => requestAnimationFrame(() => revealBesidePanel(renderer, x, y)))
       }
     }
     const input = new MapInput(canvas, {
@@ -55,6 +86,7 @@ export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
         haptic(25)
         renderer.selectAt(x, y)
         tool.inspect(id)
+        requestAnimationFrame(() => requestAnimationFrame(() => revealBesidePanel(renderer, x, y)))
       },
       onGrab: (x, y, pointerType) => {
         // with a mouse the ghost follows the pointer: dragging moves the map, a click builds

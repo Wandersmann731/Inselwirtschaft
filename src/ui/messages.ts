@@ -74,6 +74,24 @@ export function needLabel(need: TierNeed): string {
   return resourceName(need.good ?? need.id)
 }
 
+/** Name of the house of a tier, e.g. "Bürgerhaus": a pioneer house that rose is no pioneer house any more. */
+export function houseName(tierId: string): string {
+  switch (tierId) {
+    case 'pioneers':
+      return t('Pionierhaus', 'Pioneer house')
+    case 'settlers':
+      return t('Siedlerhaus', 'Settler house')
+    case 'citizens':
+      return t('Bürgerhaus', 'Citizen house')
+    case 'merchants':
+      return t('Kaufmannshaus', 'Merchant house')
+    case 'aristocrats':
+      return t('Aristokratenhaus', 'Aristocrat house')
+    default:
+      return tierId
+  }
+}
+
 /** Signed number with thousands separators, e.g. "+1.250" or "-40". */
 export function formatSigned(value: number): string {
   const rounded = Math.round(value)
