@@ -1,10 +1,5 @@
 // The sky over the island: cloud shadows that drift across land and sea, and an evening every few minutes, when
-// the light turns blue and the windows of lived-in houses and busy workshops glow.
-import { getBuilding } from '../data'
-import { buildingRect } from '../sim/coverage'
-import type { IslandState } from '../sim/state'
-import type { TileRange } from './buildingRenderer'
-import { tileToWorld } from './iso'
+// the light turns blue. The windows that glow then are collected in lightLayer.ts.
 
 /** Length of a day in game ticks and the share of it that is evening (with the fades in and out). */
 export const DAY_TICKS = 540
@@ -62,25 +57,8 @@ function makeClouds(): HTMLCanvasElement | null {
   return canvas
 }
 
-/** A round warm glow, drawn once and stamped on every lit building. */
-function makeGlow(): HTMLCanvasElement | null {
-  const canvas = document.createElement('canvas')
-  canvas.width = 96
-  canvas.height = 96
-  const g = canvas.getContext('2d')
-  if (!g) return null
-  const gradient = g.createRadialGradient(48, 48, 2, 48, 48, 48)
-  gradient.addColorStop(0, 'rgba(255, 214, 130, 0.85)')
-  gradient.addColorStop(0.35, 'rgba(255, 170, 70, 0.4)')
-  gradient.addColorStop(1, 'rgba(255, 140, 40, 0)')
-  g.fillStyle = gradient
-  g.fillRect(0, 0, 96, 96)
-  return canvas
-}
-
 export class Sky {
   private clouds: CanvasPattern | null | undefined
-  private glow: HTMLCanvasElement | null | undefined
 
   /** Cloud shadows over the visible area. With `still` they stand where they are (less motion). */
   drawClouds(ctx: CanvasRenderingContext2D, area: Area, now: number, still: boolean): void {
@@ -102,39 +80,14 @@ export class Sky {
     ctx.restore()
   }
 
-  /** The evening: a blue veil over everything, then warm light at the houses people live in and at running workshops. */
-  drawDusk(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange, area: Area, share: number): void {
+  /** The evening: a blue veil over everything. The lights are added afterwards (see lightLayer.ts). */
+  drawDusk(ctx: CanvasRenderingContext2D, area: Area, share: number): void {
     if (share <= 0) return
     ctx.save()
     ctx.globalCompositeOperation = 'multiply'
     const mix = (day: number, night: number): number => Math.round(day + (night - day) * share)
     ctx.fillStyle = `rgb(${mix(255, 126)}, ${mix(255, 140)}, ${mix(255, 202)})`
     ctx.fillRect(area.x, area.y, area.w, area.h)
-    ctx.restore()
-
-    if (this.glow === undefined) this.glow = makeGlow()
-    if (!this.glow) return
-    ctx.save()
-    ctx.globalCompositeOperation = 'lighter'
-    for (const building of state.buildings) {
-      const rect = buildingRect(building)
-      if (rect.x > range.maxI + 3 || rect.x + rect.w < range.minI - 3 || rect.y > range.maxJ + 3 || rect.y + rect.h < range.minJ - 3) continue
-      const def = getBuilding(building.type)
-      const working = !building.production || building.production.status.kind === 'producing'
-      const lit = building.house ? !building.house.ruin && building.house.residents > 0 : building.active && def.kind !== 'road' && working
-      if (!lit) continue
-      const centre = tileToWorld(rect.x + rect.w / 2, rect.y + rect.h / 2)
-      const size = 46 + 14 * Math.max(rect.w, rect.h)
-      // the light sits where the windows are: a little above the ground, in front of the middle of the house
-      ctx.globalAlpha = 0.75 * share
-      ctx.drawImage(this.glow, centre.x - size / 2, centre.y - 14 - size / 2, size, size)
-      // two bright windows on the front walls
-      ctx.globalAlpha = share
-      ctx.fillStyle = 'rgba(255, 226, 150, 0.9)'
-      const spread = 5 + 3 * Math.min(rect.w, rect.h)
-      ctx.fillRect(centre.x - spread - 1.5, centre.y - 9, 3, 3.5)
-      ctx.fillRect(centre.x + spread - 1.5, centre.y - 9, 3, 3.5)
-    }
     ctx.restore()
   }
 }

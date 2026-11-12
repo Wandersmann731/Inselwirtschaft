@@ -29,6 +29,7 @@ import { TickClock } from './tickClock'
 import { drawWalkers } from './walkers'
 import { drawShadows } from './buildingShadows'
 import { duskShare, Sky } from './sky'
+import { LightLayer } from './lightLayer'
 import { Surf } from './surf'
 import { groundTextures } from './groundTextures'
 import { CHUNK_H, CHUNK_W, TerrainCache } from './terrainCache'
@@ -59,6 +60,7 @@ export class MapRenderer {
   private carts = new Carts()
   private clock = new TickClock()
   private sky = new Sky()
+  private lights = new LightLayer()
   private water: WaterPattern | null = null
   /** Sprite version the water pattern was made with: it is made again if pictures arrived late. */
   private waterVersion = -1
@@ -229,12 +231,15 @@ export class MapRenderer {
     const ticks = this.clock.ticks(state.tick, now)
     this.carts.draw(ctx, state, range, ticks)
     drawWalkers(ctx, state, range, ticks)
-    drawBuildings(ctx, state, range, now, settings.smoke)
+    // cloud shadows drift over land and sea; every few minutes of game time evening falls and the windows glow
+    const dusk = settings.sky ? duskShare(ticks) : 0
+    if (dusk > 0) this.lights.begin(ctx)
+    drawBuildings(ctx, state, range, now, settings.smoke, dusk > 0 ? this.lights : undefined)
     drawShips(ctx, state, now)
-    if (settings.sky) {
-      // cloud shadows drift over land and sea; every few minutes of game time evening falls and the windows glow
-      this.sky.drawClouds(ctx, area, now, settings.reducedMotion)
-      this.sky.drawDusk(ctx, state, range, area, duskShare(ticks))
+    if (settings.sky) this.sky.drawClouds(ctx, area, now, settings.reducedMotion)
+    if (dusk > 0) {
+      this.sky.drawDusk(ctx, area, dusk)
+      this.lights.flush(ctx, dusk)
     }
     this.effects.update(state, now)
     this.effects.draw(ctx, now)

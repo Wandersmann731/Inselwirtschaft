@@ -2,6 +2,7 @@
 
 import { buildings } from '../data'
 import { cleanPlotPixels, measurePlot } from './plotCleanup'
+import { clearPaintedWater } from './waterPlot'
 
 const BASE = `${import.meta.env.BASE_URL}sprites/`
 
@@ -105,6 +106,8 @@ class SpriteStore {
       }
     }
     const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    // a pier painted on a block of water: the block goes, the real sea shows instead
+    if (def.pier) clearPaintedWater(pixels.data, canvas.width, canvas.height)
     // a picture with an overhang border is meant to reach beyond its footprint: it is not cut, only filled
     cleanPlotPixels(pixels.data, canvas.width, canvas.height, { w: def.size[0], h: def.size[1], pads: this.pads(key) }, !padded)
     ctx.putImageData(pixels, 0, 0)

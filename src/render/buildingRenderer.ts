@@ -13,6 +13,8 @@ import { drawPlacedSprite, placeSprite, SPRITE_SCALE, type SpritePlacement } fro
 import { buildingKey, roadKey, smokeKey } from './spriteKeys'
 import { quarterBlocks } from './quarterRenderer'
 import { coastEdges, fadedCopy, type FadeEdges } from './coastFade'
+import { glowStamp, isLit, type LightLayer } from './lightLayer'
+import { windowMask } from './windowLights'
 
 export interface TileRange {
   minI: number
@@ -48,9 +50,10 @@ export function drawRoads(ctx: CanvasRenderingContext2D, state: IslandState, ran
 
 /**
  * Draws all buildings that overlap the visible tile range, back to front, together with the trees, bushes and rocks
- * right next to them (so these can stand in front of a building). `now` drives the smoke animation.
+ * right next to them (so these can stand in front of a building). `now` drives the smoke animation. In the evening
+ * `lights` collects the glowing windows, each building hiding the lights of those behind it.
  */
-export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange, now = 0, showSmoke = true): void {
+export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange, now = 0, showSmoke = true, lights?: LightLayer): void {
   type Entry = { depth: number; building?: (typeof state.buildings)[number]; rect?: TileRect; decor?: FrontItem }
   const entries: Entry[] = []
   for (const building of state.buildings) {
@@ -64,7 +67,9 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
 
   for (const entry of entries) {
     if (entry.decor) {
-      drawDecor(ctx, entry.decor.item, entry.decor.wx, entry.decor.wy)
+      const decor = entry.decor
+      drawDecor(ctx, decor.item, decor.wx, decor.wy)
+      lights?.cover((layer) => drawDecor(layer, decor.item, decor.wx, decor.wy))
       continue
     }
     const { building, rect } = entry
@@ -76,15 +81,28 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
     const placed = placeSprite(building, key)
     let dotHeight: number
     if (placed) {
-      // a plot on the shore fades into the sand at its front edges. Not a house of a block (it stands on the shared
-      // yard) and not the harbour buildings, whose wooden piers end where they end.
-      if (!block && !(def.placement === 'coast' && def.category === 'infrastructure')) {
-        const edges = frontCoast(state, building.id, rect)
-        const top = tileToWorld(rect.x, rect.y)
-        const frame = { originX: (top.x - placed.x) / SPRITE_SCALE, originY: (top.y - placed.y) / SPRITE_SCALE, scale: 1 / SPRITE_SCALE, w: rect.w, h: rect.h, mirrored: placed.mirrored }
-        if (edges.se || edges.sw) placed.image = fadedCopy(key, placed.image, frame, edges)
-      }
+      // a plot on the shore fades into the sand. Not a house of a block: it stands on the shared yard.
+      const top = tileToWorld(rect.x, rect.y)
+      const frame = { originX: (top.x - placed.x) / SPRITE_SCALE, originY: (top.y - placed.y) / SPRITE_SCALE, scale: 1 / SPRITE_SCALE, w: rect.w, h: rect.h, mirrored: placed.mirrored }
+      const whole = placed.image
+      if (!block) placed.image = fadedCopy(key, placed.image, frame, shoreEdges(state, building.id, rect), isPier(def) ? 'pier' : 'building')
       drawPlacedSprite(ctx, placed)
+      if (lights) {
+        lights.cover((layer) => drawPlacedSprite(layer, placed))
+        const lit = isLit(building)
+        const windows = lit ? windowMask(key, whole, frame, def.requiresFertility !== undefined) : null
+        // a little light spills on the ground in front, the windows themselves shine brightly. A lived-in house
+        // whose picture shows no window (a log cabin seen from behind) still has that glow at its door.
+        const stamp = windows || (lit && house) ? glowStamp() : null
+        if (windows || stamp) {
+          lights.light((layer) => {
+            const centre = tileToWorld(rect.x + rect.w / 2, rect.y + rect.h / 2)
+            const size = 40 + 12 * Math.max(rect.w, rect.h)
+            if (stamp) layer.drawImage(stamp, centre.x - size / 2, centre.y - 10 - size / 2, size, size)
+            if (windows) drawPlacedSprite(layer, { ...placed, image: windows })
+          })
+        }
+      }
       dotHeight = placed.rise * 0.8
       if (showSmoke && def.smoke && building.production?.status.kind === 'producing') drawSmoke(ctx, placed, def.smoke, now)
     } else {
@@ -104,14 +122,19 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
   }
 }
 
+/** Harbour buildings stand on piers: they end where they end (the water gets a shadow and foam instead of a soft edge). */
+export function isPier(def: { pier?: boolean }): boolean {
+  return def.pier === true
+}
+
 let coastCache: { occupancy: number[]; edges: Map<number, FadeEdges> } | null = null
 
-/** The front edges of a building that border the shore. Looked up once per building until something is built or torn down. */
-function frontCoast(state: IslandState, id: number, rect: TileRect): FadeEdges {
+/** The edges of a building that border the shore. Looked up once per building until something is built or torn down. */
+function shoreEdges(state: IslandState, id: number, rect: TileRect): FadeEdges {
   if (coastCache?.occupancy !== state.occupancy) coastCache = { occupancy: state.occupancy, edges: new Map() }
   let edges = coastCache.edges.get(id)
   if (!edges) {
-    edges = { ...coastEdges(state.map, state.occupancy, rect), ne: false, nw: false }
+    edges = coastEdges(state.map, state.occupancy, rect)
     coastCache.edges.set(id, edges)
   }
   return edges

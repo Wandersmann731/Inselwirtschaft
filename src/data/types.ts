@@ -101,6 +101,8 @@ export interface BuildingDef {
   catchment?: number
   /** Shows a column of smoke while the building produces. Where the chimney opens, as a share of the picture: [from left, from top]. */
   smoke?: [number, number]
+  /** Stands on a pier in the water: its picture has planks or painted water instead of a plot of land. */
+  pier?: boolean
   /** The island must have this fertility (from its climate zone). */
   requiresFertility?: string
   /** The island must have this mineral deposit; the building stands on the mountains. */

@@ -684,6 +684,7 @@
     "upkeep": { "active": 20, "idle": 10 },
     "unlockTier": "citizens",
     "placement": "coast",
+    "pier": true,
     "color": "#5f7f94",
     "requiresFertility": "whales",
     "output": { "good": "blubber", "amount": 1 },
@@ -824,6 +825,7 @@
     "upkeep": { "active": 15, "idle": 2 },
     "unlockTier": "pioneers",
     "placement": "coast",
+    "pier": true,
     "color": "#4f7cac",
     "catchment": 25
   },
@@ -848,6 +850,7 @@
     "upkeep": { "active": 30, "idle": 8 },
     "unlockTier": "settlers",
     "placement": "coast",
+    "pier": true,
     "color": "#6b5b3e"
   }
 ]

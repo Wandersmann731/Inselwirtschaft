@@ -76,7 +76,7 @@ export function drawYards(ctx: CanvasRenderingContext2D, state: IslandState, ran
     // on the beach the yard fades into the sand instead of ending in a hard edge
     const edges = coastEdges(state.map, state.occupancy, { x: block.x - 0.5, y: block.y - 0.5, w: W, h: H })
     const scale = image.width / ((W + H) * HALF_W)
-    const picture = fadedCopy(key, image, { originX: H * HALF_W * scale, originY: 0, scale, w: W, h: H, mirrored: false }, edges)
+    const picture = fadedCopy(key, image, { originX: H * HALF_W * scale, originY: 0, scale, w: W, h: H, mirrored: false }, edges, 'flat')
     ctx.drawImage(picture, top.x - H * HALF_W, top.y, (W + H) * HALF_W, (W + H) * HALF_H)
   }
 }
