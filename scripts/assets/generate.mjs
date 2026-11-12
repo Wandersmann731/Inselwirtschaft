@@ -154,7 +154,7 @@ async function finish(job, rawFile) {
     }
     fs.writeFileSync(target, buffer)
     const { channels } = await sharp(buffer).stats()
-    const fitNote = fitted ? `, Maßstab ${fitted.scale.toFixed(3)}, Kantenverhältnis ${fitted.ratio.toFixed(2)}, Sockel ${Math.round(fitted.thick)}` : ''
+    const fitNote = fitted ? `, Maßstab ${fitted.scale.toFixed(4)}, Kantenverhältnis ${fitted.ratio.toFixed(2)}, Sockel ${Math.round(fitted.thick)}, Ausschnitt ab ${fitted.regionLeft},${fitted.regionTop}` : ''
     return `deckt ${Math.round((channels[3].mean / 255) * 100)} %${fitNote}`
   }
 

@@ -137,7 +137,7 @@ export async function cropToPlot(image, width, height, floor = 1) {
   const buffer = await sharp(region, { raw: { width: regionWidth, height: regionHeight, channels: 4 } }).resize(width, height, { fit: 'fill' }).png().toBuffer()
   // where the corners of the painted plot lie in the finished picture
   const toY = (row) => (row - regionTop) * scale
-  return { buffer, scale, ratio, thick, plot: { tipL: toY(tipL), tipR: toY(tipR), front: toY(front) } }
+  return { buffer, scale, ratio, thick, regionLeft, regionTop, plot: { tipL: toY(tipL), tipR: toY(tipR), front: toY(front) } }
 }
 
 /** Ground that the model painted a little beyond the back edges of the diamond is at most this high (picture pixels). */

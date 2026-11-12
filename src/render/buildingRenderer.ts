@@ -15,6 +15,7 @@ import { quarterBlocks } from './quarterRenderer'
 import { coastEdges, fadedCopy, type FadeEdges } from './coastFade'
 import { glowStamp, isLit, type LightLayer } from './lightLayer'
 import { windowMask } from './windowLights'
+import { moverSlot, type Mover } from './depth'
 
 export interface TileRange {
   minI: number
@@ -50,10 +51,11 @@ export function drawRoads(ctx: CanvasRenderingContext2D, state: IslandState, ran
 
 /**
  * Draws all buildings that overlap the visible tile range, back to front, together with the trees, bushes and rocks
- * right next to them (so these can stand in front of a building). `now` drives the smoke animation. In the evening
- * `lights` collects the glowing windows, each building hiding the lights of those behind it.
+ * right next to them (so these can stand in front of a building), and with the carts and residents (`movers`) between
+ * them. `now` drives the smoke animation. In the evening `lights` collects the glowing windows, each building hiding
+ * the lights of those behind it.
  */
-export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange, now = 0, showSmoke = true, lights?: LightLayer): void {
+export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange, now = 0, showSmoke = true, lights?: LightLayer, movers: Mover[] = []): void {
   type Entry = { depth: number; building?: (typeof state.buildings)[number]; rect?: TileRect; decor?: FrontItem }
   const entries: Entry[] = []
   for (const building of state.buildings) {
@@ -64,8 +66,28 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
   for (const decor of frontDecorIn(state, range)) entries.push({ depth: decor.depth, decor })
   entries.sort((a, b) => a.depth - b.depth)
   const blocks = quarterBlocks(state)
+  // carts and residents go between the buildings: each before the first building it stands behind
+  const rects = entries.map((entry) => entry.rect ?? null)
+  const waiting = new Map<number, Mover[]>()
+  for (const mover of movers) {
+    const slot = moverSlot(mover, rects)
+    const list = waiting.get(slot)
+    if (list) list.push(mover)
+    else waiting.set(slot, [mover])
+  }
+  const drawMovers = (slot: number): void => {
+    const list = waiting.get(slot)
+    if (!list) return
+    // among themselves: the one further back first
+    list.sort((a, b) => a.x + a.y - (b.x + b.y))
+    for (const mover of list) {
+      mover.draw(ctx)
+      lights?.cover((layer) => mover.draw(layer))
+    }
+  }
 
-  for (const entry of entries) {
+  for (const [index, entry] of entries.entries()) {
+    drawMovers(index)
     if (entry.decor) {
       const decor = entry.decor
       drawDecor(ctx, decor.item, decor.wx, decor.wy)
@@ -120,6 +142,7 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
     if (icon) drawNeedBadge(ctx, rect, dotHeight, mark, icon)
     else drawStatusDot(ctx, rect, dotHeight, mark)
   }
+  drawMovers(entries.length)
 }
 
 /** Harbour buildings stand on piers: they end where they end (the water gets a shadow and foam instead of a soft edge). */

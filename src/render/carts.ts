@@ -8,6 +8,7 @@ import { getLinks } from '../sim/logistics'
 import type { IslandState } from '../sim/state'
 import { adjacentRoadTiles, roadDistances } from '../world/pathfinding'
 import type { TileRange } from './buildingRenderer'
+import type { Mover } from './depth'
 import { tileToWorld } from './iso'
 import { drawCartBody, drawOx, drawPerson, FIGURE_SCALE } from './figures'
 import { sprites } from './sprites'
@@ -79,14 +80,18 @@ const COATS = ['#8a5a36', '#c8b08a', '#5e4630']
  * and the materials brought to it, come on a hand cart that somebody pushes.
  */
 export class Carts {
-  /** `ticks` is the game time with its fraction (see TickClock), so the carts roll instead of jumping from tile to tile. */
-  draw(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange, ticks: number): void {
+  /**
+   * The carts that are on the road right now, each with where it stands, so the map can draw it between the
+   * buildings (see depth.ts). `ticks` is the game time with its fraction (see TickClock), so the carts roll instead
+   * of jumping from tile to tile.
+   */
+  collect(state: IslandState, range: TileRange, ticks: number): Mover[] {
+    const movers: Mover[] = []
     // carts belong to the town like the smoke: only the game's own setting hides them, not the system's wish for calm windows
-    if (!state.owned || getSettings().reducedMotion) return
+    if (!state.owned || getSettings().reducedMotion) return movers
     const paths = deliveryPaths(state)
     const links = getLinks(state)
     const { width } = state.map
-    let drawn = 0
     for (const building of state.buildings) {
       const shipments = building.production?.shipments
       const path = paths.get(building.id)
@@ -114,10 +119,12 @@ export class Carts {
         const sx = (dx - dy) * sign
         const sy = ((dx + dy) / 2) * sign
         const length = Math.hypot(sx, sy) || 1
-        drawTeam(ctx, at.x, at.y, sx / length, sy / length, shipment.good, raw && out, building.id, ticks)
-        if (++drawn >= MAX_CARTS) return
+        const ox = raw && out
+        movers.push({ x: x + 0.5, y: y + 0.5, draw: (ctx) => drawTeam(ctx, at.x, at.y, sx / length, sy / length, shipment.good, ox, building.id, ticks) })
+        if (movers.length >= MAX_CARTS) return movers
       }
     }
+    return movers
   }
 }
 

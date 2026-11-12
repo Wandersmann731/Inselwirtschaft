@@ -81,6 +81,18 @@ describe('adding ground around a small painted plot', () => {
   })
 })
 
+describe('a picture drawn smaller than its plot', () => {
+  it('stands in the middle of the footprint and gets ground around it', () => {
+    const plan = planFit({ left: 0, right: 255, cornerY: 176, bottom: 239 }, 256, 0.75)
+    expect(plan.scale).toBeCloseTo(0.75)
+    expect(plan.plot).not.toBeNull()
+    expect(plan.plot!.half).toBeCloseTo(96)
+    // the middle of the picture stays the middle of the footprint
+    expect(plan.dx + 128 * plan.scale).toBeCloseTo(128)
+    expect(plan.height).toBe(Math.ceil(176 * 0.75 + 64))
+  })
+})
+
 describe('pictures with cropped walls', () => {
   /** A wall from row 10 to 69 between x 40 and 89; with `outline`, its sides are dark as painted walls are. */
   function house(outline: boolean): Uint8ClampedArray {

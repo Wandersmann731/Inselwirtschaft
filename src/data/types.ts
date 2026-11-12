@@ -103,6 +103,11 @@ export interface BuildingDef {
   smoke?: [number, number]
   /** Stands on a pier in the water: its picture has planks or painted water instead of a plot of land. */
   pier?: boolean
+  /**
+   * Draws the picture smaller than its plot (below 1), with the ground of the plot made around it. For a building
+   * that was painted filling its whole plot but is small in the world, like a market stall next to a three-storey house.
+   */
+  pictureScale?: number
   /** The island must have this fertility (from its climate zone). */
   requiresFertility?: string
   /** The island must have this mineral deposit; the building stands on the mountains. */

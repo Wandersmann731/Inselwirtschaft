@@ -132,5 +132,11 @@ export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
     }
   }, [getState, tool, onRenderer])
 
-  return <canvas ref={canvasRef} className="map-canvas" />
+  return (
+    <>
+      <canvas ref={canvasRef} className="map-canvas" />
+      {/* daylight over the map: warm where the sun comes from, a little darker towards the corners (see theme.css) */}
+      <div className="map-light" aria-hidden="true" />
+    </>
+  )
 }

@@ -45,6 +45,9 @@ const FARMS = new Set([
   'grain_farm', 'sugar_plantation', 'vineyard', 'silk_plantation', 'indigo_farm', 'cattle_farm',
 ])
 
+/** Pictures whose plot was painted in two steps: its corners cannot be measured, so they are cut by the guide as before. */
+const STEPPED = new Set(['weaver'])
+
 /** Pictures where the model painted its plot above the grey guide plot and left that standing: the row (share of the height) where the guide plot begins. */
 const PLOT_FLOOR = { house_aristocrats_10: 0.725 }
 
@@ -80,8 +83,9 @@ function jobFor(row) {
       'Keep the exact silhouette, size, position and 2:1 isometric perspective of the block: the building must stand on the diamond-shaped ground area, fill the block volume and not extend beyond it, a roof may overhang only slightly. Do not draw any outline, frame or hexagon around the building. Draw no smoke and no steam (it is added later by the game). ' +
       `${STYLE} Keep the flat magenta background (#FF00FF) completely empty and use no magenta or pink colour in the building. No text, no people.`
     if (base.startsWith('house_') || FARMS.has(base) || PLOTS.has(base)) job.cutSlab = true
-    // a house may be painted wider or taller than its guide block (wings, towers): those parts are kept
-    if (base.startsWith('house_')) job.wide = true
+    // A house or a workshop may be painted wider or taller than its guide block (wings, towers, sheds), and its plot
+    // larger or smaller than the guide: the picture is cut to the plot that was painted, with all that stands on it.
+    if (base.startsWith('house_') || (PLOTS.has(base) && !MINES.has(base) && !STEPPED.has(id))) job.wide = true
     if (PLOT_FLOOR[id]) job.plotFloor = PLOT_FLOOR[id]
     // the ground of houses and workshops is toned down towards the meadow of the game, so plots do not look like bright tiles
     if ((base.startsWith('house_') && base !== 'house_ruin') || (PLOTS.has(base) && !MINES.has(base))) job.meadow = true

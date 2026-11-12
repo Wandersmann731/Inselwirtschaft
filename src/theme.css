@@ -365,3 +365,16 @@
 .goal-facts > div {
   border: 1px solid var(--rule);
 }
+
+/* ---- Daylight over the map --------------------------------------------------------------------------------- */
+
+/* Lies over the map and under every bar and window; taps go through it. The sun stands in the top left. */
+.map-light {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(130% 110% at 50% 45%, transparent 55%, rgba(18, 22, 30, 0.34) 100%),
+    radial-gradient(90% 80% at 12% 8%, rgba(255, 232, 190, 0.2), transparent 60%),
+    linear-gradient(160deg, transparent 40%, rgba(40, 52, 78, 0.12) 100%);
+}

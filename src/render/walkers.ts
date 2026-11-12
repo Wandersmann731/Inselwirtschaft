@@ -9,6 +9,7 @@ import type { IslandState, PlacedBuilding } from '../sim/state'
 import { hash2 } from '../world/noise2d'
 import { Terrain } from '../world/terrain'
 import type { TileRange } from './buildingRenderer'
+import type { Mover } from './depth'
 import { drawPerson } from './figures'
 import { tileToWorld } from './iso'
 import type { TileRect } from './shapes'
@@ -160,13 +161,16 @@ function walkersOf(residents: number): number {
   return residents <= 0 ? 0 : residents < 8 ? 1 : residents < 15 ? 2 : residents < 28 ? 3 : 4
 }
 
-/** Draws the residents that are on their way right now. `ticks` is the game time with its fraction (see TickClock). */
-export function drawWalkers(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange, ticks: number): void {
-  if (getSettings().reducedMotion) return
+/**
+ * The residents that are on their way right now, each with where it stands, so the map can draw it between the
+ * buildings (see depth.ts). `ticks` is the game time with its fraction (see TickClock).
+ */
+export function collectWalkers(state: IslandState, range: TileRange, ticks: number): Mover[] {
+  const movers: Mover[] = []
+  if (getSettings().reducedMotion) return movers
   const routes = routesOf(state)
-  if (routes.destinations.length === 0) return
+  if (routes.destinations.length === 0) return movers
   const { width } = state.map
-  let drawn = 0
   for (const building of state.buildings) {
     const house = building.house
     if (!house || house.ruin) continue
@@ -202,11 +206,10 @@ export function drawWalkers(ctx: CanvasRenderingContext2D, state: IslandState, r
       // a little to the side of the middle of the tile, so two walkers do not walk through each other
       const sideX = (hash2(building.id, n, 815) - 0.5) * 12
       const sideY = (hash2(building.id, n, 816) - 0.5) * 6
-      drawPerson(ctx, at.x + sideX, at.y + sideY, heading >= 0 ? 1 : -1, ticks * 7 + building.id + n, {
-        ...looks[(building.id + n) % looks.length],
-        sack: step.where === 'back' && way.store,
-      })
-      if (++drawn >= MAX_WALKERS) return
+      const look = { ...looks[(building.id + n) % looks.length], sack: step.where === 'back' && way.store }
+      movers.push({ x: x + 0.5, y: y + 0.5, draw: (ctx) => drawPerson(ctx, at.x + sideX, at.y + sideY, heading >= 0 ? 1 : -1, ticks * 7 + building.id + n, look) })
+      if (movers.length >= MAX_WALKERS) return movers
     }
   }
+  return movers
 }

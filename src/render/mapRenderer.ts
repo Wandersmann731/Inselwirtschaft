@@ -26,7 +26,7 @@ import { fillDepth, WaterPattern } from './water'
 import { MapEffects } from './effects'
 import { Carts } from './carts'
 import { TickClock } from './tickClock'
-import { drawWalkers } from './walkers'
+import { collectWalkers } from './walkers'
 import { drawShadows } from './buildingShadows'
 import { duskShare, Sky } from './sky'
 import { LightLayer } from './lightLayer'
@@ -229,12 +229,11 @@ export class MapRenderer {
     drawShadows(ctx, state, range)
     // carts and residents move with the game time: faster at 4x, still in a pause
     const ticks = this.clock.ticks(state.tick, now)
-    this.carts.draw(ctx, state, range, ticks)
-    drawWalkers(ctx, state, range, ticks)
+    const movers = [...this.carts.collect(state, range, ticks), ...collectWalkers(state, range, ticks)]
     // cloud shadows drift over land and sea; every few minutes of game time evening falls and the windows glow
     const dusk = settings.sky ? duskShare(ticks) : 0
     if (dusk > 0) this.lights.begin(ctx)
-    drawBuildings(ctx, state, range, now, settings.smoke, dusk > 0 ? this.lights : undefined)
+    drawBuildings(ctx, state, range, now, settings.smoke, dusk > 0 ? this.lights : undefined, movers)
     drawShips(ctx, state, now)
     if (settings.sky) this.sky.drawClouds(ctx, area, now, settings.reducedMotion)
     if (dusk > 0) {

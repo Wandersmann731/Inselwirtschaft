@@ -27,15 +27,18 @@ export interface FitPlan {
   plot: PaintedPlot | null
 }
 
-/** How a picture of the given width is laid into a canvas of the same width, from its measured plot. Pure. */
-export function planFit(measured: MeasuredPlot, width: number): FitPlan {
+/**
+ * How a picture of the given width is laid into a canvas of the same width, from its measured plot. `shrink` (below
+ * 1, from the building data) makes the picture that much smaller than its plot would ask for. Pure.
+ */
+export function planFit(measured: MeasuredPlot, width: number, shrink = 1): FitPlan {
   const plotWidth = measured.right - measured.left + 1
   const full = width / plotWidth
-  const scale = Math.min(full, MAX_FIT)
+  const scale = Math.min(full, MAX_FIT) * shrink
   const middle = ((measured.left + measured.right + 1) / 2) * scale
   // the side corners of the painted plot lie on the row of the side corners of the footprint
   const height = Math.ceil(measured.cornerY * scale + width / 4)
-  const grown = full > MAX_FIT + 1e-6
+  const grown = shrink < 1 || full > MAX_FIT + 1e-6
   return {
     scale,
     dx: width / 2 - middle,

@@ -5,6 +5,7 @@ import { cleanPlotPixels, measurePlot } from './plotCleanup'
 import { isCutOff } from './cutCheck'
 import { growPlot, planFit } from './plotFit'
 import { clearPaintedWater } from './waterPlot'
+import { naturalLook } from './naturalLook'
 
 const BASE = `${import.meta.env.BASE_URL}sprites/`
 
@@ -22,6 +23,9 @@ export interface Pads {
   t: number
   b: number
 }
+
+/** The pictures of the map that get the natural look (see naturalLook.ts). Icons, the logo and smoke stay as they are. */
+const LOOK = /^(decor|ground|quarters|roads|ships|terrain)\//
 
 class SpriteStore {
   private padData: Record<string, Pads> = {}
@@ -59,7 +63,7 @@ class SpriteStore {
           }
           const image = new Image()
           image.onload = () => {
-            this.images.set(key, key.startsWith('buildings/') ? this.cleaned(key, image) : image)
+            this.images.set(key, key.startsWith('buildings/') ? this.cleaned(key, image) : LOOK.test(key) ? this.natural(key, image) : image)
             this.version++
             resolve()
           }
@@ -99,7 +103,7 @@ class SpriteStore {
       const measured = measurePlot(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height)
       if (measured) {
         // enlarged only a little (see plotFit.ts); a plot that stays too small gets ground added around it
-        const plan = planFit(measured, canvas.width)
+        const plan = planFit(measured, canvas.width, def.pictureScale)
         const fitted = document.createElement('canvas')
         fitted.width = canvas.width
         fitted.height = plan.height
@@ -121,6 +125,21 @@ class SpriteStore {
     if (def.pier) clearPaintedWater(pixels.data, canvas.width, canvas.height)
     // a picture with an overhang border is meant to reach beyond its footprint: it is not cut, only filled
     cleanPlotPixels(pixels.data, canvas.width, canvas.height, { w: def.size[0], h: def.size[1], pads: this.pads(key) }, !padded)
+    naturalLook(pixels.data, canvas.width, canvas.height, name.length)
+    ctx.putImageData(pixels, 0, 0)
+    return canvas
+  }
+
+  /** Any other picture of the map (ground, roads, yards, trees, ships) in the natural look of the buildings. */
+  private natural(key: string, image: HTMLImageElement): SpriteImage {
+    const canvas = document.createElement('canvas')
+    canvas.width = image.naturalWidth
+    canvas.height = image.naturalHeight
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })
+    if (!ctx) return image
+    ctx.drawImage(image, 0, 0)
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    naturalLook(pixels.data, canvas.width, canvas.height, key.length, !key.startsWith('ground/'))
     ctx.putImageData(pixels, 0, 0)
     return canvas
   }
