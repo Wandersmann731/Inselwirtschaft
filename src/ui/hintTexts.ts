@@ -119,32 +119,32 @@ export function hintText(stepId: string): HintText {
       return {
         title: t('Eigenes Werkzeug', 'Your own tools'),
         body: t(
-          `Fast jedes Gebäude und jeder Aufstieg kostet Werkzeug. Baue eine ${name('ore_mine')}, eine ${name('smelter')} und einen ${name('toolmaker')}. Schmelze und Werkzeugmacher brauchen auch Holz.`,
-          `Almost every building and every rise costs tools. Build an ${inText(name('ore_mine'))}, an ${inText(name('smelter'))} and a ${inText(name('toolmaker'))}. The smelter and the toolmaker also need wood.`,
+          `Fast jedes Gebäude und jeder Aufstieg kostet Werkzeug, und der Vorrat vom Start geht zur Neige. Baue eine ${name('ore_mine')}, eine ${name('smelter')} und einen ${name('toolmaker')}. Schmelze und Werkzeugmacher brauchen auch Holz. Reicht das nicht, verkauft der Händler am Kontor Werkzeug.`,
+          `Almost every building and every rise costs tools, and the starting supply is running low. Build an ${inText(name('ore_mine'))}, an ${inText(name('smelter'))} and a ${inText(name('toolmaker'))}. The smelter and the toolmaker also need wood. If that is not enough, the trader at the trading post sells tools.`,
         ),
       }
     case 'bricks':
       return {
         title: t('Ziegel', 'Bricks'),
         body: t(
-          `Für ${tierName('citizens')} und größere Gebäude brauchst du Ziegel. Ein ${name('quarry')} am Berg liefert Stein, der ${name('stonemason')} brennt Ziegel daraus.`,
-          `For ${inText(tierName('citizens'))} and bigger buildings you need bricks. A ${inText(name('quarry'))} in the mountains provides stone and the ${inText(name('stonemason'))} makes bricks from it.`,
+          `Jeder Aufstieg und die ${name('church')} kosten Ziegel. Ein ${name('quarry')} am Berg liefert Stein, der ${name('stonemason')} macht Ziegel daraus. Auch Ziegel verkauft der Händler am Kontor.`,
+          `Every rise and the ${inText(name('church'))} cost bricks. A ${inText(name('quarry'))} in the mountains provides stone and the ${inText(name('stonemason'))} makes bricks from it. The trader at the trading post sells bricks as well.`,
         ),
       }
     case 'growSettlers':
       return {
-        title: t('Mehr Siedler', 'More settlers'),
+        title: t('Die Stadt wächst', 'The town grows'),
         body: t(
-          `Ab ${unlockResidents('church')} ${tierName('settlers')}n gibt es die ${name('church')}. Baue weiter Häuser und halte alle Waren vorrätig.`,
-          `At ${unlockResidents('church')} ${inText(tierName('settlers'))} the ${inText(name('church'))} becomes available. Keep building houses and keep all goods in stock.`,
+          `Für den nächsten Aufstieg brauchst du eine ${name('church')}. Es gibt sie, sobald ${unlockResidents('church')} Bewohner in Häusern der ${tierName('settlers')} oder höher leben. Baue weiter Häuser und halte alle Waren vorrätig.`,
+          `The next rise needs a ${inText(name('church'))}. It becomes available once ${unlockResidents('church')} residents live in houses of ${inText(tierName('settlers'))} or higher. Keep building houses and keep all goods in stock.`,
         ),
       }
     case 'church':
       return {
         title: t(`Eine ${name('church')} bauen`, `Build a ${inText(name('church'))}`),
         body: t(
-          `${tierName('settlers')} steigen nur zu ${tierName('citizens')}n auf, wenn eine ${name('church')} ihr Haus erreicht.`,
-          `${tierName('settlers')} only rise to ${inText(tierName('citizens'))} when a ${inText(name('church'))} reaches their house.`,
+          `${tierName('citizens')} steigen nur zu ${tierName('merchants')}n auf, wenn eine ${name('church')} ihr Haus erreicht. Sie kostet viel Werkzeug und Ziegel. Baue sie mitten in die Stadt.`,
+          `${tierName('citizens')} only rise to ${inText(tierName('merchants'))} when a ${inText(name('church'))} reaches their house. It costs a lot of tools and bricks. Build it in the middle of the town.`,
         ),
       }
     case 'riseCitizens':

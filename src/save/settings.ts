@@ -26,6 +26,8 @@ export interface Settings {
   minimap: boolean
   /** No animations in the interface and on the map, in addition to what the system asks for. */
   reducedMotion: boolean
+  /** Cloud shadows that drift over the island and an evening with lit windows every few minutes. */
+  sky: boolean
 }
 
 /** German if the browser is set to German, English otherwise. Used until the player picks a language. */
@@ -50,6 +52,7 @@ const DEFAULTS: Settings = {
   hints: true,
   minimap: true,
   reducedMotion: false,
+  sky: true,
 }
 
 /** Only what the player chose is saved: the browser language and the ?debug switch stay defaults, not choices. */

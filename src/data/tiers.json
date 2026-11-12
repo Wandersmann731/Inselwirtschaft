@@ -1,7 +1,7 @@
 [
   {
     "id": "pioneers",
-    "tax": 8.7,
+    "tax": 3.5,
     "name": "Pioniere",
     "residents": 8,
     "size": [2, 2],
@@ -19,7 +19,7 @@
   },
   {
     "id": "settlers",
-    "tax": 12.5,
+    "tax": 5.0,
     "name": "Siedler",
     "residents": 15,
     "size": [2, 2],
@@ -33,7 +33,7 @@
   },
   {
     "id": "citizens",
-    "tax": 19.1,
+    "tax": 7.6,
     "name": "Bürger",
     "residents": 28,
     "size": [2, 2],
@@ -57,7 +57,7 @@
   },
   {
     "id": "merchants",
-    "tax": 24.6,
+    "tax": 9.8,
     "name": "Kaufleute",
     "residents": 42,
     "size": [2, 2],
@@ -81,7 +81,7 @@
   },
   {
     "id": "aristocrats",
-    "tax": 31.0,
+    "tax": 12.4,
     "name": "Aristokraten",
     "residents": 30,
     "size": [2, 2],

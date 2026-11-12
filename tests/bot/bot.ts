@@ -4,6 +4,7 @@ import { buildingRect, suppliedHouses } from '../../src/sim/coverage'
 import { totalUpkeep } from '../../src/sim/economy'
 import { fromIslandState, toIslandState } from '../../src/sim/islands'
 import type { GameState, IslandState } from '../../src/sim/state'
+import { setTradeLimit, traderSells } from '../../src/sim/trade'
 import { cumulativeNeeds, getTier, isBuildingUnlocked } from '../../src/sim/tiers'
 import { Terrain } from '../../src/world/terrain'
 import { findStartSite } from '../../src/world/startSite'
@@ -51,7 +52,7 @@ export class Bot {
 
   /** One decision. Returns the new game (or the same if nothing was done). */
   step(state: GameState): GameState {
-    let island = toIslandState(state, this.homeId)
+    let island = this.trade(toIslandState(state, this.homeId))
     for (let action = 0; action < 3; action++) {
       const next = this.act(state, island)
       if (!next) break
@@ -83,7 +84,8 @@ export class Bot {
       for (const need of cumulativeNeeds(house.house!.tier)) {
         if (!need.good || need.rate === undefined) continue
         // goods nobody on the island makes (tobacco ...) are replaced by salt, like the residents do
-        const good = !produced.has(need.good) || (need.substitutes?.length && !producible.has(need.good)) ? (need.substitutes?.[0] ?? need.good) : need.good
+        const bought = island.trade[need.good]?.buyBelow !== undefined
+        const good = !bought && (!produced.has(need.good) || (need.substitutes?.length && !producible.has(need.good))) ? (need.substitutes?.[0] ?? need.good) : need.good
         demand[good] = (demand[good] ?? 0) + residents * need.rate * CYCLE_TICKS / CYCLE_TICKS
       }
     }
@@ -98,6 +100,11 @@ export class Bot {
       this.block('keeping tools for the tool chain')
       return null
     }
+    // tools for a public building that is open but not built come first: without the church nobody rises
+    if (!toolChain && getBuilding(typeId).category !== 'public' && (island.stock.tools ?? 0) - getBuilding(typeId).cost.tools < this.toolReserve(island)) {
+      this.block('saving tools for a public building')
+      return null
+    }
     const spot = findSpot(island, typeId, ax, ay, radius, margin, needAccess ? (candidate) => hasRoadAccess(island, typeId, candidate) : undefined)
     if (!spot) {
       this.block(`no spot for ${typeId}`)
@@ -109,6 +116,36 @@ export class Bot {
       return null
     }
     return placeBuilding(island, typeId, spot.x, spot.y, spot.rotated)
+  }
+
+  /** Tools the next public building costs, as long as it is unlocked, wanted by a house and not built yet. */
+  private toolReserve(island: IslandState): number {
+    const wanted = new Set(this.houses(island).flatMap((house) => cumulativeNeeds(house.house!.tier).flatMap((need) => (need.building ? [need.building] : []))))
+    for (const type of wanted) {
+      if (isBuildingUnlocked(island, type) && this.count(island, type) === 0) return getBuilding(type).cost.tools
+    }
+    return 0
+  }
+
+  /**
+   * Orders at the trading post, like a player with money to spare: tools when the own chain cannot keep up, and the
+   * goods of the citizens that do not grow at home.
+   */
+  private trade(island: IslandState): IslandState {
+    // short of money: the standing orders for building materials stop, the town must not run into debt for them
+    if (island.coins < 1200) return ['tools', 'bricks'].reduce((result, good) => (result.trade[good] ? setTradeLimit(result, good, {}) : result), island)
+    if (island.coins < 3000) return island
+    let next = island
+    const order = (good: string, amount: number): void => {
+      if (traderSells(good) && next.trade[good]?.buyBelow === undefined) next = setTradeLimit(next, good, { buyBelow: amount })
+    }
+    if ((island.stock.tools ?? 0) < 10 && this.count(island, 'toolmaker') > 0) order('tools', 12)
+    if ((island.stock.bricks ?? 0) < 10 && this.count(island, 'stonemason') > 0) order('bricks', 12)
+    if (this.houses(island).some((house) => tierRank(house.house!.tier) >= 2)) {
+      order('tobacco', 8)
+      order('spices', 8)
+    }
+    return next
   }
 
   private anchor(island: IslandState): { x: number; y: number } {
@@ -163,7 +200,7 @@ export class Bot {
   private cover(state: GameState, island: IslandState): IslandState | null {
     const houses = this.houses(island)
     if (houses.length === 0) return null
-    const maxTier = Math.max(...houses.map((h) => allBuildings.findIndex((d) => d.houseTier === h.house!.tier) >= 0 ? tierRank(h.house!.tier) : 0))
+    const maxTier = Math.max(...houses.map((h) => tierRank(h.house!.tier)))
     const wanted: { type: string }[] = []
     const addIf = (type: string, rank: number): void => {
       if (maxTier >= rank - 1) wanted.push({ type })

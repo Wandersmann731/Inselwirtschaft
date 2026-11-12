@@ -1,0 +1,9 @@
+{
+  "firstAfterCycles": 8,
+  "pauseCycles": 5,
+  "durationCycles": 10,
+  "minResidents": 60,
+  "rewardMultiplier": 2.5,
+  "amounts": [10, 15, 20, 30],
+  "goods": ["food", "cloth", "leather", "wood", "alcohol", "salt", "bricks", "tools", "tobacco", "spices", "silk", "lamp_oil", "wine", "jewelry"]
+}

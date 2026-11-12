@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { addOrder, addStop, createRoute, deleteRoute, removeOrder, removeStop } from '../src/sim/routes'
+import { trade } from '../src/data'
+import { addOrder, addStop, createRoute, createTransportRoute, deleteRoute, removeOrder, removeStop } from '../src/sim/routes'
 import { createInitialState, type Ship } from '../src/sim/state'
 
 const ship = (routeId: number | null): Ship => ({
@@ -18,6 +19,22 @@ const ship = (routeId: number | null): Ship => ({
 
 describe('routes', () => {
   const base = createInitialState(1)
+
+  it('lays out a whole transport route in one go: load at one island, unload everything at the other', () => {
+    const state = createTransportRoute(base, 3, 0, 'tobacco', 25)
+    expect(state.routes).toHaveLength(1)
+    expect(state.routes[0].stops).toEqual([
+      { island: 3, orders: [{ good: 'tobacco', amount: 25, mode: 'load' }] },
+      { island: 0, orders: [{ good: 'tobacco', amount: trade.orderAmounts[trade.orderAmounts.length - 1], mode: 'unload' }] },
+    ])
+    expect(state.nextRouteId).toBe(base.nextRouteId + 1)
+  })
+
+  it('refuses a transport route between the same island, to an unknown island or without an amount', () => {
+    expect(createTransportRoute(base, 0, 0, 'tobacco', 25)).toBe(base)
+    expect(createTransportRoute(base, 0, 999, 'tobacco', 25)).toBe(base)
+    expect(createTransportRoute(base, 0, 3, 'tobacco', 0)).toBe(base)
+  })
 
   it('creates routes with running numbers and a default name', () => {
     let state = createRoute(base)

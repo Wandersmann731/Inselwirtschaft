@@ -1,7 +1,7 @@
 import { config, tiers } from '../data'
 import type { GameSpeed } from '../sim/state'
 import { MATERIALS } from '../game/needsOverview'
-import { formatSigned, formatWhole, resourceName } from './messages'
+import { formatSigned, formatWhole, goalText, resourceName } from './messages'
 import { toggleFullscreen, useFullscreen } from './fullscreen'
 import { Icon } from './Icon'
 import { useCountUp } from './useCountUp'
@@ -19,6 +19,8 @@ interface TopHudProps {
   balance: number | null
   residentsByTier: Record<string, number>
   highestTier: number
+  /** The goal of the game: residents that count for it, how many it takes and whether it was reached. */
+  goal: { have: number; need: number; reached: boolean }
   speed: GameSpeed
   onSpeedChange: (speed: GameSpeed) => void
   onOpenMenu: () => void
@@ -42,6 +44,7 @@ export function TopHud({
   balance,
   residentsByTier,
   highestTier,
+  goal,
   speed,
   onSpeedChange,
   islandName,
@@ -89,6 +92,9 @@ export function TopHud({
             <Icon name={`tiers/${tier.id}`} size={18} title={tier.name} /> {formatWhole(residentsByTier[tier.id] ?? 0)}
           </span>
         ))}
+        <span className={goal.reached ? 'hud-stat hud-goal reached' : 'hud-stat hud-goal'} title={t(`Ziel: ${goalText()}`, `Goal: ${goalText()}`)}>
+          ⚑ {goal.reached ? '✓' : `${formatWhole(goal.have)}/${formatWhole(goal.need)}`}
+        </span>
         <span className="hud-stat hud-island">{islandName}</span>
         </div>
       </button>

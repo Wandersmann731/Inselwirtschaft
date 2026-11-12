@@ -6,7 +6,7 @@ import { sprites, type SpriteImage } from './sprites'
 import { buildingKey } from './spriteKeys'
 
 /** Sprites are made at twice the game's tile size. */
-const SPRITE_SCALE = 0.5
+export const SPRITE_SCALE = 0.5
 
 export interface SpritePlacement {
   image: SpriteImage

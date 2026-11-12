@@ -1,4 +1,4 @@
-import { config, getBuilding } from '../data'
+import { config, getBuilding, quests } from '../data'
 import { generateIsland } from '../world/islandGenerator'
 import { generateWorld, layoutRng, layoutWorld } from '../world/worldGenerator'
 import { emptyLedger } from './ledger'
@@ -161,6 +161,15 @@ export const MIGRATIONS: Record<number, Migration> = {
   },
   // v14 adds the beginner tips. Tips the save has already outgrown are skipped by their tier.
   13: (data) => ({ hintsDone: [], ...data }),
+  // v15 adds the orders of the trader town and the goal of the game. A running game gets its first order after the usual wait.
+  14: (data) => ({
+    quest: null,
+    nextQuestTick: Number(data.tick) + quests.firstAfterCycles * config.economyCycleTicks,
+    questsDone: 0,
+    goalReachedTick: null,
+    goalClosed: false,
+    ...data,
+  }),
 }
 
 /** Brings a raw saved object up to the current version or throws if that is impossible. */

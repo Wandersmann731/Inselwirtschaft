@@ -1,3 +1,4 @@
+import { trade } from '../data'
 import type { GameState, Route, RouteOrder } from './state'
 
 function updateRoute(state: GameState, routeId: number, change: (route: Route) => Route): GameState {
@@ -51,4 +52,18 @@ export function removeOrder(state: GameState, routeId: number, stopIndex: number
       i === stopIndex ? { ...stop, orders: stop.orders.filter((_, j) => j !== orderIndex) } : stop,
     ),
   }))
+}
+
+/**
+ * A whole route in one go: load `amount` tons of a good at one island, unload all of it at another, again and
+ * again. Nothing happens if an island is unknown, both are the same or the amount is not positive.
+ */
+export function createTransportRoute(state: GameState, from: number, to: number, good: string, amount: number): GameState {
+  const known = (id: number): boolean => state.islands.some((island) => island.id === id)
+  if (from === to || amount <= 0 || !known(from) || !known(to)) return state
+  const routeId = state.nextRouteId
+  const everything = trade.orderAmounts[trade.orderAmounts.length - 1]
+  let next = addStop(addStop(createRoute(state), routeId, from), routeId, to)
+  next = addOrder(next, routeId, 0, { good, amount, mode: 'load' })
+  return addOrder(next, routeId, 1, { good, amount: everything, mode: 'unload' })
 }

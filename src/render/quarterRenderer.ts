@@ -5,6 +5,7 @@ import { hash2 } from '../world/noise2d'
 import type { TileRange } from './buildingRenderer'
 import { HALF_H, HALF_W, tileToWorld } from './iso'
 import { sprites } from './sprites'
+import { coastEdges, fadedCopy } from './coastFade'
 
 /** A block of houses built together: they share one yard. */
 export interface QuarterBlock {
@@ -66,11 +67,16 @@ export function drawYards(ctx: CanvasRenderingContext2D, state: IslandState, ran
     if (a < 1 || b < 1 || a > MAX_HOUSES || b > MAX_HOUSES) continue
     const list = sprites.variants(`quarters/yard_${yardStyle(block)}_${a}x${b}`)
     if (list.length === 0) continue
-    const image = sprites.get(list[Math.floor(hash2(block.id, 3, 991) * list.length)])
+    const key = list[Math.floor(hash2(block.id, 3, 991) * list.length)]
+    const image = sprites.get(key)
     if (!image) continue
     const W = 2 * a + 1
     const H = 2 * b + 1
     const top = tileToWorld(block.x - 0.5, block.y - 0.5)
-    ctx.drawImage(image, top.x - H * HALF_W, top.y, (W + H) * HALF_W, (W + H) * HALF_H)
+    // on the beach the yard fades into the sand instead of ending in a hard edge
+    const edges = coastEdges(state.map, state.occupancy, { x: block.x - 0.5, y: block.y - 0.5, w: W, h: H })
+    const scale = image.width / ((W + H) * HALF_W)
+    const picture = fadedCopy(key, image, { originX: H * HALF_W * scale, originY: 0, scale, w: W, h: H, mirrored: false }, edges)
+    ctx.drawImage(picture, top.x - H * HALF_W, top.y, (W + H) * HALF_W, (W + H) * HALF_H)
   }
 }

@@ -89,7 +89,14 @@ describe('beginner tips', () => {
     expect(currentHint(base)?.id).toBe('salt')
     const home = base.islands[0]
     const bought = { ...base, islands: [{ ...home, stock: { ...home.stock, salt: 5 } }, ...base.islands.slice(1)] }
-    expect(currentHint(bought)?.id).toBe('tools')
+    expect(currentHint(bought)?.id).toBe('riseCitizens')
+  })
+
+  it('ask for the church only once citizens live in the town: it is what lets them rise', () => {
+    const citizens = withBuildings({ ...createNewGame(1), highestTier: tierIndex('citizens') }, ['toolmaker', 'stonemason', 'tobacco_factory'])
+    // settlers' tips are through with the rise; the church is still locked, so the tip says how to get it
+    expect(currentHint(citizens)?.id).toBe('growSettlers')
+    expect(chapterOf(citizens, 'church').map((entry) => entry.step.id)).toEqual(['tools', 'bricks', 'citizenGoods', 'growSettlers', 'church', 'riseMerchants'])
   })
 
   it('keep a reached goal done when the condition later breaks', () => {
@@ -142,9 +149,11 @@ describe('beginner tips', () => {
   })
 
   it('come into old saves through the migration', () => {
-    const old = { ...createNewGame(1), version: CURRENT_SAVE_VERSION - 1 } as Record<string, unknown>
+    const old = { ...createNewGame(1), version: 13 } as Record<string, unknown>
     delete old.hintsDone
-    expect(migrateState(old).hintsDone).toEqual([])
+    const migrated = migrateState(old)
+    expect(migrated.hintsDone).toEqual([])
+    expect(migrated.version).toBe(CURRENT_SAVE_VERSION)
   })
 })
 

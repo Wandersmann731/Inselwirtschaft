@@ -161,6 +161,7 @@
 .stats-panel,
 .world-panel,
 .building-panel,
+.quest,
 .hint-card {
   --hud-text: var(--ink);
   --text-soft: #4a3a2a;
@@ -345,4 +346,22 @@
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #fbe6a8, #d9a441 60%, #a8782a);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+/* ---- End screen of the scenario ---------------------------------------------------------------------------- */
+
+.goal-screen h2 {
+  font-family: var(--font-display);
+  letter-spacing: 0.3px;
+}
+
+.goal-stars {
+  color: var(--brass);
+  text-shadow:
+    0 1px 0 #7a5a1a,
+    0 0 14px rgba(219, 167, 68, 0.7);
+}
+
+.goal-facts > div {
+  border: 1px solid var(--rule);
 }

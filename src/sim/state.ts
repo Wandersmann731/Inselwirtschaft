@@ -1,4 +1,4 @@
-import { config } from '../data'
+import { config, quests } from '../data'
 import { generateWorld } from '../world/worldGenerator'
 import type { IslandRole } from '../data'
 import type { GameMap } from '../world/terrain'
@@ -6,7 +6,7 @@ import type { GameMap } from '../world/terrain'
 export type { GameMap }
 
 /** Bump when the GameState shape changes and add a migration in migrations.ts. */
-export const CURRENT_SAVE_VERSION = 14
+export const CURRENT_SAVE_VERSION = 15
 
 export type GameSpeed = number
 
@@ -190,6 +190,18 @@ export interface Route {
   stops: RouteStop[]
 }
 
+/** An order of the trader town: deliver the goods before it ends and get the reward. */
+export interface Quest {
+  id: number
+  good: string
+  /** Tons asked for. */
+  amount: number
+  /** Coins paid on delivery. */
+  reward: number
+  /** Tick at which the order ends unfilled. */
+  expires: number
+}
+
 export interface GameState {
   version: number
   seed: number
@@ -207,6 +219,16 @@ export interface GameState {
   nextRouteId: number
   /** Beginner tips (tutorial.json) that were met or skipped. They do not come back. */
   hintsDone: string[]
+  /** The open order of the trader town, null if there is none. */
+  quest: Quest | null
+  /** Tick from which the next order may come. */
+  nextQuestTick: number
+  /** Orders filled so far. */
+  questsDone: number
+  /** Tick at which the goal of the game (scenario.json) was reached, null before. */
+  goalReachedTick: number | null
+  /** The player has seen the end screen and plays on. */
+  goalClosed: boolean
 }
 
 /**
@@ -232,6 +254,11 @@ export function createStateWith(seed: number, islands: Island[], world: WorldCha
     nextShipId: 1,
     nextRouteId: 1,
     hintsDone: [],
+    quest: null,
+    nextQuestTick: quests.firstAfterCycles * config.economyCycleTicks,
+    questsDone: 0,
+    goalReachedTick: null,
+    goalClosed: false,
   }
 }
 

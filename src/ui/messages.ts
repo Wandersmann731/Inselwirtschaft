@@ -1,4 +1,4 @@
-import { buildings, goods, landNames } from '../data'
+import { buildings, goods, landNames, scenario, tiers } from '../data'
 import type { TierNeed } from '../data'
 import type { BuildingCost } from '../data'
 import type { PlacementError } from '../sim/build'
@@ -129,4 +129,11 @@ export function blockerLabel(error: PlacementError, lockLabel: string): string {
     default:
       return placementMessage(error)
   }
+}
+
+/** The goal of the game as one line, for the top bar, the statistics and the end screen. */
+export function goalText(): string {
+  const { tier, residents } = scenario.goal
+  const name = tiers.find((entry) => entry.id === tier)?.name ?? tier
+  return t(`${formatWhole(residents)} Einwohner in Häusern der ${name} oder höher`, `${formatWhole(residents)} residents in houses of ${name} or higher`)
 }

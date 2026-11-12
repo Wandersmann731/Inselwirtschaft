@@ -29,22 +29,22 @@
     "done": [{ "buildings": [["saltworks"]] }, { "stock": ["salt"] }],
     "build": ["salt_mine", "saltworks"]
   },
+  { "id": "riseCitizens", "tier": "settlers", "done": [{ "tier": "citizens" }] },
   {
     "id": "tools",
-    "tier": "settlers",
+    "tier": "citizens",
     "done": [{ "buildings": [["toolmaker"]] }],
     "build": ["ore_mine", "smelter", "toolmaker"]
   },
-  { "id": "bricks", "tier": "settlers", "done": [{ "buildings": [["stonemason"]] }], "build": ["quarry", "stonemason"] },
-  { "id": "growSettlers", "tier": "settlers", "done": [{ "unlocked": "church" }] },
-  { "id": "church", "tier": "settlers", "done": [{ "buildings": [["church"]] }], "build": ["church"] },
-  { "id": "riseCitizens", "tier": "settlers", "done": [{ "tier": "citizens" }] },
+  { "id": "bricks", "tier": "citizens", "done": [{ "buildings": [["stonemason"]] }], "build": ["quarry", "stonemason"] },
   {
     "id": "citizenGoods",
     "tier": "citizens",
     "done": [{ "buildings": [["tobacco_factory", "spice_plantation"]] }, { "stock": ["tobacco", "spices"] }],
     "build": ["tobacco_plantation", "tobacco_factory", "spice_plantation"]
   },
+  { "id": "growSettlers", "tier": "citizens", "done": [{ "unlocked": "church" }] },
+  { "id": "church", "tier": "citizens", "done": [{ "buildings": [["church"]] }], "build": ["church"] },
   { "id": "riseMerchants", "tier": "citizens", "done": [{ "tier": "merchants" }] },
   { "id": "bathhouse", "tier": "merchants", "done": [{ "buildings": [["bathhouse"]] }], "build": ["bathhouse"] },
   {

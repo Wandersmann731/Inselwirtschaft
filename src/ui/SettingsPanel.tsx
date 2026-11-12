@@ -14,7 +14,7 @@ interface Props {
   onDeleted?: () => void
 }
 
-type Toggle = 'hints' | 'debug' | 'waterAnimation' | 'smoke' | 'muted' | 'autoFullscreen' | 'vibration' | 'keepAwake' | 'minimap' | 'reducedMotion'
+type Toggle = 'hints' | 'debug' | 'waterAnimation' | 'smoke' | 'muted' | 'autoFullscreen' | 'vibration' | 'keepAwake' | 'minimap' | 'reducedMotion' | 'sky'
 type Volume = 'volumeEffects' | 'volumeAmbience' | 'volumeMusic'
 
 const VOLUMES: { key: Volume; label: () => string }[] = [
@@ -30,6 +30,7 @@ const OPTIONS: { key: Toggle; label: () => string; hint: () => string }[] = [
   { key: 'vibration', label: () => t('Vibration', 'Vibration'), hint: () => t('Kurzes Rütteln beim Bauen, Abreißen und langen Drücken.', 'A short buzz when building, demolishing and on long press.') },
   { key: 'keepAwake', label: () => t('Bildschirm anlassen', 'Keep screen on'), hint: () => t('Das Handy geht während des Spiels nicht in den Ruhezustand.', 'The phone does not go to sleep while you play.') },
   { key: 'minimap', label: () => t('Übersichtskarte', 'Overview map'), hint: () => t('Die kleine Karte der Insel in der Ecke.', 'The small map of the island in the corner.') },
+  { key: 'sky', label: () => t('Wolken und Abendlicht', 'Clouds and evening light'), hint: () => t('Wolkenschatten ziehen über die Insel, und alle paar Minuten wird es Abend.', 'Cloud shadows drift over the island, and every few minutes evening falls.') },
   { key: 'reducedMotion', label: () => t('Weniger Bewegung', 'Less motion'), hint: () => t('Keine Animationen in Fenstern, Leisten und auf der Karte.', 'No animations in windows, bars and on the map.') },
   { key: 'waterAnimation', label: () => t('Bewegtes Wasser', 'Moving water'), hint: () => t('Bei langsamen Handys ausschalten.', 'Switch off on slow phones.') },
   { key: 'smoke', label: () => t('Rauch über Schornsteinen', 'Smoke over chimneys'), hint: () => t('Bei langsamen Handys ausschalten.', 'Switch off on slow phones.') },

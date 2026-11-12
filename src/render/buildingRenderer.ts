@@ -9,9 +9,10 @@ import { HALF_H, HALF_W, tileToWorld } from './iso'
 import { drawDecor } from './decorDraw'
 import { frontDecorIn, type FrontItem } from './frontDecor'
 import { sprites } from './sprites'
-import { drawPlacedSprite, placeSprite, type SpritePlacement } from './spriteDraw'
+import { drawPlacedSprite, placeSprite, SPRITE_SCALE, type SpritePlacement } from './spriteDraw'
 import { buildingKey, roadKey, smokeKey } from './spriteKeys'
 import { quarterBlocks } from './quarterRenderer'
+import { coastEdges, fadedCopy, type FadeEdges } from './coastFade'
 
 export interface TileRange {
   minI: number
@@ -71,9 +72,18 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
     const def = getBuilding(building.type)
     const house = building.house
     const block = building.quarter !== undefined ? (blocks.get(building.quarter) ?? null) : null
-    const placed = placeSprite(building, buildingKey(building, block))
+    const key = buildingKey(building, block)
+    const placed = placeSprite(building, key)
     let dotHeight: number
     if (placed) {
+      // a plot on the shore fades into the sand at its front edges. Not a house of a block (it stands on the shared
+      // yard) and not the harbour buildings, whose wooden piers end where they end.
+      if (!block && !(def.placement === 'coast' && def.category === 'infrastructure')) {
+        const edges = frontCoast(state, building.id, rect)
+        const top = tileToWorld(rect.x, rect.y)
+        const frame = { originX: (top.x - placed.x) / SPRITE_SCALE, originY: (top.y - placed.y) / SPRITE_SCALE, scale: 1 / SPRITE_SCALE, w: rect.w, h: rect.h, mirrored: placed.mirrored }
+        if (edges.se || edges.sw) placed.image = fadedCopy(key, placed.image, frame, edges)
+      }
       drawPlacedSprite(ctx, placed)
       dotHeight = placed.rise * 0.8
       if (showSmoke && def.smoke && building.production?.status.kind === 'producing') drawSmoke(ctx, placed, def.smoke, now)
@@ -85,8 +95,54 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
     // a mark only where something is wrong: a producer that does not run, a house whose residents are leaving.
     // A town that works shows no marks at all.
     const mark = building.production ? STATUS_COLORS[building.production.status.kind] : house && !house.ruin && house.residents > 0 ? houseDotColor(house) : null
-    if (mark && mark !== STATUS_COLORS.producing && !(house && mark === STATUS_COLORS.waiting)) drawStatusDot(ctx, rect, dotHeight, mark)
+    if (!mark || mark === STATUS_COLORS.producing || (house && mark === STATUS_COLORS.waiting)) continue
+    // what is missing shows as its picture: the good a workshop waits for, the good a house has run short of
+    const missing = building.production ? (building.production.status.kind === 'waiting' ? building.production.status.good : undefined) : house ? shortGood(house) : undefined
+    const icon = missing ? sprites.get(`icons/goods/${missing}`) : undefined
+    if (icon) drawNeedBadge(ctx, rect, dotHeight, mark, icon)
+    else drawStatusDot(ctx, rect, dotHeight, mark)
   }
+}
+
+let coastCache: { occupancy: number[]; edges: Map<number, FadeEdges> } | null = null
+
+/** The front edges of a building that border the shore. Looked up once per building until something is built or torn down. */
+function frontCoast(state: IslandState, id: number, rect: TileRect): FadeEdges {
+  if (coastCache?.occupancy !== state.occupancy) coastCache = { occupancy: state.occupancy, edges: new Map() }
+  let edges = coastCache.edges.get(id)
+  if (!edges) {
+    edges = { ...coastEdges(state.map, state.occupancy, rect), ne: false, nw: false }
+    coastCache.edges.set(id, edges)
+  }
+  return edges
+}
+
+/** The good a house is short of (below the shortage line), if it is a good and not a public building. */
+export function shortGood(house: HouseState): string | undefined {
+  for (const need of cumulativeNeeds(house.tier)) {
+    if (!need.good || need.optional || need.forRise) continue
+    if ((house.needs[need.id] ?? 100) < config.population.shortageBelow) return need.good
+  }
+  return undefined
+}
+
+/** A round badge with the picture of the missing good, ringed in the colour of the problem. */
+function drawNeedBadge(ctx: CanvasRenderingContext2D, rect: TileRect, height: number, color: string, icon: CanvasImageSource): void {
+  const center = tileToWorld(rect.x + rect.w / 2, rect.y + rect.h / 2)
+  const y = center.y - height - 4
+  ctx.fillStyle = '#f6ecd6'
+  ctx.strokeStyle = color
+  ctx.lineWidth = 2.5
+  ctx.beginPath()
+  ctx.arc(center.x, y, 10, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.stroke()
+  ctx.strokeStyle = 'rgba(40, 24, 8, 0.7)'
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.arc(center.x, y, 11.5, 0, Math.PI * 2)
+  ctx.stroke()
+  ctx.drawImage(icon, center.x - 8, y - 8, 16, 16)
 }
 
 /** A column of smoke that rises from the chimney, looping. `chimney` is the opening as a share of the building picture. */

@@ -1501,3 +1501,265 @@ button.toast {
   font-size: 13px;
   color: var(--muted);
 }
+
+/* The goal of the game in the top bar */
+.hud-goal {
+  color: var(--highlight);
+  font-size: 14px;
+}
+
+.hud-goal.reached {
+  color: var(--good);
+}
+
+/* An order of the trader town, in the column of messages */
+.quest {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  width: min(460px, calc(100vw - 24px));
+  padding: 6px 6px 6px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.quest-text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.quest-text strong {
+  font-size: 15px;
+}
+
+.quest-title,
+.quest-state {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.quest .action-button {
+  flex: 0 0 auto;
+  min-height: var(--button-size);
+  padding: 0 12px;
+}
+
+.quest .panel-close {
+  flex: 0 0 auto;
+}
+
+/* An open build menu category needs the room. */
+:root:has(.build-menu > :not(.build-categories)) .quest {
+  display: none;
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .quest {
+    width: min(340px, 42vw);
+  }
+
+  .quest-title {
+    display: none;
+  }
+}
+
+/* upright phone: the card is narrow (it leaves the overview map free), so the buttons go below the text */
+@media (orientation: portrait) {
+  .quest {
+    flex-wrap: wrap;
+    width: min(460px, calc(100vw - 150px));
+  }
+
+  .quest-text {
+    flex: 1 1 140px;
+  }
+
+  .quest-title {
+    display: none;
+  }
+
+  .quest .action-button {
+    flex: 1 1 auto;
+  }
+}
+
+/* End screen of the scenario */
+.goal-backdrop {
+  z-index: 30;
+}
+
+.goal-screen {
+  align-items: center;
+  width: min(440px, 92vw);
+  padding: 14px 18px 16px;
+  overflow-y: auto;
+  text-align: center;
+}
+
+.goal-screen h2 {
+  margin: 2px 0 2px;
+  font-size: 26px;
+}
+
+.goal-line {
+  margin: 0 0 10px;
+  color: var(--text-soft);
+}
+
+.goal-stars {
+  display: flex;
+  gap: 10px;
+  font-size: 34px;
+  line-height: 1;
+}
+
+.goal-stars span:nth-child(2) {
+  font-size: 46px;
+}
+
+.goal-facts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+  margin: 0 0 6px;
+}
+
+.goal-facts > div {
+  padding: 6px 4px;
+  border-radius: 6px;
+  background: var(--tint);
+}
+
+.goal-facts dt {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.goal-facts dd {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.goal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.goal-actions .action-button {
+  min-height: var(--button-size);
+  padding: 0 18px;
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .goal-screen {
+    width: min(620px, 92vw);
+    max-height: 94vh;
+    padding: 8px 14px 10px;
+  }
+
+  .goal-stars {
+    font-size: 24px;
+  }
+
+  .goal-stars span:nth-child(2) {
+    font-size: 32px;
+  }
+
+  .goal-screen h2 {
+    font-size: 22px;
+  }
+
+  .goal-facts {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* Trade route in three steps */
+.wizard-steps {
+  display: flex;
+  gap: 6px 16px;
+  flex-wrap: wrap;
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.wizard-steps li.current {
+  color: var(--hud-text);
+  font-weight: 700;
+}
+
+.wizard-steps li.done {
+  color: var(--good);
+}
+
+.wizard-number {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 13px;
+}
+
+.wizard-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 6px 0;
+}
+
+.wizard-options .category-button {
+  min-height: var(--button-size);
+  padding: 4px 14px;
+}
+
+.wizard-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+.wizard-option span {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.wizard-summary {
+  margin: 8px 0 2px;
+  padding: 6px 8px;
+  border-left: 3px solid var(--accent);
+  background: var(--tint);
+  font-size: 14px;
+}
+
+/* Phone held sideways: the column of messages is short. The order and the folded goal card always stay whole;
+   warnings take what is left, the newest at the bottom. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .toasts {
+    flex: 0 1 auto;
+    justify-content: flex-end;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .hint-card:not(.open),
+  .hint-chip {
+    flex: 0 0 auto;
+  }
+}

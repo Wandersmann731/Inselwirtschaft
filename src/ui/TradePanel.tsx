@@ -8,6 +8,7 @@ import type { GameState, Route, Ship } from '../sim/state'
 import { kontorKit } from '../sim/trade'
 import { formatWhole, resourceName } from './messages'
 import { t } from '../i18n/language'
+import { RouteWizard } from './RouteWizard'
 
 type Tab = 'ships' | 'routes'
 
@@ -201,11 +202,18 @@ function RoutesTab({
   loop: GameLoop
   islandName: (id: number | null) => string
 }) {
+  const [wizard, setWizard] = useState(false)
+  if (wizard) return <RouteWizard loop={loop} state={state} onDone={() => setWizard(false)} />
   return (
     <>
-      <button type="button" className="action-button" onClick={() => loop.dispatch((s) => createRoute(s))}>
-        {t('Neue Route', 'New route')}
-      </button>
+      <div className="ship-actions">
+        <button type="button" className="action-button confirm" onClick={() => setWizard(true)}>
+          {t('Neue Route in 3 Schritten', 'New route in 3 steps')}
+        </button>
+        <button type="button" className="action-button" onClick={() => loop.dispatch((s) => createRoute(s))}>
+          {t('Leere Route', 'Empty route')}
+        </button>
+      </div>
       {state.routes.length === 0 && (
         <p className="stats-note">
           {t('Eine Route ist eine Liste von Häfen mit Lade- und Entladebefehlen. Das Schiff fährt sie der Reihe nach immer wieder ab.', 'A route is a list of ports with load and unload orders. The ship sails them in turn, again and again.')}
@@ -251,7 +259,7 @@ function RouteEditor({
         <select value={island} onChange={(event) => setIsland(Number(event.target.value))}>
           {state.islands.map((entry) => (
             <option key={entry.id} value={entry.id}>
-              {entry.name}
+              {translatedIsland(entry.name)}
             </option>
           ))}
         </select>

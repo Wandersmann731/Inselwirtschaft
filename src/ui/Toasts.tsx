@@ -23,6 +23,8 @@ interface Toast {
 }
 
 const SHOW_MS = 6000
+/** No more than this many messages at once: the newest stay, so the column never covers the map. */
+const MAX_SHOWN = 4
 
 /** Short messages at the top: a good about to run out, coins below zero. Checked once per cycle. */
 export function Toasts({ state, onShortage }: { state: GameState; onShortage?: (good: string) => void }) {
@@ -86,7 +88,7 @@ export function Toasts({ state, onShortage }: { state: GameState; onShortage?: (
   if (toasts.length === 0) return null
   return (
     <div className="toasts" aria-live="polite">
-      {toasts.map((toast) =>
+      {toasts.slice(-MAX_SHOWN).map((toast) =>
         toast.shortage && onShortage ? (
           <button key={toast.id} type="button" className="toast" onClick={() => onShortage(toast.shortage!)}>
             <Icon name="ui/warning" size={24} /> {toast.text} <span aria-hidden="true">›</span>

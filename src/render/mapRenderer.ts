@@ -27,6 +27,8 @@ import { MapEffects } from './effects'
 import { Carts } from './carts'
 import { TickClock } from './tickClock'
 import { drawWalkers } from './walkers'
+import { drawShadows } from './buildingShadows'
+import { duskShare, Sky } from './sky'
 import { Surf } from './surf'
 import { groundTextures } from './groundTextures'
 import { CHUNK_H, CHUNK_W, TerrainCache } from './terrainCache'
@@ -56,6 +58,7 @@ export class MapRenderer {
   private effects = new MapEffects()
   private carts = new Carts()
   private clock = new TickClock()
+  private sky = new Sky()
   private water: WaterPattern | null = null
   /** Sprite version the water pattern was made with: it is made again if pictures arrived late. */
   private waterVersion = -1
@@ -213,18 +216,26 @@ export class MapRenderer {
     const k = dpr * zoom
     ctx.setTransform(k, 0, 0, k, dpr * (viewport.width / 2 - this.camera.x * zoom), dpr * (viewport.height / 2 - this.camera.y * zoom))
     const range = this.visibleTileRange(map)
-    this.drawWater(now, settings.waterAnimation)
+    const view = visibleWorldRect(this.camera, this.viewport)
+    const area = { x: view.minX - 2, y: view.minY - 2, w: view.maxX - view.minX + 4, h: view.maxY - view.minY + 4 }
+    this.drawWater(area, now, settings.waterAnimation)
     this.surf.draw(this.ctx, map, this.getState().id, range, now, settings.waterAnimation)
     const state = this.getState()
     this.drawTerrain(map, state)
     drawYards(ctx, state, range)
     drawRoads(ctx, state, range)
+    drawShadows(ctx, state, range)
     // carts and residents move with the game time: faster at 4x, still in a pause
     const ticks = this.clock.ticks(state.tick, now)
     this.carts.draw(ctx, state, range, ticks)
     drawWalkers(ctx, state, range, ticks)
     drawBuildings(ctx, state, range, now, settings.smoke)
     drawShips(ctx, state, now)
+    if (settings.sky) {
+      // cloud shadows drift over land and sea; every few minutes of game time evening falls and the windows glow
+      this.sky.drawClouds(ctx, area, now, settings.reducedMotion)
+      this.sky.drawDusk(ctx, state, range, area, duskShare(ticks))
+    }
     this.effects.update(state, now)
     this.effects.draw(ctx, now)
     this.overlay.draw(ctx, state, this.getTool(), range)
@@ -235,14 +246,12 @@ export class MapRenderer {
   }
 
   /** The sea: an animated pattern over the visible part of the world. */
-  private drawWater(now: number, animated: boolean): void {
+  private drawWater(area: { x: number; y: number; w: number; h: number }, now: number, animated: boolean): void {
     if (!sprites.ready) return
     if (!this.water || (this.waterVersion !== sprites.version && !this.water.complete)) {
       this.water = new WaterPattern(this.ctx)
       this.waterVersion = sprites.version
     }
-    const rect = visibleWorldRect(this.camera, this.viewport)
-    const area = { x: rect.minX - 2, y: rect.minY - 2, w: rect.maxX - rect.minX + 4, h: rect.maxY - rect.minY + 4 }
     this.water.fill(this.ctx, area, now, animated)
     fillDepth(this.ctx, area, this.bounds())
   }

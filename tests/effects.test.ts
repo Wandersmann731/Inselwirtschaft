@@ -21,7 +21,10 @@ describe('map effects', () => {
     expect(risen.map((b) => b.id)).toEqual([1])
   })
 
-  it('ignores demolished buildings', () => {
-    expect(changesBetween([farm(1), farm(2)], [farm(2)])).toEqual({ built: [], risen: [] })
+  it('finds demolished buildings, so they can sink away', () => {
+    const { built, risen, removed } = changesBetween([farm(1), farm(2)], [farm(2)])
+    expect(built).toEqual([])
+    expect(risen).toEqual([])
+    expect(removed.map((b) => b.id)).toEqual([1])
   })
 })

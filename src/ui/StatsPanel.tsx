@@ -4,15 +4,17 @@ import { balanceOf } from '../sim/economy'
 import type { GameState, IslandState } from '../sim/state'
 import { residentsOfTier } from '../sim/tiers'
 import { findShortages } from '../sim/warnings'
-import { depositName, fertilityName, formatSigned, formatWhole } from './messages'
+import { depositName, fertilityName, formatSigned, formatWhole, goalText } from './messages'
 import { Icon } from './Icon'
 import { TrendChart } from './TrendChart'
+import { goalProgress } from '../sim/scenario'
 import type { CycleSnapshot } from '../game/history'
 import { oneDecimal, t } from '../i18n/language'
 
 /** Statistics window: money of the last cycle, residents per tier and production and use per good on the island on screen. */
 export function StatsPanel({ state, island, history, onClose }: { state: GameState; island: IslandState; history: CycleSnapshot[]; onClose: () => void }) {
   const last = island.economy.last
+  const goal = goalProgress(state)
   const warned = new Map(findShortages(island).map((warning) => [warning.good, warning.cycles]))
   const rows = goods.filter(
     (good) =>
@@ -36,6 +38,14 @@ export function StatsPanel({ state, island, history, onClose }: { state: GameSta
             {island.fertilities.length > 0 ? island.fertilities.map(fertilityName).join(', ') : t('keines', 'none')}. {t('Vorkommen', 'Deposits')}:{' '}
             {island.deposits.map(depositName).join(', ')}.
           </p>
+
+          <h3>{t('Ziel des Spiels', 'Goal of the game')}</h3>
+          <p className="stats-note">
+            {goalText()}: <strong>{state.goalReachedTick !== null ? t('erreicht ✓', 'reached ✓') : `${formatWhole(goal.have)} / ${formatWhole(goal.need)}`}</strong>
+          </p>
+          <div className="hint-progress" aria-hidden="true">
+            <span style={{ width: `${state.goalReachedTick !== null ? 100 : Math.min(100, (goal.have / goal.need) * 100)}%` }} />
+          </div>
 
           <h3>{t('Letzter Zyklus dieser Insel', 'Last cycle of this island')}</h3>
           {last ? (

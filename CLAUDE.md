@@ -17,6 +17,8 @@ Das Projekt ist privat und nicht kommerziell.
 - Öffentliche Gebäude und Marktstände wirken in einem Radius ab dem Gebäuderand.
 - Mehrstufige Produktionsketten, mehrere Inseln mit Klimazonen und Fruchtbarkeiten,
   Handel per Schiff, Kontor und automatischer Handelsroute.
+- Aufträge: Die Händlerstadt bittet ab und zu um eine Ware, die der Spieler herstellt, und zahlt gut dafür (src/data/quests.json, src/sim/quests.ts).
+- Spielziel: eine Einwohnerzahl ab einer Stufe (src/data/scenario.json). Danach zeigt ein Endbildschirm die Bilanz, das Spiel läuft frei weiter.
 - Militär, Piraten, Katastrophen und Forschung kommen nach dem MVP. Architektur dafür
   offen halten, aber nicht bauen.
 

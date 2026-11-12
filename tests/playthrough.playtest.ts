@@ -14,6 +14,8 @@ describe('playthrough with the bot', () => {
       const last = summary.history[summary.history.length - 1]
       expect(summary.milestones.settlers?.minutes ?? 999, 'settlers by minute 15').toBeLessThanOrEqual(15)
       expect(summary.milestones.citizens, 'citizens reached at least once').toBeDefined()
+      // the middle of the game: church, tools and bricks (partly bought from the trader) carry the town to merchants
+      expect(summary.milestones.merchants?.minutes ?? 999, 'merchants within the first hour').toBeLessThanOrEqual(60)
       expect(last.residents, 'residents at the end').toBeGreaterThanOrEqual(150)
       expect(last.coins, 'coins at the end').toBeGreaterThan(0)
       expect(last.balance, 'balance per cycle at the end').toBeGreaterThan(0)

@@ -64,5 +64,10 @@ export function islandsOf(state: GameState | IslandState): Island[] {
 export function liftIsland(flat: IslandState): GameState {
   const island = Object.fromEntries(ISLAND_KEYS.map((key) => [key, flat[key]])) as unknown as Island
   const { version, seed, rngState, tick, speed, coins, highestTier, world, ships, routes, nextShipId, nextRouteId, hintsDone } = flat
-  return { version, seed, rngState, tick, speed, coins, highestTier, world, ships, routes, nextShipId, nextRouteId, hintsDone, islands: [island] }
+  const { quest, nextQuestTick, questsDone, goalReachedTick, goalClosed } = flat
+  return {
+    ...{ version, seed, rngState, tick, speed, coins, highestTier, world, ships, routes, nextShipId, nextRouteId, hintsDone },
+    ...{ quest, nextQuestTick, questsDone, goalReachedTick, goalClosed },
+    islands: [island],
+  }
 }

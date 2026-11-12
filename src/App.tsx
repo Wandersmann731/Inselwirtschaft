@@ -4,6 +4,7 @@ import { tiers } from './data'
 import { BuildController } from './game/buildController'
 import type { GameLoop } from './game/gameLoop'
 import { balanceOf } from './sim/economy'
+import { goalProgress } from './sim/scenario'
 import { toIslandState } from './sim/islands'
 import { residentsOfTier } from './sim/tiers'
 import { useGameAudio } from './audio/useGameAudio'
@@ -11,11 +12,13 @@ import { getSettings } from './save/settings'
 import { BalancePanel } from './ui/BalancePanel'
 import { BuildBar } from './ui/BuildBar'
 import { GameMenu } from './ui/GameMenu'
+import { GoalScreen } from './ui/GoalScreen'
 import { HintCard } from './ui/HintCard'
 import { KontorPanel } from './ui/KontorPanel'
 import type { MapRenderer } from './render/mapRenderer'
 import { MapCanvas } from './ui/MapCanvas'
 import { MiniMap } from './ui/MiniMap'
+import { QuestNotice } from './ui/QuestNotice'
 import { RiseNotice } from './ui/RiseNotice'
 import { StatsPanel } from './ui/StatsPanel'
 import { Toasts } from './ui/Toasts'
@@ -88,6 +91,7 @@ export function App({ loop, onQuit }: { loop: GameLoop; onQuit: () => void }) {
         balance={balance}
         residentsByTier={residentsByTier}
         highestTier={state.highestTier}
+        goal={{ ...goalProgress(state), reached: state.goalReachedTick !== null }}
         speed={state.speed}
         islandName={islandName(island.name)}
         stock={island.stock}
@@ -102,8 +106,10 @@ export function App({ loop, onQuit }: { loop: GameLoop; onQuit: () => void }) {
       <div className="notices">
         <Toasts state={state} onShortage={showChain} />
         <RiseNotice island={island} onShow={showChain} />
+        <QuestNotice loop={loop} state={state} />
         <HintCard loop={loop} state={state} island={island} tool={tool} />
       </div>
+      {state.goalReachedTick !== null && !state.goalClosed && <GoalScreen loop={loop} state={state} onQuit={onQuit} />}
       {showMenu && <GameMenu loop={loop} onClose={() => setShowMenu(false)} onQuit={onQuit} />}
       {showBalance && <BalancePanel loop={loop} onClose={() => setShowBalance(false)} />}
       {showStats && <StatsPanel state={state} island={island} history={loop.getHistory()} onClose={() => setShowStats(false)} />}

@@ -312,3 +312,26 @@ export interface TradeConfig {
   /** Amounts offered in the route editor. The last one stands for "all". */
   orderAmounts: number[]
 }
+
+/** Small orders of the trader town: it asks for a good the player makes and pays well for it. */
+export interface QuestConfig {
+  /** Economy cycles before the first order of a new game. */
+  firstAfterCycles: number
+  /** Economy cycles between the end of one order and the next. */
+  pauseCycles: number
+  /** Economy cycles an order stays open. */
+  durationCycles: number
+  /** No orders before the realm has this many residents. */
+  minResidents: number
+  /** The reward is the base price of the goods times this. */
+  rewardMultiplier: number
+  /** Tons an order can ask for. */
+  amounts: number[]
+  /** Goods an order can ask for, as far as the player made them in the last cycle. */
+  goods: string[]
+}
+
+/** The goal of a game: this many residents in houses of the tier or a higher one. After it the game goes on freely. */
+export interface ScenarioConfig {
+  goal: { tier: string; residents: number }
+}

@@ -5,6 +5,8 @@ import { processProduction } from './production'
 import { moveShips } from './ships'
 import type { Rng } from './rng'
 import type { GameSpeed, GameState } from './state'
+import { runQuests } from './quests'
+import { checkGoal } from './scenario'
 import { recordHints } from './tutorial'
 
 /** Advances the simulation by one second of game time. Pure: returns a new state. */
@@ -13,7 +15,7 @@ export function tick(state: GameState, rng: Rng): GameState {
     onEachIsland({ ...state, tick: state.tick + 1, rngState: rng.getState() }, (island) => (island.owned ? processProduction(island) : island)),
   )
   // Beginner tips are checked once per cycle; the screen checks the tip it shows on its own.
-  return next.tick % config.economyCycleTicks === 0 ? recordHints(runCycle(next)) : next
+  return next.tick % config.economyCycleTicks === 0 ? recordHints(checkGoal(runQuests(runCycle(next), rng))) : next
 }
 
 /** Returns a new state with the given speed. Unknown speeds are ignored. */
