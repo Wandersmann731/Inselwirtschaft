@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { islandName } from '../i18n/dataNames'
-import { sprites } from '../render/sprites'
+import { shipFromAbove } from '../render/vessel/ship'
 import { drawChart, drawPlate, islandOutlines } from '../render/worldChart'
 import type { GameState } from '../sim/state'
 import { t } from '../i18n/language'
@@ -65,7 +65,7 @@ export function WorldMap({ state, activeIsland, onSelect, onClose }: WorldMapPro
         ctx.stroke()
         ctx.setLineDash([])
       }
-      const image = sprites.get('ships/ship_top')
+      const image = shipFromAbove()
       if (image) {
         // The ship picture points up; turn it towards where the ship is going.
         const next = ship.path[0]

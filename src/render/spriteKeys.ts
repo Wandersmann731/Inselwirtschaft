@@ -1,14 +1,13 @@
 import { getBuilding } from '../data'
 import type { PlacedBuilding } from '../sim/state'
 import { hash2 } from '../world/noise2d'
+import { builtVariants } from './built'
 import { sprites } from './sprites'
 
-export const SMOKE_FRAMES = 12
-
-/** Road sprite for the neighbours that are roads: n = up right (y - 1), e = down right (x + 1), s = down left (y + 1), w = up left (x - 1). */
-export function roadKey(north: boolean, east: boolean, south: boolean, west: boolean): string {
-  const name = `${north ? 'n' : ''}${east ? 'e' : ''}${south ? 's' : ''}${west ? 'w' : ''}`
-  return `roads/road_${name || 'none'}`
+/** All pictures of a building: those made by code, else the painted ones. */
+function variantsOf(base: string): string[] {
+  const made = builtVariants(base)
+  return made.length > 0 ? made : sprites.variants(base)
 }
 
 /** Which of several pictures a building uses. Follows from where it stands, so it never changes. */
@@ -32,7 +31,7 @@ export function buildingKey(building: Pick<PlacedBuilding, 'type' | 'x' | 'y' | 
     const slot = Math.floor((building.x - block.x) / 2) + 3 * Math.floor((building.y - block.y) / 2)
     if (cut.length > 0) return cut[blockVariant(cut.length, building.quarter, slot)]
   }
-  const list = sprites.variants(base)
+  const list = variantsOf(base)
   if (list.length === 0) return base
   return list[pickVariant(list.length, building.x, building.y)]
 }
@@ -51,9 +50,5 @@ export function blockVariant(count: number, quarter: number, slot: number): numb
 export function ghostKey(typeId: string): string {
   const def = getBuilding(typeId)
   const base = def.houseTier ? `buildings/house_${def.houseTier}` : `buildings/${typeId}`
-  return sprites.variants(base)[0] ?? base
-}
-
-export function smokeKey(frame: number): string {
-  return `effects/smoke_${(frame % SMOKE_FRAMES) + 1}`
+  return variantsOf(base)[0] ?? base
 }

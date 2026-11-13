@@ -6,15 +6,18 @@ import type { GameMap } from './terrain'
 export type DecorKind =
   | 'tree' | 'pine' | 'palm' | 'bush' | 'rock' | 'tuft' | 'flowers' | 'pebbles'
   | 'peak_small' | 'peak_medium' | 'peak_large' | 'peak_snow'
+  // planted beside houses and drawn by code (see render/gardenSprites.ts): never part of the wild growth below
+  | 'hedge' | 'bed' | 'garden'
 
 /** How many picture variants each kind has (decor/<kind>_<n>). */
 export const DECOR_VARIANTS: Record<DecorKind, number> = {
   tree: 4, pine: 3, palm: 2, bush: 3, rock: 3, tuft: 3, flowers: 2, pebbles: 2,
   peak_small: 3, peak_medium: 3, peak_large: 3, peak_snow: 2,
+  hedge: 4, bed: 4, garden: 4,
 }
 
 /** Tall objects stand in front of nearby buildings and are drawn together with them. Low ones stay in the ground picture. */
-const TALL: ReadonlySet<DecorKind> = new Set(['tree', 'pine', 'palm', 'bush', 'rock', 'peak_small', 'peak_medium', 'peak_large', 'peak_snow'])
+const TALL: ReadonlySet<DecorKind> = new Set(['tree', 'pine', 'palm', 'bush', 'rock', 'peak_small', 'peak_medium', 'peak_large', 'peak_snow', 'hedge', 'bed', 'garden'])
 
 export function isTall(kind: DecorKind): boolean {
   return TALL.has(kind)
@@ -29,6 +32,8 @@ export interface DecorItem {
   y: number
   scale: number
   flip: boolean
+  /** How light the object is, 1 as painted: trees deep in a forest are darker, those at its sunny edge lighter. */
+  shade?: number
 }
 
 export interface DecorContext {
@@ -70,12 +75,32 @@ export function decorForTile(ctx: DecorContext, tx: number, ty: number): DecorIt
   if (terrain === Terrain.Forest) {
     const density = fbm(tx * 0.16, ty * 0.16, seed + 3, 3) // groves and clearings
     const coniferShare = fbm(tx * 0.1 + 40, ty * 0.1 + 40, seed + 5, 2) + (COLD.has(ctx.climate) ? 0.22 : -0.12)
+    const isForest = (x: number, y: number): boolean => x >= 0 && y >= 0 && x < map.width && y < map.height && map.tiles[y * map.width + x] === Terrain.Forest
+    // the rim of the forest: a tile with open land beside it. Deep inside every tile around it is forest too.
+    const rim = !isForest(tx + 1, ty) || !isForest(tx - 1, ty) || !isForest(tx, ty + 1) || !isForest(tx, ty - 1)
+    const deep = !rim && isForest(tx + 1, ty + 1) && isForest(tx - 1, ty - 1) && isForest(tx + 1, ty - 1) && isForest(tx - 1, ty + 1)
+    const pick = (i: number): DecorKind => (hash2(tx * 7 + i, ty * 5, seed + 9) < Math.max(0.05, Math.min(0.95, coniferShare)) ? 'pine' : 'tree')
+    // the canopy: big trees, more of them where the forest is thick
     const count = density < 0.28 ? (chance(1) < 0.65 ? 1 : 0) : density < 0.45 ? 2 + (chance(2) < 0.4 ? 1 : 0) : 4 + (chance(2) < 0.5 ? 1 : 0)
     for (let i = 0; i < count; i++) {
-      const pine = hash2(tx * 7 + i, ty * 5, seed + 9) < Math.max(0.05, Math.min(0.95, coniferShare))
-      items.push(make(ctx, 10 + i, tx, ty, pine ? 'pine' : 'tree', 0.95, 0.62, 1.38))
+      const item = make(ctx, 10 + i, tx, ty, pick(i), 0.95, 0.7, 1.45)
+      // light falls on the rim, the inside lies in its own shade; no two trees are the same green
+      item.shade = (rim ? 1.04 : deep ? 0.84 : 0.93) + (hash2(tx * 3 + i, ty * 11, seed + 61) - 0.5) * 0.2
+      items.push(item)
     }
-    if (chance(3) < 0.18) items.push(make(ctx, 20, tx, ty, 'bush', 0.9, 0.7, 1))
+    // the layer below: young trees and bushes. At the rim they close the forest down to the ground.
+    const young = rim ? 1 + (chance(22) < 0.6 ? 1 : 0) : chance(22) < 0.4 ? 1 : 0
+    for (let i = 0; i < young; i++) {
+      const item = make(ctx, 60 + i, tx, ty, pick(8 + i), 0.95, 0.42, 0.68)
+      item.shade = (rim ? 1.08 : 0.9) + (hash2(tx * 5 + i, ty * 13, seed + 62) - 0.5) * 0.16
+      items.push(item)
+    }
+    const bushes = rim ? (chance(3) < 0.75 ? 1 : 0) + (chance(23) < 0.35 ? 1 : 0) : chance(3) < 0.18 ? 1 : 0
+    for (let i = 0; i < bushes; i++) {
+      const item = make(ctx, 20 + i * 5, tx, ty, 'bush', 0.95, 0.7, 1.1)
+      item.shade = (rim ? 1.02 : 0.88) + (hash2(tx * 7 + i, ty * 3, seed + 63) - 0.5) * 0.16
+      items.push(item)
+    }
     if (chance(4) < 0.2) items.push(make(ctx, 21, tx, ty, 'tuft', 0.9, 0.8, 1.1))
   } else if (terrain === Terrain.Grass) {
     const meadow = fbm(tx * 0.2 + 7, ty * 0.2 + 7, seed + 11, 2)

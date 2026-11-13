@@ -1,0 +1,171 @@
+<!doctype html>
+<!-- Beispiel des Auftraggebers für ein Haus aus HTML und CSS: Türhöhe als Maß, Kontaktschatten, Schattierung ohne Umrisse.
+     Nur als Vorlage für die Zeichenregeln; das Spiel zeichnet Gebäude im Canvas (siehe CLAUDE.md). -->
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Beispiel Haus</title>
+<style>
+:root {
+  --base-door-height: 48px; /* Verbindliche Referenz-Normhöhe */
+  --tile-width: 120px;
+  --tile-height: 60px;
+
+  /* Material-Farbwerte (Physikalisches Shading ohne harte Outlines) */
+  --color-timber: #2b1d11;
+  --color-plaster: #e2dbc9;
+  --color-plaster-shadow: #b5ac96;
+  --color-roof: #5a3825;
+  --color-roof-highlight: #7c4e36;
+}
+
+body { background: #6f8f4e; padding: 160px 80px; }
+
+.game-tile {
+  position: relative;
+  width: var(--tile-width);
+  height: var(--tile-height);
+  transform-style: preserve-3d;
+  contain: layout style paint;
+}
+
+/* Basis-Schatten (Ambient Occlusion) */
+.ambient-shadow {
+  position: absolute;
+  bottom: -6px;
+  left: 10px;
+  width: 90px;
+  height: 45px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  filter: blur(4px);
+  transform: rotateX(60deg);
+  z-index: 1;
+}
+
+.building {
+  position: absolute;
+  bottom: 10px;
+  left: 20px;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* Wände mit prozeduraler Putz- und Fachwerkstruktur */
+.wall {
+  position: absolute;
+  background-color: var(--color-plaster);
+  background-image:
+    linear-gradient(90deg, var(--color-timber) 4px, transparent 4px),
+    linear-gradient(0deg, var(--color-timber) 4px, transparent 4px),
+    radial-gradient(circle, rgba(0,0,0,0.08) 0%, transparent 80%);
+  background-size: 24px 24px, 24px 24px, 100% 100%;
+}
+
+.wall.front {
+  width: 64px;
+  height: calc(var(--base-door-height) * 1.8);
+  bottom: 0;
+  left: 0;
+  transform-origin: bottom left;
+  transform: skewY(30deg);
+  box-shadow: inset -8px 0 12px rgba(0,0,0,0.25);
+}
+
+.wall.side {
+  width: 64px;
+  height: calc(var(--base-door-height) * 1.8);
+  bottom: 0;
+  left: 64px;
+  transform-origin: bottom left;
+  transform: skewY(-30deg);
+  background-color: var(--color-plaster-shadow);
+  box-shadow: inset 8px 0 12px rgba(0,0,0,0.35);
+}
+
+/* Normierte Eingangstür */
+.door {
+  position: absolute;
+  bottom: 0;
+  left: 20px;
+  width: calc(var(--base-door-height) * 0.45);
+  height: var(--base-door-height);
+  background: linear-gradient(135deg, #3d271d, #1f130e);
+  border-radius: 2px 2px 0 0;
+  box-shadow: inset 2px 2px 4px rgba(0,0,0,0.6);
+}
+
+/* Fenster mit Lichtreflexen */
+.window {
+  position: absolute;
+  width: 14px;
+  height: 18px;
+  background: linear-gradient(135deg, #2a4359, #15222e);
+  border: 2px solid var(--color-timber);
+  box-shadow: inset 1px 1px 3px rgba(255,255,255,0.2);
+}
+
+.win-1 { bottom: 32px; right: 10px; }
+.win-2 { bottom: 32px; left: 14px; }
+
+/* Dachflächen mit Ziegel-Simulation */
+.roof {
+  position: absolute;
+  background-color: var(--color-roof);
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(0,0,0,0.3) 4px, rgba(0,0,0,0.3) 5px),
+    linear-gradient(135deg, var(--color-roof-highlight), var(--color-roof));
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+.roof.left {
+  width: 76px;
+  height: 50px;
+  bottom: 70px;
+  left: -6px;
+  transform: skewY(30deg) rotate(-15deg);
+}
+
+.roof.right {
+  width: 76px;
+  height: 50px;
+  bottom: 70px;
+  left: 56px;
+  transform: skewY(-30deg) rotate(15deg);
+}
+
+/* Kamin */
+.chimney {
+  position: absolute;
+  bottom: 85px;
+  left: 45px;
+  width: 14px;
+  height: 28px;
+  background: linear-gradient(90deg, #7a3e2a, #52281b);
+  box-shadow: 2px 4px 6px rgba(0,0,0,0.4);
+}
+</style>
+</head>
+<body>
+<div class="game-tile">
+  <div class="building house-timber">
+    <!-- Bodenplatte & Kontaktschatten -->
+    <div class="ambient-shadow"></div>
+
+    <!-- Gebäudevolumen -->
+    <div class="wall front">
+      <div class="door"></div>
+      <div class="window win-1"></div>
+    </div>
+    <div class="wall side">
+      <div class="window win-2"></div>
+    </div>
+
+    <!-- Dachkonstruktion -->
+    <div class="roof left"></div>
+    <div class="roof right"></div>
+    <div class="chimney"></div>
+  </div>
+</div>
+</body>
+</html>

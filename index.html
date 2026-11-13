@@ -18,6 +18,10 @@
     <link rel="icon" type="image/png" href="/icons/favicon.png" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <style>
+      /* The scene behind the loading screen and the start menu: evening sky and sea, islands, a headland with a palm and houses, a ship. */
+      :root {
+        --scene: radial-gradient(ellipse 44% 30% at 68% 46%, rgba(255, 228, 164, 0.8), rgba(255, 186, 110, 0.28) 46%, rgba(255, 186, 110, 0) 72%), url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 900' preserveAspectRatio='xMidYMax slice'><path d='M0 452 Q120 420 250 440 T520 430 Q600 400 700 436 L700 456 L0 456Z' fill='%236b8ea0' opacity='.55'/><path d='M900 452 Q1000 396 1120 430 T1380 418 Q1500 430 1600 410 L1600 456 L900 456Z' fill='%23587c90' opacity='.6'/><path d='M1010 520 q-4 -40 4 -96 l10 0 q-6 60 0 96Z M1060 520 q-2 -30 3 -70 l8 0 q-4 40 0 70Z' fill='%23322a2c'/><path d='M960 440 q50 -34 112 -8 q-60 -6 -112 8Z M972 470 q44 -26 96 -6 q-50 -4 -96 6Z M1046 462 q30 -18 66 -4 q-34 -4 -66 4Z' fill='%23efe2c4'/><path d='M940 520 q80 26 190 0 l-14 34 q-80 16 -160 0Z' fill='%233a2a22'/><path d='M936 556 q100 14 200 0' stroke='%23d8eef2' stroke-width='3' fill='none' opacity='.6'/><path d='M0 900 L0 560 Q60 520 130 548 Q170 470 250 520 Q330 500 380 580 Q470 600 520 690 Q560 800 600 900Z' fill='%230f2a22'/><path d='M150 560 q-8 -70 14 -150 l12 4 q-16 76 -6 146Z' fill='%231a1512'/><path d='M170 410 q-70 -40 -130 0 q66 -18 130 0Z M172 410 q30 -70 110 -70 q-70 20 -110 70Z M172 410 q70 -30 120 20 q-60 -30 -120 -20Z M170 410 q-50 -60 -110 -50 q60 8 110 50Z M171 410 q10 -70 -30 -110 q10 60 30 110Z' fill='%23163a26'/><path d='M300 600 l0 -44 l34 -26 l34 26 l0 44Z M380 610 l0 -34 l28 -22 l28 22 l0 34Z' fill='%231d1a18'/><rect x='318' y='566' width='10' height='14' fill='%23f3c66e'/><rect x='398' y='584' width='9' height='12' fill='%23f3c66e'/><path d='M1600 900 L1600 640 Q1520 600 1460 660 Q1400 700 1380 780 Q1340 840 1320 900Z' fill='%230f2a22'/><g stroke='%23bfe3ea' stroke-width='2.4' fill='none' opacity='.35'><path d='M620 600 q40 -10 80 0 t80 0'/><path d='M760 680 q50 -12 100 0 t100 0'/><path d='M1140 640 q40 -10 80 0 t80 0'/><path d='M640 780 q60 -14 120 0 t120 0'/></g></svg>") center bottom / cover no-repeat, linear-gradient(180deg, #1d4764 0%, #3d7591 24%, #9bbfb6 41%, #f2d196 50.2%, #2b7a92 50.4%, #17506a 68%, #0b2838 100%);
+      }
       .boot {
         position: fixed;
         inset: 0;
@@ -26,17 +30,36 @@
         align-items: center;
         justify-content: center;
         gap: 18px;
-        background:
-          linear-gradient(rgba(20, 13, 8, 0.55), rgba(20, 13, 8, 0.8)),
-          #0d2433 center / cover no-repeat url('/sprites/app/splash.webp');
+        background: linear-gradient(rgba(20, 13, 8, 0.45), rgba(20, 13, 8, 0.72)), var(--scene);
         color: #f6ecd6;
         font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
       }
-      .boot-logo {
-        max-width: min(420px, 78vw);
-        max-height: 30vh;
-        object-fit: contain;
-        filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
+      /* The title of the game: letters of gold with an anchor under them, made of text and a drawn shape, no picture. */
+      .wordmark {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0;
+        font-family: Georgia, 'Times New Roman', 'Noto Serif', serif;
+        font-size: clamp(28px, 8.6vw, 54px);
+        font-weight: 900;
+        line-height: 1.05;
+        letter-spacing: 0.01em;
+        white-space: nowrap;
+        filter: drop-shadow(0 2px 0 #4a2a10) drop-shadow(0 3px 0 #2e1908) drop-shadow(0 6px 8px rgba(0, 0, 0, 0.6));
+      }
+      .wordmark span {
+        padding: 0 0.1em 0.06em;
+        background: linear-gradient(180deg, #fbe7ae 0%, #e9bd5c 46%, #b9812a 54%, #8e5c18 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        -webkit-text-stroke: 1px rgba(90, 52, 20, 0.5);
+      }
+      .wordmark svg {
+        width: 1.3em;
+        height: 1.08em;
+        margin-top: -0.06em;
       }
       .boot-bar {
         width: min(320px, 70vw);
@@ -66,7 +89,7 @@
     <!-- Loading screen: shown until the pictures are loaded, then React takes over #root. Styled here, so it shows at once. -->
     <div id="root">
       <div class="boot">
-        <img class="boot-logo" id="boot-logo" alt="" />
+        <h1 class="wordmark"><span id="boot-logo"></span><svg viewBox="0 0 48 40" aria-hidden="true"><defs><linearGradient id="wm-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbe7ae"/><stop offset="0.5" stop-color="#e2b24f"/><stop offset="1" stop-color="#8e5c18"/></linearGradient></defs><g fill="none" stroke="url(#wm-gold)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="6" r="3.4"/><path d="M24 9.6V35M15 15h18M7 22c1 9 8 13 17 13s16-4 17-13"/><path d="M3 24l4-6 5 5M45 24l-4-6-5 5"/></g></svg></h1>
         <div class="boot-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><span id="boot-fill"></span></div>
         <p class="boot-text" id="boot-text"></p>
       </div>
@@ -87,7 +110,7 @@
         var english = language === 'en'
         document.documentElement.lang = language
         document.title = english ? 'Island Economy' : 'Inselwirtschaft'
-        document.getElementById('boot-logo').src = english ? '/sprites/app/logo_en.webp' : '/sprites/app/logo.webp'
+        document.getElementById('boot-logo').textContent = english ? 'Island Economy' : 'Inselwirtschaft'
         document.getElementById('boot-text').textContent = english ? 'Loading the island …' : 'Die Insel wird geladen …'
       })()
     </script>

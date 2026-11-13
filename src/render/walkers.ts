@@ -10,7 +10,7 @@ import { hash2 } from '../world/noise2d'
 import { Terrain } from '../world/terrain'
 import type { TileRange } from './buildingRenderer'
 import type { Mover } from './depth'
-import { drawPerson } from './figures'
+import { drawPerson, type PersonLook } from './figures'
 import { tileToWorld } from './iso'
 import type { TileRect } from './shapes'
 
@@ -22,12 +22,12 @@ const SPEED = 1.1
 const MAX_WALKERS = 90
 
 /** Clothes by tier: plain at first, finer with every tier. */
-const CLOTHES: Record<string, { shirt: string; top: string }[]> = {
-  pioneers: [{ shirt: '#7d6647', top: '#5a4a36' }, { shirt: '#66704f', top: '#a8926a' }],
-  settlers: [{ shirt: '#5c7287', top: '#4a3a2a' }, { shirt: '#7d6647', top: '#a8926a' }],
-  citizens: [{ shirt: '#8f4e44', top: '#3b2c20' }, { shirt: '#48647c', top: '#c9bd9c' }],
-  merchants: [{ shirt: '#5f4a72', top: '#2e251e' }, { shirt: '#3a6258', top: '#b89e5c' }],
-  aristocrats: [{ shirt: '#c9bfa4', top: '#6e3a36' }, { shirt: '#9c8140', top: '#d8cfb6' }],
+const CLOTHES: Record<string, PersonLook[]> = {
+  pioneers: [{ shirt: '#7d6647', top: '#5a4a36' }, { shirt: '#66704f', top: '#d8cdb0', skirt: true }],
+  settlers: [{ shirt: '#5c7287', top: '#4a3a2a' }, { shirt: '#7d5a4a', top: '#e0d8c2', skirt: true }],
+  citizens: [{ shirt: '#8f4e44', top: '#3b2c20' }, { shirt: '#48647c', top: '#e6dfcc', skirt: true }],
+  merchants: [{ shirt: '#5f4a72', top: '#2e251e' }, { shirt: '#3a6258', top: '#efe8d6', skirt: true }],
+  aristocrats: [{ shirt: '#c9bfa4', top: '#6e3a36' }, { shirt: '#9c5a6a', top: '#f2ecdc', skirt: true }],
 }
 
 /** True if a resident can walk over the tile: free land, and forest only where a road runs through it. */

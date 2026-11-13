@@ -2,6 +2,7 @@ import { tiers } from '../data'
 import type { BuildingDef } from '../data'
 import type { BuildController } from '../game/buildController'
 import { buildingFlow } from '../game/chains'
+import { thumbOf } from '../render/built'
 import { spriteUrl } from '../render/sprites'
 import { ghostKey } from '../render/spriteKeys'
 import { buildingBlocker } from '../sim/build'
@@ -21,7 +22,7 @@ function lockLabel(state: IslandState, def: BuildingDef): string {
 
 function Thumb({ def }: { def: BuildingDef }) {
   if (def.kind === 'road') return <Icon name="ui/cat_infrastructure" size={40} />
-  return <img className="build-thumb" src={spriteUrl(ghostKey(def.id))} alt="" draggable={false} onError={(event) => (event.currentTarget.style.visibility = 'hidden')} />
+  return <img className="build-thumb" src={thumbOf(ghostKey(def.id)) || spriteUrl(ghostKey(def.id))} alt="" draggable={false} onError={(event) => (event.currentTarget.style.visibility = 'hidden')} />
 }
 
 /** "Holz + Erz → Eisen" as little pictures, so the chain can be read without words. */

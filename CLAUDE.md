@@ -41,11 +41,18 @@ Das Projekt ist privat und nicht kommerziell.
 - Kein Backend, kein Login, keine Werbung, keine Tracker. Alles läuft offline.
 
 ## Grafiken
-- Master-PNG liegen in art/ (siehe docs/grafiken.md), die Rohbilder in art-raw/ (nicht im Git). Das Spiel lädt fertige WebP-Dateien aus public/sprites und rechnet beim Laden nichts um.
-- Neu erzeugen: scripts/assets/README.md. Nach Änderungen an art/ immer `node scripts/assets/optimize.mjs` ausführen, auf einem Rechner mit art-raw/. Dabei werden Gebäude, Bäume und Schiffe gebacken (scripts/assets/bake.mjs): doppelte Auflösung, keine Comic-Umrisse, gleicher Maßstab (scripts/assets/picture-scale.json).
-- Gebäude-, Baum- und Schiffsbilder haben 4 Bildpunkte je Weltpixel (PICTURE_SCALE in src/render/sprites.ts).
-- Das Wasser und die Figuren (Bewohner, Karren) zeichnet der Code selbst (src/render/water.ts, figures.ts).
-- Fehlt ein Sprite, zeichnet der Renderer die alten Farbformen als Ersatz.
+- Alles, was das Spiel zeigt, zeichnet der Code; es lädt keine Bilddatei mehr (public/sprites/index.json ist leer). Erzeugt wird beim ersten Gebrauch, dann gemerkt.
+- Gebäude, Felder und Wohnhäuser: src/render/built (Baukasten kit.ts, Dächer roofs.ts, Materialien materials.ts, Verwitterung wear.ts, Fassaden facade.ts, Anbauten extras.ts; die einzelnen Gebäude in houses.ts, townhouses.ts, fields.ts, workshops.ts, mines.ts, stalls.ts, harbour.ts, shipyard.ts, publics.ts; Kleinteile in props.ts und yardProps.ts). Maß ist die Haustür (DOOR, 13 Weltpixel). Jede Wohnstufe hat sechs Baupläne (HOUSE_VARIANTS in look.ts).
+- Bäume, Büsche, Felsen, Gipfel, Gras und Blumen: src/render/grown. Laubbäume, Büsche, Tannen und Palmen werden nicht gemalt, sondern aus Blattmassen, Ästen und Wedeln im Raum aufgebaut und dann je Bildpunkt beleuchtet (volume.ts); Felsen und Gipfel entstehen aus Höhenkarten (relief.ts). Schiff als kleines 3D-Modell in acht Fahrtrichtungen: src/render/vessel. Rauch: smokeFrames.ts.
+- Boden: vier Böden in groundMade.ts, gemischt in groundTextures.ts. Wege: roadLayer.ts. Küste: surf.ts. Wasser: water.ts. Gärten und Hecken: gardenSprites.ts. Figuren und Ochsen: figures.ts, Karren: cartFigures.ts, gemeinsames Werkzeug: figureKit.ts (jede Schrittstellung wird einmal gemalt und gemerkt, acht je Schritt).
+- Symbole der Oberfläche (Waren, Bewohner, Menü, Zustände): src/render/icons, in der Oberfläche über `<Icon name="goods/wood" />`. Jedes Symbol bekommt am Ende Kantenlicht und Körnung (finish in icons/index.ts). Schriftzug: src/ui/Wordmark.tsx (Aussehen in index.html, .wordmark). Startbild: src/ui/harbourScene.ts setzt eine Hafenstadt aus den Gebäuden, Bäumen und Schiffen des Spiels zusammen (Backdrop.tsx), Küste, Brandung und Boden der Insel rechnet harbourGround.ts je Bildpunkt aus; solange geladen wird, steht dahinter der Abendhimmel aus index.html (--scene). Das Menü steht im Querformat links, im Hochformat oben, die Insel liegt im freien Teil daneben (freeBeside, islandPlace).
+- Hinweise über Gebäuden (Betrieb steht, Haus leidet Mangel) werden nicht gemalt: leuchtende Punkte aus HTML/CSS über der Karte (src/render/markLayer.ts, Aussehen in theme.css unter .map-mark; welches Gebäude einen bekommt: markOf in buildingRenderer.ts).
+- Schatten: jedes Gebäudebild bringt seinen Bodenschatten mit (built/shadowCast.ts, Sonnenstand LIGHT in built/light.ts); crossShade.ts legt die Schatten der Nachbarn noch einmal über Sockel und untere Wand eines Gebäudes, damit sie nicht an dessen Grundstück enden. Felder haben ausgefranste Ränder (fray in built/fields.ts). Jedes Wohnhaus bekommt einen eigenen Farbton (drawTone in crossShade.ts).
+- Bewegung: Bäume und Büsche neben Gebäuden wiegen im Wind (swayOf in decorDraw.ts), im Wald die Krone jedes zweiten Baums (forestSway.ts: sie wird aus dem fertigen Bodenbild genommen und leicht versetzt darübergelegt, nur ab Zoom 0,75), das Meer glitzert (glitter.ts), Möwen kreisen über dem Kontor (birds.ts); die Flügel der Mühle drehen sich, solange sie mahlt (built/sails.ts; sie sind kein Teil des Mühlenbilds, sondern werden darüber gezeichnet, auch in Baumenü und Startbild); alles ruht bei „Bewegung reduzieren“.
+- An jedem Steg liegt ein Ruderboot, wo das Meer ihn berührt (boats.ts, berthOf). Wohnhäuser werden bis zu zwei Weltpixel versetzt gezeichnet (houseShift in spriteDraw.ts); das Grundstück bleibt, wo es ist.
+- Bildspeicher: Gebäudebilder zusammen höchstens PICTURE_BUDGET (built/index.ts), die am längsten nicht gezeigten gehen zuerst; Straßenbilder wie Bodenbilder begrenzt (keptRoads); die Bilder des Startbilds werden beim Schließen des Menüs freigegeben (releaseHarbour).
+- Gebäude-, Baum- und Schiffsbilder haben 4 Bildpunkte je Weltpixel, Gipfel 3 (PEAK_RES; wie groß ein Pflanzenbild in der Welt ist, sagt decorScale).
+- Bilddateien gibt es nur noch dort, wo eine Datei nötig ist: die App-Symbole in public/icons (Startbildschirm des Handys, Lesezeichen) und public/sprites/app/splash.webp als Vorschaubild für geteilte Links. Die alten Master in art/ werden nicht mehr ausgeliefert (scripts/assets/optimize.mjs überspringt sie).
 
 ## Ton
 - MP3 liegen in public/audio (sfx, loops, music) mit index.json. Das Spiel spielt nur, was im Index steht (src/audio). Erzeugen: scripts/assets/README.md.
@@ -55,6 +62,7 @@ Das Projekt ist privat und nicht kommerziell.
 - npm run dev       Entwicklungsserver
 - npm run build     Produktions-Build (muss fehlerfrei durchlaufen)
 - npm test          Vitest-Tests für src/sim
+- npm run compare   Bild der festen Testszene (scripts/compare/scene.json) neben docs/ziel/zielbild.jpg, z. B. `npm run compare -- phase1`
 
 ## Arbeitsregeln
 1. Baue nur die Phase, die im Prompt genannt ist. Nichts aus späteren Phasen.

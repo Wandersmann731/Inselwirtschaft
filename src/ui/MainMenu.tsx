@@ -11,7 +11,9 @@ import { formatWhole } from './messages'
 import { SettingsPanel } from './SettingsPanel'
 import { SlotList } from './SlotList'
 import { useSlots } from './slots'
-import { gameTitle, logoFile, t } from '../i18n/language'
+import { t } from '../i18n/language'
+import { Backdrop } from './Backdrop'
+import { Wordmark } from './Wordmark'
 
 type Screen = 'main' | 'new' | 'load'
 
@@ -75,8 +77,9 @@ export function MainMenu({ onStart }: MainMenuProps) {
 
   return (
     <div className="menu-screen">
+      <Backdrop />
       <div className="menu-panel">
-        <img className="menu-logo" src={`${import.meta.env.BASE_URL}sprites/app/${logoFile()}`} alt={gameTitle()} />
+        <Wordmark className="menu-logo" />
         {screen === 'main' && (
           <div className="menu-buttons">
             {/* without a saved game there is nothing to go on with: "new game" is the first button then */}

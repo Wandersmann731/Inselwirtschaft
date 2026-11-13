@@ -1,15 +1,19 @@
 // The sea is made here, not painted: a painted wave pattern reads as a drawing however it is moved. Two pictures
 // are worked out once from noise that joins itself at the edges: the body of the water, with long low swells that
-// are darker in their troughs, and the light on it, small glints where a ripple faces the sun. Both repeat over the
-// whole sea, drift against each other and are never seen in the same place twice.
+// are darker in their troughs and small wind waves on them (short, wide, a little lighter on their backs), and the
+// light on it, small glints where a ripple faces the sun. Both repeat over the whole sea, drift against each other
+// and are never seen in the same place twice.
 
 /** Pixels of one picture, and how many world pixels it covers. */
-const RES = 256
+const RES = 512
 const SPAN = 384
 /** Deep water, the back of a swell, and a glint. */
-const DEEP = [30, 70, 96]
-const CREST = [58, 106, 124]
-const GLINT = [206, 226, 232]
+const DEEP = [22, 68, 94]
+const CREST = [54, 116, 134]
+const GLINT = [214, 232, 234]
+/** How much darker the trough between two wind waves is, and how much lighter the back of one. */
+const FURROW = 0.2
+const BACK = 0.42
 /** How far the layers wander (world pixels), their speed (radians per second) and how strongly the glints show. */
 const DRIFT = 22
 const SPEED = 0.22
@@ -49,8 +53,19 @@ export function seaAt(u: number, v: number): { swell: number; glint: number } {
   const swell = 0.55 * tiling(u * 5, v * 12, 5, 12, 1) + 0.3 * tiling(u * 10, v * 26, 10, 26, 2) + 0.15 * tiling(u * 22, v * 54, 22, 54, 3)
   // a ripple that faces the sun is a short streak of light; only the ripples on the back of a swell catch it
   const fine = 0.7 * tiling(u * 16, v * 84, 16, 84, 4) + 0.3 * tiling(u * 40, v * 150, 40, 150, 5)
-  const lit = Math.min(1, Math.max(0, (fine - 0.7) / 0.16))
+  const lit = Math.min(1, Math.max(0, (fine - 0.67) / 0.15))
   return { swell, glint: lit * lit * Math.min(1, Math.max(0, (swell - 0.4) * 3.2)) }
+}
+
+/**
+ * The small wind waves at one point of the repeating picture, -1 in a trough to 1 on a crest: short waves that lie
+ * across the screen, wide and low, with still smaller ones on them. A crest is a narrow, sharp line, a trough is
+ * broad. Pure.
+ */
+export function rippleAt(u: number, v: number): number {
+  const wave = 0.55 * tiling(u * 14, v * 84, 14, 84, 21) + 0.45 * tiling(u * 30, v * 170, 30, 170, 23)
+  const centred = Math.max(-1, Math.min(1, (wave - 0.5) * 4.6))
+  return centred > 0 ? centred * centred * centred : -Math.sqrt(-centred)
 }
 
 function picture(paint: (u: number, v: number, out: Uint8ClampedArray, o: number) => void): HTMLCanvasElement | null {
@@ -76,7 +91,10 @@ export class WaterPattern {
       const { swell } = seaAt(u, v)
       const t = Math.min(1, Math.max(0, (swell - 0.25) / 0.55))
       const mix = t * t * (3 - 2 * t)
-      for (let c = 0; c < 3; c++) out[o + c] = DEEP[c] + (CREST[c] - DEEP[c]) * mix
+      const ripple = rippleAt(u, v)
+      // wind waves show most on the lit back of a swell
+      const shade = 1 + (ripple < 0 ? ripple * FURROW : ripple * BACK) * (0.5 + 0.5 * mix)
+      for (let c = 0; c < 3; c++) out[o + c] = (DEEP[c] + (CREST[c] - DEEP[c]) * mix) * shade
       out[o + 3] = 255
     })
     const light = picture((u, v, out, o) => {
@@ -174,4 +192,52 @@ export function fillDepth(ctx: CanvasRenderingContext2D, area: { x: number; y: n
   ctx.fillStyle = gradient
   ctx.fillRect(area.x - cx, (area.y - cy) * 2, area.w, area.h * 2)
   ctx.restore()
+}
+
+/** Pixels of a foam picture. How many world pixels it covers is up to the surf. */
+export const LACE_RES = 256
+const FOAM = [244, 250, 248]
+
+/**
+ * How much foam lies at a point of the repeating foam picture (u, v from 0 to 1), 0 to 1: a net of white lines with
+ * clear water in its meshes, as foam spreads behind a broken wave. `dense` is fresh froth: small meshes, thick
+ * lines, and most of them closed. Pure.
+ */
+export function laceAt(u: number, v: number, dense = false): number {
+  // the lines of a net are where a noise passes its middle: `off` is the distance from such a line
+  const off = (cells: number, seed: number): number =>
+    Math.abs(2 * (0.65 * tiling(u * cells, v * cells * 2, cells, cells * 2, seed) + 0.35 * tiling(u * cells * 2, v * cells * 4, cells * 2, cells * 4, seed + 1)) - 1)
+  const thick = tiling(u * 4, v * 8, 4, 8, dense ? 19 : 17)
+  const line = (distance: number, width: number): number => {
+    const t = Math.min(1, distance / width)
+    return 1 - t * t * (3 - 2 * t)
+  }
+  // a wide-meshed net, a finer one that fills in, and where the foam is thickest the meshes close
+  const grow = dense ? 2 : 1
+  const lines = Math.max(line(off(6, 11), (0.1 + 0.2 * thick) * grow), 0.8 * line(off(13, 13), (0.08 + 0.16 * thick) * grow))
+  const closed = Math.min(1, Math.max(0, (thick - (dense ? 0.6 : 0.58)) / 0.22)) * (dense ? 0.9 : 0.8)
+  // froth is not even: a fine grain breaks it up
+  const grain = 0.82 + 0.18 * tiling(u * 64, v * 64, 64, 64, 29)
+  return Math.min(1, Math.max(lines, closed)) * grain
+}
+
+/** The foam picture as a repeating fill, made once by the surf (see surf.ts). */
+export function makeLace(ctx: CanvasRenderingContext2D, dense = false): CanvasPattern | null {
+  const canvas = document.createElement('canvas')
+  canvas.width = LACE_RES
+  canvas.height = LACE_RES
+  const g = canvas.getContext('2d')
+  if (!g) return null
+  const image = g.createImageData(LACE_RES, LACE_RES)
+  for (let y = 0; y < LACE_RES; y++) {
+    for (let x = 0; x < LACE_RES; x++) {
+      const o = (y * LACE_RES + x) * 4
+      image.data[o] = FOAM[0]
+      image.data[o + 1] = FOAM[1]
+      image.data[o + 2] = FOAM[2]
+      image.data[o + 3] = 255 * laceAt((x + 0.5) / LACE_RES, (y + 0.5) / LACE_RES, dense)
+    }
+  }
+  g.putImageData(image, 0, 0)
+  return ctx.createPattern(canvas, 'repeat')
 }

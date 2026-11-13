@@ -63,8 +63,9 @@ describe('variants', () => {
     expect(same).toBeLessThan(20)
   })
 
-  it('falls back to the plain name while no pictures are loaded', () => {
+  it('needs no loaded pictures: buildings are made by code, a building with one picture has its plain name', () => {
     expect(buildingKey({ type: 'chapel', x: 1, y: 1, house: undefined })).toBe('buildings/chapel')
-    expect(buildingKey({ type: 'house_pioneers', x: 1, y: 1, house: undefined })).toBe('buildings/house_pioneers')
+    // a house has several pictures: which one follows from where it stands
+    expect(buildingKey({ type: 'house_pioneers', x: 1, y: 1, house: undefined })).toMatch(/^buildings\/house_pioneers(_[2-6])?$/)
   })
 })

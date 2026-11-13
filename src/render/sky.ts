@@ -1,5 +1,6 @@
-// The sky over the island: cloud shadows that drift across land and sea, and an evening every few minutes, when
-// the light turns blue. The windows that glow then are collected in lightLayer.ts.
+// The sky over the island: the warm light of an afternoon sun that stands in the top left, cloud shadows that drift
+// across land and sea, and an evening every few minutes, when the light turns blue. The windows that glow then are
+// collected in lightLayer.ts.
 
 /** Length of a day in game ticks and the share of it that is evening (with the fades in and out). */
 export const DAY_TICKS = 540
@@ -57,11 +58,36 @@ function makeClouds(): HTMLCanvasElement | null {
   return canvas
 }
 
+/**
+ * The afternoon: warm light from the top left that cools towards the bottom right. The colours are laid over the
+ * picture with the 'overlay' blend: a colour near middle grey leaves dark and light as they are and only shifts the
+ * hue, so the picture turns warm without turning hazy. Above middle grey it also brightens, below it darkens.
+ */
+const AFTERNOON = {
+  warm: 'rgba(196, 148, 92, 0.5)',
+  middle: 'rgba(160, 136, 108, 0.34)',
+  cool: 'rgba(92, 104, 142, 0.42)',
+}
+
 export class Sky {
   private clouds: CanvasPattern | null | undefined
 
-  /** Cloud shadows over the visible area. With `still` they stand where they are (less motion). */
+  /** The light of the afternoon over the visible area: one fill, nothing is worked out per pixel here. */
+  private drawLight(ctx: CanvasRenderingContext2D, area: Area): void {
+    ctx.save()
+    ctx.globalCompositeOperation = 'overlay'
+    const light = ctx.createLinearGradient(area.x, area.y, area.x + area.w, area.y + area.h)
+    light.addColorStop(0, AFTERNOON.warm)
+    light.addColorStop(0.5, AFTERNOON.middle)
+    light.addColorStop(1, AFTERNOON.cool)
+    ctx.fillStyle = light
+    ctx.fillRect(area.x, area.y, area.w, area.h)
+    ctx.restore()
+  }
+
+  /** The light of the day and the cloud shadows over the visible area. With `still` the clouds stand where they are (less motion). */
   drawClouds(ctx: CanvasRenderingContext2D, area: Area, now: number, still: boolean): void {
+    this.drawLight(ctx, area)
     if (this.clouds === undefined) {
       const picture = makeClouds()
       this.clouds = picture ? ctx.createPattern(picture, 'repeat') : null

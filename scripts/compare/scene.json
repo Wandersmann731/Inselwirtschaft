@@ -1,0 +1,9 @@
+{
+  "comment": "The fixed test scene behind docs/ziel/zielbild.jpg: the bot town of this seed after this many game minutes, paused, seen from this camera. The camera centre is in tiles, counted from the top-left tile of the Kontor.",
+  "seed": 1,
+  "minutes": 55,
+  "viewport": { "width": 1376, "height": 768, "deviceScaleFactor": 2 },
+  "camera": { "fromKontorX": 2.45, "fromKontorY": -2.15, "zoom": 1.75 },
+  "frozenTimeMs": 60000,
+  "keep": [".map-canvas", ".map-light", ".map-marks", ".map-shade"]
+}

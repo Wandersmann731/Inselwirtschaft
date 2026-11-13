@@ -4,7 +4,6 @@ import type { IslandState } from '../sim/state'
 import { inMap, Terrain, type GameMap } from '../world/terrain'
 import { t } from '../i18n/language'
 import {
-  centerCamera,
   clampCamera,
   panCamera,
   screenToWorld,
@@ -15,12 +14,18 @@ import {
 } from './camera'
 import { mapBounds, tileToWorld, worldToTile, type Bounds, type Point } from './iso'
 import { yardField } from '../world/settlement'
-import { drawBuildings, drawRoads, type TileRange } from './buildingRenderer'
+import { drawBuildings, type TileRange } from './buildingRenderer'
+import { MarkLayer, type Mark } from './markLayer'
+import { drawGlitter } from './glitter'
+import { drawGulls } from './birds'
+import { SWAY_FROM_ZOOM, swayForest } from './forestSway'
+import { RoadLayer } from './roadLayer'
+import { allowBuilding } from './built'
 import { drawYards } from './quarterRenderer'
 import { drawShips } from './shipRenderer'
 import { OverlayRenderer } from './overlayRenderer'
 import { getSettings } from '../save/settings'
-import { findStartSite } from '../world/startSite'
+import { openingCamera } from './openingCamera'
 import { fillDepth, WaterPattern } from './water'
 import { MapEffects } from './effects'
 import { Carts } from './carts'
@@ -29,6 +34,7 @@ import { collectWalkers } from './walkers'
 import { drawShadows } from './buildingShadows'
 import { duskShare, Sky } from './sky'
 import { LightLayer } from './lightLayer'
+import { drawReflections } from './reflections'
 import { Surf } from './surf'
 import { groundTextures } from './groundTextures'
 import { CHUNK_H, CHUNK_W, TerrainCache } from './terrainCache'
@@ -41,6 +47,8 @@ const ZOOM_LIMITS = { min: world.minZoom, max: world.maxZoom }
  * The gap keeps small pinches near the threshold from making all pictures again.
  */
 const HIGH_RES = { up: 1.75, down: 1.45 }
+/** Milliseconds a frame may spend on making building pictures that are not there yet. */
+const BUILD_BUDGET_MS = 24
 
 /**
  * Draws the map on a canvas. Lives outside React: React only mounts and destroys it.
@@ -64,6 +72,8 @@ export class MapRenderer {
   /** Sprite version the water pattern was made with: it is made again if pictures arrived late. */
   private chunkScale = 1
   private surf = new Surf()
+  private marks: MarkLayer | null = null
+  private roads = new RoadLayer()
   private rafId = 0
   private dpr = 1
   private viewport: Viewport = { width: 1, height: 1 }
@@ -98,7 +108,13 @@ export class MapRenderer {
     this.rafId = requestAnimationFrame(this.frame)
   }
 
+  /** The element the hints over the buildings float in (see markLayer.ts). */
+  setMarkLayer(root: HTMLElement): void {
+    this.marks = new MarkLayer(root)
+  }
+
   destroy(): void {
+    this.marks?.clear()
     cancelAnimationFrame(this.rafId)
     this.resizeObserver.disconnect()
   }
@@ -184,26 +200,13 @@ export class MapRenderer {
     if (map.width === 0) return
     const now = performance.now()
     const settings = getSettings()
+    // building pictures that are still missing are made in this frame, but no longer than this
+    allowBuilding(BUILD_BUDGET_MS)
 
     if (map !== this.cameraMap) {
       this.cameraMap = map
       this.selected = null
-      this.camera = centerCamera(mapBounds(map), 1, viewport)
-      const shown = this.getState()
-      const market = shown.buildings.find((b) => b.type === 'market_house') ?? shown.buildings.find((b) => b.type === 'kontor')
-      if (!shown.owned && market) {
-        // islands of others: look at their town
-        const at = tileToWorld(market.x + 1, market.y + 1)
-        this.camera = clampCamera({ ...this.camera, x: at.x, y: at.y }, viewport, mapBounds(map))
-      } else if (shown.owned) {
-        // your own island: a settlement is shown at its trading post; before the first house the free ground
-        // beside it, where the first houses go (the ghost building starts in the middle of the screen)
-        const kontor = shown.buildings.find((b) => b.type === 'kontor') ?? market
-        const settled = shown.buildings.some((b) => b.house)
-        const site = settled && kontor ? { x: kontor.x + 0.5, y: kontor.y + 0.5 } : findStartSite(map)
-        const at = tileToWorld(site.x + 0.5, site.y + 0.5)
-        this.camera = clampCamera({ ...this.camera, x: at.x, y: at.y }, viewport, mapBounds(map))
-      }
+      this.camera = openingCamera(this.getState(), viewport)
     }
 
     const { zoom } = this.camera
@@ -219,11 +222,13 @@ export class MapRenderer {
     const view = visibleWorldRect(this.camera, this.viewport)
     const area = { x: view.minX - 2, y: view.minY - 2, w: view.maxX - view.minX + 4, h: view.maxY - view.minY + 4 }
     this.drawWater(area, now, settings.waterAnimation)
-    this.surf.draw(this.ctx, map, this.getState().id, range, now, settings.waterAnimation)
+    if (settings.waterAnimation && !settings.reducedMotion) drawGlitter(ctx, area, now)
     const state = this.getState()
+    // the shore follows the buildings at the water; reflections lie on the still water, under the foam
+    this.surf.draw(this.ctx, map, state.id, range, now, settings.waterAnimation, state, () => drawReflections(ctx, state, range, now, settings.waterAnimation))
     this.drawTerrain(map, state)
     drawYards(ctx, state, range)
-    drawRoads(ctx, state, range)
+    this.roads.draw(ctx, state, range, this.chunkScale)
     drawShadows(ctx, state, range)
     // carts and residents move with the game time: faster at 4x, still in a pause
     const ticks = this.clock.ticks(state.tick, now)
@@ -231,8 +236,12 @@ export class MapRenderer {
     // cloud shadows drift over land and sea; every few minutes of game time evening falls and the windows glow
     const dusk = settings.sky ? duskShare(ticks) : 0
     if (dusk > 0) this.lights.begin(ctx)
-    drawBuildings(ctx, state, range, now, settings.smoke, dusk > 0 ? this.lights : undefined, movers)
+    const hints: Mark[] = []
+    drawBuildings(ctx, state, range, now, settings.smoke, dusk > 0 ? this.lights : undefined, movers, hints)
+    this.marks?.show(hints, (x, y) => [(x - this.camera.x) * zoom + viewport.width / 2, (y - this.camera.y) * zoom + viewport.height / 2], zoom, settings.reducedMotion)
     drawShips(ctx, state, now)
+    const post = settings.reducedMotion ? undefined : state.buildings.find((b) => b.type === 'kontor')
+    if (post) drawGulls(ctx, tileToWorld(post.x + 1, post.y + 1).x, tileToWorld(post.x + 1, post.y + 1).y, now)
     if (settings.sky) this.sky.drawClouds(ctx, area, now, settings.reducedMotion)
     if (dusk > 0) {
       this.sky.drawDusk(ctx, area, dusk)
@@ -305,6 +314,7 @@ export class MapRenderer {
         // one screen pixel wider and higher than its rectangle: between two pictures that end inside a screen pixel
         // the sea would show through as a hairline
         this.ctx.drawImage(entry.canvas, rx * CHUNK_W, ry * CHUNK_H, CHUNK_W + overlap, CHUNK_H + overlap)
+        if (this.camera.zoom >= SWAY_FROM_ZOOM && !getSettings().reducedMotion) swayForest(this.ctx, entry.canvas, rx * CHUNK_W, ry * CHUNK_H, CHUNK_W, performance.now())
         this.chunksDrawn++
       }
       if (!entry?.ready) this.drawFlatTiles(map, rx, ry)

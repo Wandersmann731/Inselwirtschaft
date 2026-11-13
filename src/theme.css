@@ -225,10 +225,6 @@
     0 12px 36px rgba(0, 0, 0, 0.6);
 }
 
-.menu-logo {
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.55));
-}
-
 /* ---- Small parts ------------------------------------------------------------------------------------------- */
 
 .toast {
@@ -377,4 +373,81 @@
     radial-gradient(130% 110% at 50% 45%, transparent 55%, rgba(18, 22, 30, 0.34) 100%),
     radial-gradient(90% 80% at 12% 8%, rgba(255, 232, 190, 0.2), transparent 60%),
     linear-gradient(160deg, transparent 40%, rgba(40, 52, 78, 0.12) 100%);
+}
+
+/* Hints over the buildings (render/markLayer.ts): each a small glowing sphere of the colour of the problem, without
+   any outline - a light core, the colour around it, and a halo that breathes. */
+.map-marks {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+
+.map-mark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--dot, 16px);
+  height: var(--dot, 16px);
+  margin: calc(var(--dot, 16px) / -2) 0 0 calc(var(--dot, 16px) / -2);
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 36%, rgba(255, 255, 255, 0.98) 0%, var(--pale, #fff) 20%, var(--mark) 48%, var(--glow) 66%, transparent 76%);
+  will-change: transform;
+}
+
+/* the halo: a soft light around the sphere that swells and fades */
+.map-mark::before {
+  content: '';
+  position: absolute;
+  inset: -70%;
+  border-radius: 50%;
+  background: radial-gradient(circle closest-side, var(--glow) 0%, transparent 100%);
+  animation: mark-glow 2.6s ease-in-out infinite;
+}
+
+/* what is missing: the picture of the good on a disc of parchment, ringed with the light of the problem */
+.map-mark.need {
+  width: var(--badge, 28px);
+  height: var(--badge, 28px);
+  margin: calc(var(--badge, 28px) / -2) 0 0 calc(var(--badge, 28px) / -2);
+  background-color: #f6ecd6;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 76%;
+  box-shadow:
+    0 0 0 2px var(--mark),
+    0 0 10px 3px var(--glow),
+    0 2px 5px rgba(20, 14, 10, 0.4);
+}
+
+.map-mark.need::before {
+  inset: -45%;
+  /* a ring around the disc: the picture of the good stays clear */
+  background: radial-gradient(circle closest-side, transparent 66%, var(--glow) 72%, transparent 100%);
+}
+
+@keyframes mark-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.86);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+.map-marks.calm .map-mark::before {
+  animation: none;
+  opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-mark::before {
+    animation: none;
+    opacity: 0.8;
+  }
 }

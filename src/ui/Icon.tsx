@@ -1,12 +1,12 @@
 import { goods } from '../data'
 import type { BuildingCost } from '../data'
-import { spriteUrl } from '../render/sprites'
+import { iconUrl } from '../render/icons'
 import { resourceName } from './messages'
 import { numberLocale } from '../i18n/language'
 
-/** A picture from the sprites/icons folder, e.g. name "ui/coin" or "goods/wood". */
+/** A symbol drawn by code (see ui/icons), e.g. name "ui/coin" or "goods/wood". */
 export function Icon({ name, size = 24, title }: { name: string; size?: number; title?: string }) {
-  return <img className="icon" src={spriteUrl(`icons/${name}`)} width={size} height={size} alt={title ?? ''} title={title} draggable={false} />
+  return <img className="icon" src={iconUrl(name)} width={size} height={size} alt={title ?? ''} title={title} draggable={false} />
 }
 
 /** Cost as little pictures with numbers: coins first, then the goods that are needed. */

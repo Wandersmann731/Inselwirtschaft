@@ -30,11 +30,6 @@ export function gameTitle(): string {
   return t('Inselwirtschaft', 'Island Economy')
 }
 
-/** The title picture of the start menu for the current language (under public/sprites/app). */
-export function logoFile(): string {
-  return getLanguage() === 'en' ? 'logo_en.webp' : 'logo.webp'
-}
-
 export function setLanguage(language: Language): void {
   updateSettings({ language })
   applyDataLanguage(language)

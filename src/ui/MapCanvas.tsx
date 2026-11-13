@@ -46,13 +46,17 @@ function revealBesidePanel(renderer: MapRenderer, x: number, y: number): void {
 
 export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const marksRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const renderer = new MapRenderer(canvas, getState, tool.getSnapshot, () => getSettings().debug)
+    if (marksRef.current) renderer.setMarkLayer(marksRef.current)
     renderer.start()
     onRenderer?.(renderer)
+    // development only: scripts/compare sets the camera of its test scene through this
+    if (import.meta.env.DEV) (window as unknown as { __mapRenderer?: MapRenderer }).__mapRenderer = renderer
     let grabStart = { x: 0, y: 0 }
     tool.setViewCenter(() => renderer.tileAt(canvas.clientWidth / 2, canvas.clientHeight * 0.42))
     const handleTap = (x: number, y: number): void => {
@@ -137,6 +141,8 @@ export function MapCanvas({ getState, tool, onRenderer }: MapCanvasProps) {
       <canvas ref={canvasRef} className="map-canvas" />
       {/* daylight over the map: warm where the sun comes from, a little darker towards the corners (see theme.css) */}
       <div className="map-light" aria-hidden="true" />
+      {/* hints over the buildings: glowing points made of CSS, placed by the map (render/markLayer.ts) */}
+      <div ref={marksRef} className="map-marks" aria-hidden="true" />
     </>
   )
 }

@@ -1,20 +1,22 @@
 import { getBuilding } from '../data'
+import { getSettings } from '../save/settings'
 import { buildingRect } from '../sim/coverage'
 import type { IslandState, HouseState, ProductionStatusKind } from '../sim/state'
 import { cumulativeNeeds, getTier, tierIndex } from '../sim/tiers'
 import { config } from '../data'
-import { diamondPath } from './terrainStyle'
 import { boxHeight, drawBox, type TileRect } from './shapes'
-import { HALF_H, HALF_W, tileToWorld } from './iso'
+import { tileToWorld } from './iso'
 import { drawDecor } from './decorDraw'
 import { frontDecorIn, type FrontItem } from './frontDecor'
-import { sprites } from './sprites'
-import { drawPlacedSprite, placeSprite, SPRITE_SCALE, type SpritePlacement } from './spriteDraw'
-import { buildingKey, roadKey, smokeKey } from './spriteKeys'
+import type { Mark } from './markLayer'
+import { drawSails, sailAngle } from './built/sails'
+import { drawBoats } from './boats'
+import { beginCrossShade, drawCrossShade, drawTone } from './crossShade'
+import { drawPlacedSprite, placeSprite, type SpritePlacement } from './spriteDraw'
+import { smokeFrame } from './smokeFrames'
+import { buildingKey } from './spriteKeys'
 import { quarterBlocks } from './quarterRenderer'
-import { coastEdges, fadedCopy, type FadeEdges } from './coastFade'
 import { glowStamp, isLit, type LightLayer } from './lightLayer'
-import { windowMask } from './windowLights'
 import { moverSlot, type Mover } from './depth'
 
 export interface TileRange {
@@ -24,38 +26,14 @@ export interface TileRange {
   maxJ: number
 }
 
-const ROAD_COLOR = getBuilding('road').color
-const SPRITE_GROW = 0.7
-
-export function drawRoads(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange): void {
-  const { width, height } = state.map
-  const isRoad = (x: number, y: number): boolean => x >= 0 && y >= 0 && x < width && y < height && state.roads[y * width + x] === 1
-  ctx.fillStyle = ROAD_COLOR
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.25)'
-  ctx.lineWidth = 1
-  for (let y = range.minJ; y <= range.maxJ; y++) {
-    for (let x = range.minI; x <= range.maxI; x++) {
-      if (!state.roads[y * width + x]) continue
-      const top = tileToWorld(x, y)
-      const image = sprites.get(roadKey(isRoad(x, y - 1), isRoad(x + 1, y), isRoad(x, y + 1), isRoad(x - 1, y)))
-      if (image) {
-        ctx.drawImage(image, top.x - HALF_W - SPRITE_GROW, top.y - SPRITE_GROW / 2, 2 * HALF_W + 2 * SPRITE_GROW, 2 * HALF_H + SPRITE_GROW)
-      } else {
-        diamondPath(ctx, top.x, top.y, 0.5)
-        ctx.fill()
-        ctx.stroke()
-      }
-    }
-  }
-}
-
 /**
  * Draws all buildings that overlap the visible tile range, back to front, together with the trees, bushes and rocks
  * right next to them (so these can stand in front of a building), and with the carts and residents (`movers`) between
  * them. `now` drives the smoke animation. In the evening `lights` collects the glowing windows, each building hiding
- * the lights of those behind it.
+ * the lights of those behind it. Hints (a producer that stands still, a house in want) are not painted: they are
+ * handed back in `marks`, for the layer that floats over the map (markLayer.ts).
  */
-export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange, now = 0, showSmoke = true, lights?: LightLayer, movers: Mover[] = []): void {
+export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange, now = 0, showSmoke = true, lights?: LightLayer, movers: Mover[] = [], marks?: Mark[]): void {
   type Entry = { depth: number; building?: (typeof state.buildings)[number]; rect?: TileRect; decor?: FrontItem }
   const entries: Entry[] = []
   for (const building of state.buildings) {
@@ -66,6 +44,10 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
   for (const decor of frontDecorIn(state, range)) entries.push({ depth: decor.depth, decor })
   entries.sort((a, b) => a.depth - b.depth)
   const blocks = quarterBlocks(state)
+  beginCrossShade(state)
+  if (state.owned) drawBoats(ctx, state, getSettings().reducedMotion ? 0 : now)
+  // trees and bushes beside the houses move in the wind, unless the player wants a still picture
+  const wind = getSettings().reducedMotion ? undefined : now
   // carts and residents go between the buildings: each before the first building it stands behind
   const rects = entries.map((entry) => entry.rect ?? null)
   const waiting = new Map<number, Mover[]>()
@@ -90,7 +72,7 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
     drawMovers(index)
     if (entry.decor) {
       const decor = entry.decor
-      drawDecor(ctx, decor.item, decor.wx, decor.wy)
+      drawDecor(ctx, decor.item, decor.wx, decor.wy, false, wind)
       lights?.cover((layer) => drawDecor(layer, decor.item, decor.wx, decor.wy))
       continue
     }
@@ -103,16 +85,19 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
     const placed = placeSprite(building, key)
     let dotHeight: number
     if (placed) {
-      // a plot on the shore fades into the sand. Not a house of a block: it stands on the shared yard.
-      const top = tileToWorld(rect.x, rect.y)
-      const frame = { originX: (top.x - placed.x) / SPRITE_SCALE, originY: (top.y - placed.y) / SPRITE_SCALE, scale: 1 / SPRITE_SCALE, w: rect.w, h: rect.h, mirrored: placed.mirrored }
-      const whole = placed.image
-      if (!block) placed.image = fadedCopy(key, placed.image, frame, shoreEdges(state, building.id, rect), isPier(def) ? 'pier' : 'building')
       drawPlacedSprite(ctx, placed)
+      // the shadows of the neighbours run on over its foot
+      if (placed.made) {
+        // no two houses of one plan have weathered alike
+        if (house) drawTone(ctx, building.id, placed)
+        drawCrossShade(ctx, state, building, rect, placed)
+      }
+      const spin = placed.made?.spin
+      if (spin) drawSails(ctx, placed.x + spin.x * placed.width, placed.y + spin.y * placed.height, spin.long, sailAngle(now, wind !== undefined && building.production?.status.kind === 'producing'))
       if (lights) {
         lights.cover((layer) => drawPlacedSprite(layer, placed))
         const lit = isLit(building)
-        const windows = lit ? windowMask(key, whole, frame, def.requiresFertility !== undefined) : null
+        const windows = lit ? (placed.made?.glow ?? null) : null
         // a little light spills on the ground in front, the windows themselves shine brightly. A lived-in house
         // whose picture shows no window (a log cabin seen from behind) still has that glow at its door.
         const stamp = windows || (lit && house) ? glowStamp() : null
@@ -126,21 +111,17 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
         }
       }
       dotHeight = placed.rise * 0.8
-      if (showSmoke && def.smoke && building.production?.status.kind === 'producing') drawSmoke(ctx, placed, sprites.smoke(key) ?? def.smoke, now)
+      const chimneyAt = placed.made?.smoke ?? null
+      if (showSmoke && def.smoke && chimneyAt && building.production?.status.kind === 'producing') drawSmoke(ctx, placed, chimneyAt, now)
     } else {
       dotHeight = house ? houseHeight(house) : boxHeight(rect, def.category)
       drawBox(ctx, rect, dotHeight, house ? houseColor(house) : def.color)
     }
-    if (!state.owned) continue // the towns of others show no status
-    // a mark only where something is wrong: a producer that does not run, a house whose residents are leaving.
-    // A town that works shows no marks at all.
-    const mark = building.production ? STATUS_COLORS[building.production.status.kind] : house && !house.ruin && house.residents > 0 ? houseDotColor(house) : null
-    if (!mark || mark === STATUS_COLORS.producing || (house && mark === STATUS_COLORS.waiting)) continue
-    // what is missing shows as its picture: the good a workshop waits for, the good a house has run short of
-    const missing = building.production ? (building.production.status.kind === 'waiting' ? building.production.status.good : undefined) : house ? shortGood(house) : undefined
-    const icon = missing ? sprites.get(`icons/goods/${missing}`) : undefined
-    if (icon) drawNeedBadge(ctx, rect, dotHeight, mark, icon)
-    else drawStatusDot(ctx, rect, dotHeight, mark)
+    if (!marks) continue
+    const mark = markOf(state.owned, building)
+    if (!mark) continue
+    const center = tileToWorld(rect.x + rect.w / 2, rect.y + rect.h / 2)
+    marks.push({ id: building.id, x: center.x, y: center.y - dotHeight - (mark.good ? 4 : 0), ...mark })
   }
   drawMovers(entries.length)
 }
@@ -148,19 +129,6 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
 /** Harbour buildings stand on piers: they end where they end (the water gets a shadow and foam instead of a soft edge). */
 export function isPier(def: { pier?: boolean }): boolean {
   return def.pier === true
-}
-
-let coastCache: { occupancy: number[]; edges: Map<number, FadeEdges> } | null = null
-
-/** The edges of a building that border the shore. Looked up once per building until something is built or torn down. */
-function shoreEdges(state: IslandState, id: number, rect: TileRect): FadeEdges {
-  if (coastCache?.occupancy !== state.occupancy) coastCache = { occupancy: state.occupancy, edges: new Map() }
-  let edges = coastCache.edges.get(id)
-  if (!edges) {
-    edges = coastEdges(state.map, state.occupancy, rect)
-    coastCache.edges.set(id, edges)
-  }
-  return edges
 }
 
 /** The good a house is short of (below the shortage line), if it is a good and not a public building. */
@@ -172,28 +140,23 @@ export function shortGood(house: HouseState): string | undefined {
   return undefined
 }
 
-/** A round badge with the picture of the missing good, ringed in the colour of the problem. */
-function drawNeedBadge(ctx: CanvasRenderingContext2D, rect: TileRect, height: number, color: string, icon: CanvasImageSource): void {
-  const center = tileToWorld(rect.x + rect.w / 2, rect.y + rect.h / 2)
-  const y = center.y - height - 4
-  ctx.fillStyle = '#f6ecd6'
-  ctx.strokeStyle = color
-  ctx.lineWidth = 2.5
-  ctx.beginPath()
-  ctx.arc(center.x, y, 10, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.stroke()
-  ctx.strokeStyle = 'rgba(40, 24, 8, 0.7)'
-  ctx.lineWidth = 1
-  ctx.beginPath()
-  ctx.arc(center.x, y, 11.5, 0, Math.PI * 2)
-  ctx.stroke()
-  ctx.drawImage(icon, center.x - 8, y - 8, 16, 16)
+/**
+ * The hint a building shows, if any: a mark only where something is wrong - a producer that does not run, a house
+ * whose residents are leaving. What is missing is named: the good a workshop waits for, the good a house has run
+ * short of. A town that works shows no marks at all, and neither do the towns of others. Pure.
+ */
+export function markOf(owned: boolean, building: IslandState['buildings'][number]): { colour: string; good?: string } | null {
+  if (!owned) return null
+  const house = building.house
+  const colour = building.production ? STATUS_COLORS[building.production.status.kind] : house && !house.ruin && house.residents > 0 ? houseDotColor(house) : null
+  if (!colour || colour === STATUS_COLORS.producing || (house && colour === STATUS_COLORS.waiting)) return null
+  const good = building.production ? (building.production.status.kind === 'waiting' ? building.production.status.good : undefined) : house ? shortGood(house) : undefined
+  return good ? { colour, good } : { colour }
 }
 
 /** A column of smoke that rises from the chimney, looping. `chimney` is the opening as a share of the building picture. */
 function drawSmoke(ctx: CanvasRenderingContext2D, placed: SpritePlacement, chimney: [number, number], now: number): void {
-  const image = sprites.get(smokeKey(Math.floor(now / 100)))
+  const image = smokeFrame(Math.floor(now / 100))
   if (!image) return
   const width = image.width / 2
   const height = image.height / 2
@@ -212,17 +175,6 @@ export const STATUS_COLORS: Record<ProductionStatusKind, string> = {
   noRoad: '#ff4d4d',
   noHub: '#ff4d4d',
   inactive: '#9aa0a6',
-}
-
-function drawStatusDot(ctx: CanvasRenderingContext2D, rect: TileRect, height: number, color: string): void {
-  const center = tileToWorld(rect.x + rect.w / 2, rect.y + rect.h / 2)
-  ctx.fillStyle = color
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)'
-  ctx.lineWidth = 1.5
-  ctx.beginPath()
-  ctx.arc(center.x, center.y - height, 6, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.stroke()
 }
 
 const RUIN_COLOR = '#4d4a47'

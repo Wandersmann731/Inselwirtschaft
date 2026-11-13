@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 // Turns the master PNGs in art/ into the WebP files the game loads (public/sprites) and the app icons (public/icons).
-// Buildings, trees and ships are made at twice the size of their masters and without the comic outlines (bake.mjs);
-// ground, paving and yards get the same look. Icons, smoke and the logo stay as they are.
+// The game itself draws everything by code now; this script only still makes the app icons and the preview picture.
 //   node scripts/assets/optimize.mjs [--only bakery,house_citizens]
 import fs from 'node:fs'
 import path from 'node:path'
@@ -21,7 +20,10 @@ if (!only) fs.rmSync(OUT, { recursive: true, force: true })
 fs.mkdirSync(OUT, { recursive: true })
 fs.mkdirSync(ICONS, { recursive: true })
 
-const files = fs.readdirSync(SRC, { recursive: true }).map(String).filter((f) => f.endsWith('.png')).sort()
+// everything the game shows is made by code (src/render: roadLayer.ts, built, grown, vessel, smokeFrames.ts, groundMade.ts, icons; the title in index.html): the old pictures in art/ are not shipped any more.
+// What is left are the app icons a phone needs as files, and app/splash for the preview a link shows.
+const BY_CODE = ['roads/', 'buildings/', 'quarters/', 'decor/', 'ships/', 'effects/', 'ground/', 'icons/', 'app/logo']
+const files = fs.readdirSync(SRC, { recursive: true }).map(String).filter((f) => f.endsWith('.png') && !BY_CODE.some((dir) => f.split(path.sep).join('/').startsWith(dir))).sort()
 const list = kept('index.json') ?? []
 /** Border of a building picture beyond its footprint box, in pixels of the finished picture. */
 const pads = kept('pads.json') ?? {}
@@ -63,7 +65,8 @@ for (const file of files) {
   if (!list.includes(file.replace(/\.png$/, '.webp'))) list.push(file.replace(/\.png$/, '.webp'))
   if (list.length % 50 === 0) console.log(`${list.length} ...`)
 }
-fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(list.sort()))
+// the game loads no picture any more: its list stays empty (the splash is only the preview picture of a link)
+fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(list.filter((file) => !file.startsWith('app/')).sort()))
 fs.writeFileSync(path.join(OUT, 'pads.json'), JSON.stringify(pads))
 fs.writeFileSync(path.join(OUT, 'smoke.json'), JSON.stringify(smoke))
 // favicon from the app icon

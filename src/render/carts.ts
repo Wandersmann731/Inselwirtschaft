@@ -11,7 +11,7 @@ import type { TileRange } from './buildingRenderer'
 import type { Mover } from './depth'
 import { tileToWorld } from './iso'
 import { drawCartBody, drawOx, drawPerson, FIGURE_SCALE } from './figures'
-import { sprites } from './sprites'
+import { iconCanvas } from './icons'
 
 /** No more than this many carts are drawn at once. */
 const MAX_CARTS = 60
@@ -132,22 +132,23 @@ export class Carts {
 function drawTeam(ctx: CanvasRenderingContext2D, x: number, y: number, ux: number, uy: number, good: string, ox: boolean, id: number, ticks: number): void {
   const facing = ux >= 0 ? 1 : -1
   const stride = ticks * 7 + id
-  const load = sprites.get(`icons/goods/${good}`)
-  const cart = (): void => drawCartBody(ctx, x, y, load, ox)
+  const load = iconCanvas(`goods/${good}`, 64) ?? undefined
+  const cart = (): void => drawCartBody(ctx, x, y, load, ox, facing, stride * 0.4)
   const mover = ox
     ? (): void => {
-        const ax = x + ux * 14 * FIGURE_SCALE
-        const ay = y + uy * 14 * FIGURE_SCALE
-        // the shaft from the cart to the ox
+        const ax = x + ux * 17.5 * FIGURE_SCALE
+        const ay = y + uy * 17.5 * FIGURE_SCALE
+        // the shaft from the floor of the cart to the yoke on the neck of the ox
         ctx.strokeStyle = '#3b2717'
-        ctx.lineWidth = 1.2
+        ctx.lineWidth = 0.9
+        ctx.lineCap = 'round'
         ctx.beginPath()
-        ctx.moveTo(x + ux * 6 * FIGURE_SCALE, y + (uy * 6 - 5) * FIGURE_SCALE)
-        ctx.lineTo(ax - ux * 4 * FIGURE_SCALE, ay - (uy * 4 + 5) * FIGURE_SCALE)
+        ctx.moveTo(x + ux * 7 * FIGURE_SCALE, y + (uy * 7 - 4.3) * FIGURE_SCALE)
+        ctx.lineTo(ax + ux * 5 * FIGURE_SCALE, ay + (uy * 5 - 6.6) * FIGURE_SCALE)
         ctx.stroke()
         drawOx(ctx, ax, ay, facing, stride, COATS[id % COATS.length])
       }
-    : (): void => drawPerson(ctx, x - ux * 9.5 * FIGURE_SCALE, y - uy * 9.5 * FIGURE_SCALE, facing, stride, { ...HANDS[id % HANDS.length], pushing: true })
+    : (): void => drawPerson(ctx, x - ux * 11.4 * FIGURE_SCALE, y - uy * 11.4 * FIGURE_SCALE, facing, stride, { ...HANDS[id % HANDS.length], pushing: true })
   // what stands lower on the screen is nearer and drawn last: the ox walks in front, the pusher behind
   const moverInFront = ox ? uy > 0 : uy < 0
   if (moverInFront) {
