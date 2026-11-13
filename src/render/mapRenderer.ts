@@ -21,7 +21,6 @@ import { drawShips } from './shipRenderer'
 import { OverlayRenderer } from './overlayRenderer'
 import { getSettings } from '../save/settings'
 import { findStartSite } from '../world/startSite'
-import { sprites } from './sprites'
 import { fillDepth, WaterPattern } from './water'
 import { MapEffects } from './effects'
 import { Carts } from './carts'
@@ -63,7 +62,6 @@ export class MapRenderer {
   private lights = new LightLayer()
   private water: WaterPattern | null = null
   /** Sprite version the water pattern was made with: it is made again if pictures arrived late. */
-  private waterVersion = -1
   private chunkScale = 1
   private surf = new Surf()
   private rafId = 0
@@ -251,11 +249,7 @@ export class MapRenderer {
 
   /** The sea: an animated pattern over the visible part of the world. */
   private drawWater(area: { x: number; y: number; w: number; h: number }, now: number, animated: boolean): void {
-    if (!sprites.ready) return
-    if (!this.water || (this.waterVersion !== sprites.version && !this.water.complete)) {
-      this.water = new WaterPattern(this.ctx)
-      this.waterVersion = sprites.version
-    }
+    this.water ??= new WaterPattern(this.ctx)
     this.water.fill(this.ctx, area, now, animated)
     fillDepth(this.ctx, area, this.bounds())
   }
@@ -304,10 +298,13 @@ export class MapRenderer {
     }
 
     this.chunksDrawn = 0
+    const overlap = 1 / (this.dpr * this.camera.zoom)
     for (const { rx, ry } of wanted) {
       const entry = request ? this.cache.get(rx, ry) : null
       if (entry?.canvas) {
-        this.ctx.drawImage(entry.canvas, rx * CHUNK_W, ry * CHUNK_H, CHUNK_W, CHUNK_H)
+        // one screen pixel wider and higher than its rectangle: between two pictures that end inside a screen pixel
+        // the sea would show through as a hairline
+        this.ctx.drawImage(entry.canvas, rx * CHUNK_W, ry * CHUNK_H, CHUNK_W + overlap, CHUNK_H + overlap)
         this.chunksDrawn++
       }
       if (!entry?.ready) this.drawFlatTiles(map, rx, ry)

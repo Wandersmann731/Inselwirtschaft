@@ -23,11 +23,11 @@ const MAX_WALKERS = 90
 
 /** Clothes by tier: plain at first, finer with every tier. */
 const CLOTHES: Record<string, { shirt: string; top: string }[]> = {
-  pioneers: [{ shirt: '#8a6a44', top: '#5a4326' }, { shirt: '#6f8050', top: '#c9a66b' }],
-  settlers: [{ shirt: '#5f7f9f', top: '#4a3520' }, { shirt: '#8a6a44', top: '#c9a66b' }],
-  citizens: [{ shirt: '#a4483c', top: '#3b2717' }, { shirt: '#3f6b8f', top: '#e6d7b0' }],
-  merchants: [{ shirt: '#6b4a8a', top: '#2e2219' }, { shirt: '#2f6f5f', top: '#d9b55a' }],
-  aristocrats: [{ shirt: '#e3d6b4', top: '#7a2f2f' }, { shirt: '#b8902e', top: '#f1e6c8' }],
+  pioneers: [{ shirt: '#7d6647', top: '#5a4a36' }, { shirt: '#66704f', top: '#a8926a' }],
+  settlers: [{ shirt: '#5c7287', top: '#4a3a2a' }, { shirt: '#7d6647', top: '#a8926a' }],
+  citizens: [{ shirt: '#8f4e44', top: '#3b2c20' }, { shirt: '#48647c', top: '#c9bd9c' }],
+  merchants: [{ shirt: '#5f4a72', top: '#2e251e' }, { shirt: '#3a6258', top: '#b89e5c' }],
+  aristocrats: [{ shirt: '#c9bfa4', top: '#6e3a36' }, { shirt: '#9c8140', top: '#d8cfb6' }],
 }
 
 /** True if a resident can walk over the tile: free land, and forest only where a road runs through it. */

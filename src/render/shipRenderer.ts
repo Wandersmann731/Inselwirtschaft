@@ -1,10 +1,8 @@
 import { chartToTile, dockTile } from '../sim/harbour'
 import type { IslandState, Ship } from '../sim/state'
 import { tileToWorld } from './iso'
-import { sprites } from './sprites'
+import { PICTURE_SCALE, sprites } from './sprites'
 
-/** Ship pictures are made at twice the game's size, like buildings. */
-const SPRITE_SCALE = 0.5
 /** How far beyond the island map a sailing ship is still drawn, in tiles. */
 const MARGIN = 16
 
@@ -62,8 +60,8 @@ export function drawShips(ctx: CanvasRenderingContext2D, state: IslandState, now
     const image = sprites.get(key)
     if (!image) continue
     const at = tileToWorld(placed.x, placed.y)
-    const width = image.width * SPRITE_SCALE
-    const height = image.height * SPRITE_SCALE
+    const width = image.width * PICTURE_SCALE
+    const height = image.height * PICTURE_SCALE
     const bob = Math.sin(now / 700 + ship.id) * 1.5
     const left = at.x - width / 2
     const top = at.y - height * 0.7 + bob

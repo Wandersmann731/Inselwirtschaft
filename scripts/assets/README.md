@@ -35,7 +35,7 @@ Weitere Optionen: `--parallel 5`, `--provider flux-2-pro` (je nach Anbieter und 
 - **Feldgebäude** (Farmen, Plantagen, Weide, Weinberg): Vorlage ist flache Grundfläche mit einem kleinen Kasten für das Gebäude im hinteren
   Eck, damit sie wie ein bestelltes Feld aussehen und nicht wie ein Modell auf einer Erdplatte.
 - **Symbole, Schiffe, Effekte**: frei erzeugt auf Magenta, freigestellt, auf die Größe eingepasst.
-- Rohbilder bleiben in `art-raw/` (nicht im Git). Fertige PNG liegen in `art/` (Master). Für das Spiel gibt `node scripts/assets/optimize.mjs` daraus kleine WebP-Dateien in `public/sprites/` und die App-Icons in `public/icons/` aus.
+- Rohbilder bleiben in `art-raw/` (nicht im Git). Fertige PNG liegen in `art/` (Master). Für das Spiel gibt `node scripts/assets/optimize.mjs` daraus WebP-Dateien in `public/sprites/` und die App-Icons in `public/icons/` aus (siehe „Backen“).
 
 ## Natürliches Gelände (Dekor und Bodentexturen)
 - `art/decor/` enthält **einzelne Objekte** (Bäume, Kiefern, Palmen, Büsche, Felsen, Gräser, Blumen, Berggipfel in drei Größen und mit Schnee).
@@ -56,13 +56,37 @@ Weitere Optionen: `--parallel 5`, `--provider flux-2-pro` (je nach Anbieter und 
   steht, bleibt ganz, auch wenn das Gebäude breiter oder höher ist als der Block (Flügel, Türme, Bäume; `standingMask`). Ausnahme: die
   Weberei, deren Grundstück in zwei Stufen gemalt ist (`STEPPED` in `manifest.mjs`). Nach einem `--reprocess` von Häusern auch
   `node scripts/assets/quarters.mjs --houses <stufe oder stufe_nummer>` und `optimize.mjs` ausführen.
-- Soll ein Gebäude kleiner wirken als sein Grundstück (Markthaus), steht `pictureScale` in `buildings.json`; das Spiel ergänzt den Boden.
-- Den natürlichen Look (weiche Umrisse, ruhigere Farben, Körnung) legt das Spiel beim Laden über alle Kartenbilder
-  (`src/render/naturalLook.ts`); die Dateien selbst bleiben im gemalten Stil.
+- Soll ein Gebäude kleiner gezeichnet werden als gemalt, steht seine Türhöhe in `picture-scale.json` (siehe unten).
+
 - Bäume, Büsche und Felsen **direkt neben** einem Gebäude werden mit dem Gebäude tiefensortiert gezeichnet (`src/render/frontDecor.ts`),
   einige stehen also vor dem Gebäude. Unter Gebäuden und Straßen wächst nichts: der Wald wird dort gerodet.
 - Alle Varianten sind erzeugt: 16 je Wohnhausstufe, 4 Ruinen, je 4 für Farmen, Forsthaus, Fischerei und Minen.
-- Auch die Werkstätten (Weberei, Bäckerei, Mühle, Steinmetz, Schmelze, Werkzeugmacher, Brennerei, Gerberei, Tabakmanufaktur, Färberei, Trankocherei, Kelterei, Goldschmied) und das Markthaus stehen auf einem Grundstück (Werkhof aus Erde und Pflaster). Die Schornsteinpositionen für den Rauch stehen in `buildings.json` (`smoke`) und müssen nach dem Neuerzeugen eines Bildes geprüft werden.
+- Auch die Werkstätten (Weberei, Bäckerei, Mühle, Steinmetz, Schmelze, Werkzeugmacher, Brennerei, Gerberei, Tabakmanufaktur, Färberei, Trankocherei, Kelterei, Goldschmied) und das Markthaus stehen auf einem Grundstück (Werkhof aus Erde und Pflaster). Die Schornsteinpositionen für den Rauch stehen in `buildings.json` (`smoke`, gemessen am Master) und müssen nach dem Neuerzeugen eines Bildes geprüft werden.
+
+## Backen: scharf, ohne Umrisse, im gleichen Maßstab (`bake.mjs`)
+`optimize.mjs` macht aus den Mastern in `art/` die Bilder, die das Spiel lädt. Gebäude, Bäume und Schiffe werden dabei
+**gebacken**: Das Spiel rechnet beim Laden nichts mehr um.
+- **Doppelte Auflösung.** Ein Master ist für ein Haus 256 px breit, das Rohbild in `art-raw/` hat gut dreimal so viele
+  Bildpunkte. `generate.mjs` merkt sich in `art/geometry.json`, welcher Ausschnitt des Rohbilds zum Master wurde. `bake.mjs`
+  nimmt denselben Ausschnitt in doppelter Größe (512 px) und überträgt alles, was am Master gemacht wurde (Zuschnitt,
+  weiche Ränder, ergänzter Boden), darauf (`compose.mjs`). Ohne `art-raw/` wird der Master nur vergrößert: Das Skript meldet
+  dann „kein Rohbild“. Die Bilder in `public/sprites` also nur auf einem Rechner mit `art-raw/` neu erzeugen.
+- **Keine Comic-Umrisse** (`derender.mjs`): Dünne schwarze Linien werden mit den Flächen daneben übermalt (zwei Flächen
+  treffen sich in der Mitte der Linie), Fugen zwischen Dachziegeln und Brettern bleiben als leichte Schattierung, die
+  Farben werden ruhiger, Flächen bekommen feine Unebenheiten und Korn. Boden, Pflaster und Höfe bekommen denselben Look.
+- **Gleicher Maßstab** (`picture-scale.json`): Das Modell hat jedes Gebäude in eigenem Maßstab gemalt. In `doors` steht
+  die Türhöhe eines Bilds (in Pixeln des Masters), gemessen wo der Maßstab klar nicht passte. Das Bild wird so
+  verkleinert, dass die Tür 26 px hoch ist; vergrößert wird nie. Um ein verkleinertes Gebäude ergänzt `bake.mjs` den Boden:
+  bei gemalten Grundstücken in deren Farbe, bei Gebäuden ohne Grundstück (Kontor, Wirtshaus, Kapelle) als Hof in der Farbe
+  aus `ground` (`ground-fill.mjs`).
+- **Rauch:** `smoke` in `buildings.json` gilt für den Master. Für verkleinerte Bilder rechnet `bake.mjs` die Stelle um und
+  schreibt sie nach `public/sprites/smoke.json`.
+- Die Grundstücks-Regeln des Spiels (`src/render/plotFit.ts`, `plotCleanup.ts`, `cutCheck.ts`, `waterPlot.ts`) benutzt
+  `bake.mjs` direkt (`ts-loader.mjs` lädt TypeScript in Node). Die Tests dazu liegen weiter in `tests/`.
+- Große Gebäude, die das Modell tiefer gemalt hat als die Vorlage (Kirche, Badehaus), nimmt `generate.mjs` von weiter
+  unten aus dem Rohbild, damit ihr Sockel nicht abgeschnitten wird.
+- Einzelne Bilder neu backen: `node scripts/assets/optimize.mjs --only bakery,house_citizens`.
+- Das Wasser ist kein Bild mehr: Das Spiel erzeugt es selbst (`src/render/water.ts`).
 
 ## Viertel (Höfe und Häuser ohne Parzelle)
 - `node scripts/assets/quarters.mjs` erzeugt ohne Bildkosten, nur aus vorhandenen Grafiken:

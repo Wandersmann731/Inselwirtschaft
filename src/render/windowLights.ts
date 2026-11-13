@@ -218,27 +218,31 @@ const masks = new Map<string, HTMLCanvasElement | null>()
 const MAX_MASKS = 160
 
 /**
- * The lights of a building picture as a picture of the same size: every pane filled with warm light and a soft
+ * The lights of a building picture as a picture of the same shape: every pane filled with warm light and a soft
  * glow around it. Null if the picture has no windows. Made once per picture.
  */
 export function windowMask(key: string, image: SpriteImage, frame: PaneFrame, farm: boolean): HTMLCanvasElement | null {
   const id = `${key}|${image.width}x${image.height}|${frame.mirrored ? 'm' : ''}`
   const hit = masks.get(id)
   if (hit !== undefined) return hit
+  // The search works in pictures with two pixels per world pixel; a sharper picture is looked at in a small copy.
+  const shrink = 2 / frame.scale
+  const small: PaneFrame = { ...frame, originX: frame.originX * shrink, originY: frame.originY * shrink, scale: 2 }
   const source = document.createElement('canvas')
-  source.width = image.width
-  source.height = image.height
+  source.width = Math.round(image.width * shrink)
+  source.height = Math.round(image.height * shrink)
   const read = source.getContext('2d', { willReadFrequently: true })
   let result: HTMLCanvasElement | null = null
   if (read) {
-    read.drawImage(image, 0, 0)
+    read.imageSmoothingQuality = 'high'
+    read.drawImage(image, 0, 0, source.width, source.height)
     const data = read.getImageData(0, 0, source.width, source.height).data
     const inShed = farm ? shedZone(data, source.width, source.height) : () => true
-    const { panes, mask } = findPanes(data, source.width, source.height, (x, y) => inShed(x, y) && onBuilding(x, y, frame, source.width, farm))
+    const { panes, mask } = findPanes(data, source.width, source.height, (x, y) => inShed(x, y) && onBuilding(x, y, small, source.width, farm))
     if (panes.length > 0) {
       result = document.createElement('canvas')
-      result.width = image.width
-      result.height = image.height
+      result.width = source.width
+      result.height = source.height
       const g = result.getContext('2d')
       if (g) {
         for (const pane of panes) {

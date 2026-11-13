@@ -41,8 +41,10 @@ Das Projekt ist privat und nicht kommerziell.
 - Kein Backend, kein Login, keine Werbung, keine Tracker. Alles läuft offline.
 
 ## Grafiken
-- Master-PNG liegen in art/ (siehe docs/grafiken.md). Das Spiel lädt die kleinen WebP-Dateien aus public/sprites.
-- Neu erzeugen: scripts/assets/README.md. Nach Änderungen an art/ immer `node scripts/assets/optimize.mjs` ausführen.
+- Master-PNG liegen in art/ (siehe docs/grafiken.md), die Rohbilder in art-raw/ (nicht im Git). Das Spiel lädt fertige WebP-Dateien aus public/sprites und rechnet beim Laden nichts um.
+- Neu erzeugen: scripts/assets/README.md. Nach Änderungen an art/ immer `node scripts/assets/optimize.mjs` ausführen, auf einem Rechner mit art-raw/. Dabei werden Gebäude, Bäume und Schiffe gebacken (scripts/assets/bake.mjs): doppelte Auflösung, keine Comic-Umrisse, gleicher Maßstab (scripts/assets/picture-scale.json).
+- Gebäude-, Baum- und Schiffsbilder haben 4 Bildpunkte je Weltpixel (PICTURE_SCALE in src/render/sprites.ts).
+- Das Wasser und die Figuren (Bewohner, Karren) zeichnet der Code selbst (src/render/water.ts, figures.ts).
 - Fehlt ein Sprite, zeichnet der Renderer die alten Farbformen als Ersatz.
 
 ## Ton

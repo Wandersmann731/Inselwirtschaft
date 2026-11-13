@@ -11,7 +11,9 @@ const WAVE_SECONDS = 4
 const REACH = 0.9
 /** Points per piece of coast; pieces share their end points, so the foam is one line. */
 const PIECE = 8
-const FOAM = '255, 255, 255'
+const FOAM = '236, 244, 244'
+/** The faint band of white water around a crest: its width as a multiple of the crest and its share of the alpha. */
+const BAND = { width: 2, alpha: 0.1 }
 
 export type TilePoint = [number, number]
 
@@ -151,22 +153,33 @@ export class Surf {
     ctx.save()
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
-    ctx.strokeStyle = `rgba(${FOAM}, ${animated ? 0.28 + 0.1 * Math.sin(now / 900) : 0.28})`
-    ctx.lineWidth = 2.5
-    ctx.beginPath()
-    for (const piece of visible) addPiece(ctx, piece, 0.04)
-    ctx.stroke()
+    // Foam is no drawn line: every wave is a broad, faint band of white water, and its crest is strong in one
+    // place and gone in the next.
+    const stroke = (alpha: number, width: number, out: number, bucket = -1): void => {
+      const chosen = bucket < 0 ? visible : visible.filter((piece) => piece.bucket === bucket)
+      ctx.strokeStyle = `rgba(${FOAM}, ${alpha * BAND.alpha})`
+      ctx.lineWidth = width * BAND.width
+      ctx.beginPath()
+      for (const piece of chosen) addPiece(ctx, piece, out)
+      ctx.stroke()
+      ctx.lineWidth = width * 0.55
+      for (const piece of chosen) {
+        // how much foam this stretch of coast carries: fixed by where it lies, a little different for every wave
+        const share = 0.5 + 0.5 * Math.sin(piece.x[0] * 0.071 + piece.y[0] * 0.113 + bucket * 1.7)
+        ctx.strokeStyle = `rgba(${FOAM}, ${alpha * share * share})`
+        ctx.beginPath()
+        addPiece(ctx, piece, out)
+        ctx.stroke()
+      }
+    }
+    stroke(animated ? 0.3 + 0.1 * Math.sin(now / 900) : 0.3, 2.5, 0.04)
     if (animated) {
       for (let bucket = 0; bucket < BUCKETS; bucket++) {
         // 0 = far out, 1 = at the shore; the group is offset by its place along the coast
         const progress = (now / 1000 / WAVE_SECONDS + bucket / BUCKETS) % 1
-        const alpha = Math.sin(progress * Math.PI) * 0.5
+        const alpha = Math.sin(progress * Math.PI) * 0.42
         if (alpha < 0.02) continue
-        ctx.strokeStyle = `rgba(${FOAM}, ${alpha})`
-        ctx.lineWidth = 2 + 2 * progress
-        ctx.beginPath()
-        for (const piece of visible) if (piece.bucket === bucket) addPiece(ctx, piece, REACH * (1 - progress) + 0.04)
-        ctx.stroke()
+        stroke(alpha, 2 + 2 * progress, REACH * (1 - progress) + 0.04, bucket)
       }
     }
     ctx.restore()

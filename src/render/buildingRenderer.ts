@@ -126,7 +126,7 @@ export function drawBuildings(ctx: CanvasRenderingContext2D, state: IslandState,
         }
       }
       dotHeight = placed.rise * 0.8
-      if (showSmoke && def.smoke && building.production?.status.kind === 'producing') drawSmoke(ctx, placed, def.smoke, now)
+      if (showSmoke && def.smoke && building.production?.status.kind === 'producing') drawSmoke(ctx, placed, sprites.smoke(key) ?? def.smoke, now)
     } else {
       dotHeight = house ? houseHeight(house) : boxHeight(rect, def.category)
       drawBox(ctx, rect, dotHeight, house ? houseColor(house) : def.color)

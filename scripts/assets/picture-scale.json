@@ -1,0 +1,63 @@
+{
+  "about": "The image model painted every building at its own scale: a door is 15 picture pixels high in one house and 50 in the next. 'doors' holds the door height of a picture, measured by eye where the scale was clearly off (in pixels of the 256 px wide master in art/). bake.mjs shrinks a picture so that its door is 'door' pixels high, by 'min' at most; a picture whose door is smaller is never enlarged. 'leaveOut' is for pictures the game should not get at all. 'ground' is the colour of the yard that bake.mjs lays around a shrunk building that was painted without a plot.",
+  "door": 26,
+  "min": 0.6,
+  "doors": {
+    "house_citizens_5": 32,
+    "house_citizens_15": 30,
+    "house_merchants_13": 31,
+    "house_pioneers_1": 29,
+    "house_pioneers_2": 30,
+    "house_pioneers_3": 40,
+    "house_pioneers_5": 42,
+    "house_pioneers_6": 42,
+    "house_pioneers_7": 30,
+    "house_pioneers_8": 46,
+    "house_pioneers_9": 42,
+    "house_pioneers_10": 35,
+    "house_pioneers_13": 44,
+    "house_pioneers_14": 29,
+    "house_pioneers_15": 44,
+    "house_pioneers_16": 40,
+    "house_settlers_2": 30,
+    "house_settlers_4": 30,
+    "house_settlers_5": 30,
+    "house_settlers_7": 32,
+    "house_settlers_9": 30,
+    "house_settlers_15": 30,
+    "house_settlers_16": 30,
+    "bakery": 40,
+    "brewery": 40,
+    "butcher": 38,
+    "chapel": 44,
+    "fishery": 30,
+    "goldsmith": 35,
+    "hunting_lodge": 32,
+    "kontor": 47,
+    "marble_mason": 40,
+    "market_house": 44,
+    "oil_boiler": 40,
+    "smelter": 35,
+    "stonemason": 32,
+    "tavern": 47,
+    "tobacco_factory": 35,
+    "toolmaker": 40,
+    "weaver": 35,
+    "winery": 42
+  },
+  "leaveOut": [],
+  "ground": {
+    "kontor": {
+      "colour": [186, 166, 126],
+      "fringe": [205, 188, 150]
+    },
+    "tavern": {
+      "colour": [158, 140, 102],
+      "fringe": [118, 142, 86]
+    },
+    "chapel": {
+      "colour": [150, 138, 106],
+      "fringe": [116, 142, 86]
+    }
+  }
+}

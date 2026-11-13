@@ -50,7 +50,7 @@ export function drawShadows(ctx: CanvasRenderingContext2D, state: IslandState, r
 }
 
 /**
- * A pier meets the water: under its front edges on the shore lies a dark, wet shadow, and a broken line of foam
+ * A pier meets the water: under its front edges on the shore lies a dark, wet shadow, and a soft line of foam
  * runs along it. Drawn before the pier itself, so only what looks out from under the planks shows.
  */
 function drawPierWater(ctx: CanvasRenderingContext2D, state: IslandState, rect: TileRect): void {
@@ -78,9 +78,11 @@ function drawPierWater(ctx: CanvasRenderingContext2D, state: IslandState, rect: 
   ctx.strokeStyle = 'rgba(8, 30, 52, 0.28)'
   ctx.lineWidth = 9
   line(5)
-  ctx.strokeStyle = 'rgba(235, 246, 250, 0.55)'
-  ctx.lineWidth = 1.4
-  ctx.setLineDash([7, 9, 3, 6])
+  // foam where the water meets the pier: a soft band with a thin light edge, not a drawn line
+  ctx.strokeStyle = 'rgba(226, 238, 240, 0.12)'
+  ctx.lineWidth = 5
   line(13)
-  ctx.setLineDash([])
+  ctx.strokeStyle = 'rgba(226, 238, 240, 0.3)'
+  ctx.lineWidth = 1
+  line(13)
 }

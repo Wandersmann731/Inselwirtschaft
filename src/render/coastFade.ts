@@ -140,6 +140,8 @@ export function fadePixels(data: Uint8ClampedArray, width: number, height: numbe
   // back edges, column by column: where nothing rises over the edge, the ground below it runs out. The run ends at
   // the first outline or the first colour that is not ground, so roofs and walls stay whole.
   const depth = FADE_TILES * 2 * HALF_H * frame.scale
+  // the distances below were measured in pictures with two pixels per world pixel
+  const unit = frame.scale / 2
   for (let ix = 0; ix < width; ix++) {
     const sx = (frame.mirrored ? width - 1 - ix : ix) + 0.5
     const along = (sx - frame.originX) / (HALF_W * frame.scale)
@@ -148,13 +150,13 @@ export function fadePixels(data: Uint8ClampedArray, width: number, height: numbe
     if (!onEdge) continue
     const edgeY = frame.originY + (Math.abs(sx - frame.originX) * HALF_H) / HALF_W
     const alphaAt = (y: number): number => (y < 0 || y >= height ? 0 : data[(Math.round(y) * width + ix) * 4 + 3])
-    if (alphaAt(edgeY - 5) > 40 || alphaAt(edgeY - 10) > 40) continue
-    for (let iy = Math.max(0, Math.floor(edgeY - 3)); iy < height; iy++) {
+    if (alphaAt(edgeY - 5 * unit) > 40 || alphaAt(edgeY - 10 * unit) > 40) continue
+    for (let iy = Math.max(0, Math.floor(edgeY - 3 * unit)); iy < height; iy++) {
       const distance = iy + 0.5 - edgeY
       if (distance >= depth) break
       const o = (iy * width + ix) * 4
       if (data[o + 3] === 0) continue
-      if (distance > 3) {
+      if (distance > 3 * unit) {
         const dark = 0.3 * data[o] + 0.59 * data[o + 1] + 0.11 * data[o + 2] < OUTLINE_DARK
         if (dark || ground[bin(o)] === 0) break
       }

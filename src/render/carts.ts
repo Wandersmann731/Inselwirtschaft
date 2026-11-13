@@ -69,11 +69,11 @@ export function shipmentShare(arrive: number, delay: number, ticks: number): num
 }
 
 const HANDS: { shirt: string; top: string }[] = [
-  { shirt: '#7a8f4e', top: '#5a4326' },
-  { shirt: '#8a5f3c', top: '#c9a66b' },
-  { shirt: '#5d7fa3', top: '#3b2717' },
+  { shirt: '#6f7d50', top: '#5a4a36' },
+  { shirt: '#7a5c40', top: '#a8926a' },
+  { shirt: '#5a7088', top: '#3b2c20' },
 ]
-const COATS = ['#8a5a36', '#c8b08a', '#5e4630']
+const COATS = ['#7d5a3c', '#b4a284', '#58463a']
 
 /**
  * Draws the carts of the island. Farms, mines and other producers of raw goods send an ox cart; a workshop's goods,

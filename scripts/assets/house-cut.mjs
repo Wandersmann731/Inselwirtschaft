@@ -20,7 +20,7 @@ export function guideBody(guide, width, height) {
  * Removing the background also takes pinkish specks out of walls and leaves pinholes, through which the meadow
  * would show. A transparent pixel with paint close by on all four sides is such a hole: it gets the colour around it.
  */
-function fillPinholes(data, W, H, reach = 4) {
+export function fillPinholes(data, W, H, reach = 4) {
   const solid = (x, y) => x >= 0 && y >= 0 && x < W && y < H && data[(y * W + x) * 4 + 3] > 200
   const fills = []
   for (let y = reach; y < H - reach; y++) {
@@ -137,7 +137,8 @@ export async function cropToPlot(image, width, height, floor = 1) {
   const buffer = await sharp(region, { raw: { width: regionWidth, height: regionHeight, channels: 4 } }).resize(width, height, { fit: 'fill' }).png().toBuffer()
   // where the corners of the painted plot lie in the finished picture
   const toY = (row) => (row - regionTop) * scale
-  return { buffer, scale, ratio, thick, regionLeft, regionTop, plot: { tipL: toY(tipL), tipR: toY(tipR), front: toY(front) } }
+  const cut = { left: regionLeft, top: regionTop, width: regionWidth, height: regionHeight }
+  return { buffer, scale, ratio, thick, regionLeft, regionTop, region: cut, plot: { tipL: toY(tipL), tipR: toY(tipR), front: toY(front) } }
 }
 
 /** Ground that the model painted a little beyond the back edges of the diamond is at most this high (picture pixels). */

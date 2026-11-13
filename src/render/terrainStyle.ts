@@ -2,7 +2,7 @@ import { Terrain } from '../world/terrain'
 import { HALF_H, HALF_W } from './iso'
 
 /** Placeholder colours until real sprites exist. */
-export const SEA_COLOR = '#1d4e6b'
+export const SEA_COLOR = '#1c4a68'
 
 export const TILE_COLORS: Record<number, string> = {
   [Terrain.Beach]: '#e2d39a',

@@ -40,7 +40,8 @@ function serviceWorker(): Plugin {
 export default defineConfig({
   plugins: [react(), serviceWorker()],
   test: {
-    include: ['tests/**/*.test.ts'],
+    // the .mjs tests cover the picture tools in scripts/assets, which are plain JavaScript
+    include: ['tests/**/*.test.ts', 'tests/**/*.test.mjs'],
     environment: 'node',
   },
 })

@@ -6,7 +6,7 @@ import { fbm } from '../world/noise2d'
 import { yardAt } from '../world/settlement'
 import { world } from '../data'
 import { Terrain, type GameMap } from '../world/terrain'
-import { sprites } from './sprites'
+import { PICTURE_SCALE, sprites } from './sprites'
 
 /** The terrain is drawn in rectangles of this size (world pixels). Each rectangle is its own picture. */
 export const CHUNK_W = 512
@@ -173,8 +173,8 @@ export function renderChunk(rx: number, ry: number, tiles: number[], ctx: ChunkC
   for (const { item, wx, wy } of objects) {
     const sprite = sprites.get(`decor/${item.kind}_${item.variant}`)
     if (!sprite) continue
-    const height = (sprite.height / 2) * item.scale
-    const width = (sprite.width / 2) * item.scale
+    const height = sprite.height * PICTURE_SCALE * item.scale
+    const width = sprite.width * PICTURE_SCALE * item.scale
     const left = wx - x0 - width / 2
     const top = wy - y0 - height
     if (left > CHUNK_W || left + width < 0 || top > CHUNK_H || top + height < 0) continue

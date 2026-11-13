@@ -9,7 +9,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import sharp from 'sharp'
 import { cropToPlot } from './house-cut.mjs'
-import { featherPlot, fitInto, shrinkMatte, maskPolygon, padToSquare, removeBackground, roadTile, smokeFrame, SIZE, tileableTexture, waterFrame } from './image-tools.mjs'
+import { featherPlot, fitInto, shrinkMatte, maskPolygon, opaqueBox, padToSquare, removeBackground, roadTile, smokeFrame, SIZE, tileableTexture, waterFrame } from './image-tools.mjs'
 import { startServer } from './mcp-client.mjs'
 import { loadJobs, ROOT } from './manifest.mjs'
 
@@ -50,6 +50,17 @@ function padsFile() {
 padsFile.save = () => {
   fs.mkdirSync(path.dirname(padsPath), { recursive: true })
   fs.writeFileSync(padsPath, JSON.stringify(Object.fromEntries([...padData].sort())))
+}
+
+/**
+ * art/geometry.json: the part of the raw picture (1024 x 1024) that became each building picture. With it the game
+ * pictures are made again from the raw pictures at a higher resolution (see bake.mjs).
+ */
+const geometryPath = path.join(ROOT, 'art', 'geometry.json')
+const geometry = fs.existsSync(geometryPath) ? JSON.parse(fs.readFileSync(geometryPath, 'utf8')) : {}
+function saveGeometry(id, region) {
+  geometry[id] = region
+  fs.writeFileSync(geometryPath, JSON.stringify(Object.fromEntries(Object.entries(geometry).sort(([a], [b]) => a.localeCompare(b)))))
 }
 
 /** Average colour of the game's grass texture, which the ground of houses and workshops is mixed towards. */
@@ -118,31 +129,40 @@ async function finish(job, rawFile) {
     const pads = padsFile()
     // a house is cut to the plot it was painted on, not to the guide (see cropToPlot); its earth side is gone then
     const fitted = job.wide ? await cropToPlot(image, job.width, job.height, job.plotFloor) : null
+    let cut = box
     if (fitted) {
       buffer = fitted.buffer
+      cut = fitted.region
       pads.delete(job.id)
     } else if (job.kind === 'building' && !job.cutSlab) {
       const growX = Math.round(box.width * 0.14)
       const growTop = Math.round(box.height * 0.16)
       const growBottom = Math.round(box.height * 0.05)
+      // The model sometimes paints a big building lower than its guide (the church, the bath house): its base then
+      // ran out of the picture and was cut off. Such a picture is taken from further down, so its base lies on the
+      // footprint again, and from as high up as its towers reach.
+      const painted = await opaqueBox(image, 128)
+      const sunk = painted ? Math.max(0, painted.top + painted.height - (box.top + box.height) - growBottom) : 0
       const left = Math.max(0, box.left - growX)
       const right = Math.min(SIZE, box.left + box.width + growX)
-      const top = Math.max(0, box.top - growTop)
-      const bottom = Math.min(SIZE, box.top + box.height + growBottom)
+      const top = Math.max(0, Math.min(box.top - growTop + sunk, painted ? painted.top - 2 : SIZE))
+      const bottom = Math.min(SIZE, box.top + box.height + growBottom + sunk)
       const scale = job.width / box.width
       const region = { left, top, width: right - left, height: bottom - top }
       buffer = await image.extract(region).resize(Math.round(region.width * scale), Math.round(region.height * scale)).png().toBuffer()
       pads.set(job.id, {
         l: Math.round((box.left - left) * scale),
         r: Math.round((right - (box.left + box.width)) * scale),
-        t: Math.round((box.top - top) * scale),
-        b: Math.round((bottom - (box.top + box.height)) * scale),
+        t: Math.round((box.top + sunk - top) * scale),
+        b: Math.round((bottom - (box.top + sunk + box.height)) * scale),
       })
+      cut = region
     } else {
       buffer = await image.extract(box).resize(job.width, job.height).png().toBuffer()
       pads.delete(job.id)
     }
     padsFile.save()
+    if (job.kind === 'building') saveGeometry(job.id, cut)
     if (job.kind === 'tile') buffer = await maskPolygon(buffer, job.width, job.height, DIAMOND)
     if (job.cutSlab) {
       // Plots must be flat: cut away everything below the lower edges of the ground diamond (the painted earth edge).

@@ -839,8 +839,7 @@
     "unlockTier": "pioneers",
     "placement": "land",
     "color": "#c0504d",
-    "catchment": 22,
-    "pictureScale": 0.8
+    "catchment": 22
   },
   {
     "id": "shipyard",

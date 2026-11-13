@@ -3,12 +3,7 @@ import type { PlacedBuilding } from '../sim/state'
 import { hash2 } from '../world/noise2d'
 import { sprites } from './sprites'
 
-export const WATER_FRAMES = 8
 export const SMOKE_FRAMES = 12
-
-export function waterKey(frame: number): string {
-  return `terrain/water_${(frame % WATER_FRAMES) + 1}`
-}
 
 /** Road sprite for the neighbours that are roads: n = up right (y - 1), e = down right (x + 1), s = down left (y + 1), w = up left (x - 1). */
 export function roadKey(north: boolean, east: boolean, south: boolean, west: boolean): string {

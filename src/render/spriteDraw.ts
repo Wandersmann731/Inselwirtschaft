@@ -2,11 +2,11 @@ import { getBuilding } from '../data'
 import type { PlacedBuilding } from '../sim/state'
 import { buildingRect } from '../sim/coverage'
 import { tileToWorld, HALF_H, HALF_W } from './iso'
-import { sprites, type SpriteImage } from './sprites'
+import { PICTURE_SCALE, sprites, type SpriteImage } from './sprites'
 import { buildingKey } from './spriteKeys'
 
-/** Sprites are made at twice the game's tile size. */
-export const SPRITE_SCALE = 0.5
+/** World pixels per picture pixel of a building picture. */
+export const SPRITE_SCALE = PICTURE_SCALE
 
 export interface SpritePlacement {
   image: SpriteImage

@@ -1,12 +1,12 @@
 import type { DecorItem } from '../world/decor'
-import { sprites } from './sprites'
+import { PICTURE_SCALE, sprites } from './sprites'
 
 /** Draws one object (tree, peak ...) standing with its base at (baseX, baseY). Returns false if the picture is missing. */
 export function drawDecor(ctx: CanvasRenderingContext2D, item: DecorItem, baseX: number, baseY: number): boolean {
   const sprite = sprites.get(`decor/${item.kind}_${item.variant}`)
   if (!sprite) return false
-  const width = (sprite.width / 2) * item.scale
-  const height = (sprite.height / 2) * item.scale
+  const width = sprite.width * PICTURE_SCALE * item.scale
+  const height = sprite.height * PICTURE_SCALE * item.scale
   const left = baseX - width / 2
   const top = baseY - height
   if (item.flip) {

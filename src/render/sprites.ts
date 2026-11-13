@@ -1,22 +1,24 @@
 // Loads all game sprites (WebP files in public/sprites) once and hands them out by key, e.g. "buildings/chapel".
 
-import { buildings } from '../data'
-import { cleanPlotPixels, measurePlot } from './plotCleanup'
-import { isCutOff } from './cutCheck'
-import { growPlot, planFit } from './plotFit'
-import { clearPaintedWater } from './waterPlot'
-import { naturalLook } from './naturalLook'
+// The pictures arrive finished: scripts/assets/bake.mjs has cut them to their plots, taken out the comic outlines
+// and graded them, so nothing is worked out here.
 
 const BASE = `${import.meta.env.BASE_URL}sprites/`
 
-/** A loaded picture: the file itself, or for buildings a cleaned copy (see plotCleanup.ts). */
+/** A loaded picture: the file itself, or a copy made of it while the game runs (a faded shore edge, see coastFade.ts). */
 export type SpriteImage = HTMLImageElement | HTMLCanvasElement
+
+/**
+ * World pixels per picture pixel for buildings, trees and ships: these pictures are made at four times the game's
+ * tile size (a tile is 64 world pixels wide, 256 pixels in a picture), so they stay sharp when zoomed in on a phone.
+ */
+export const PICTURE_SCALE = 0.25
 
 export function spriteUrl(key: string): string {
   return `${BASE}${key}.webp`
 }
 
-/** Extra border of a building picture beyond its footprint box, in picture pixels (see scripts/assets). */
+/** Extra border of a building picture beyond its footprint box, in picture pixels (see scripts/assets/bake.mjs). */
 export interface Pads {
   l: number
   r: number
@@ -24,14 +26,10 @@ export interface Pads {
   b: number
 }
 
-/** The pictures of the map that get the natural look (see naturalLook.ts). Icons, the logo and smoke stay as they are. */
-const LOOK = /^(decor|ground|quarters|roads|ships|terrain)\//
-
 class SpriteStore {
   private padData: Record<string, Pads> = {}
+  private smokeData: Record<string, [number, number]> = {}
   private images = new Map<string, SpriteImage>()
-  /** House pictures with cropped walls: loaded, but not chosen while a whole picture of the same house exists. */
-  private flawed = new Set<string>()
   /** True once loading finished (also if some sprites are missing: drawing then falls back to colour shapes). */
   ready = false
   /** Counts the pictures that arrived. Caches built from missing pictures are made again when it changes. */
@@ -52,6 +50,11 @@ class SpriteStore {
     } catch {
       this.padData = {}
     }
+    try {
+      this.smokeData = (await (await fetch(`${BASE}smoke.json`)).json()) as Record<string, [number, number]>
+    } catch {
+      this.smokeData = {}
+    }
     let done = 0
     const settled = (): void => onProgress?.(++done, keys.length)
     const loading = keys.map(
@@ -63,7 +66,7 @@ class SpriteStore {
           }
           const image = new Image()
           image.onload = () => {
-            this.images.set(key, key.startsWith('buildings/') ? this.cleaned(key, image) : LOOK.test(key) ? this.natural(key, image) : image)
+            this.images.set(key, image)
             this.version++
             resolve()
           }
@@ -80,68 +83,12 @@ class SpriteStore {
     return this.padData[key.replace(/^buildings\//, '')] ?? { l: 0, r: 0, t: 0, b: 0 }
   }
 
-  /** A building picture with a clean ground diamond: no loose earth over the edges, no missing corners. */
-  private cleaned(key: string, image: HTMLImageElement): SpriteImage {
-    const name = key.replace(/^buildings\//, '')
-    const base = name.replace(/(_q)?(_\d+)?$/, '')
-    const tier = base.startsWith('house_') ? base.slice('house_'.length) : null
-    const def = tier ? buildings.find((entry) => entry.houseTier === tier) ?? buildings.find((entry) => entry.houseTier) : buildings.find((entry) => entry.id === base)
-    if (!def) return image
-    const padded = this.padData[name] !== undefined
-    let canvas = document.createElement('canvas')
-    canvas.width = image.naturalWidth
-    canvas.height = image.naturalHeight
-    let ctx = canvas.getContext('2d', { willReadFrequently: true })
-    if (!ctx) return image
-    ctx.drawImage(image, 0, 0)
-    // a house whose walls were cropped when the picture was made is left out of the choice (see cutCheck.ts)
-    if (tier && isCutOff(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height)) this.flawed.add(key)
-    // A painted plot is often smaller than the footprint and floats above the bottom of the picture: then the ground
-    // of the island shows around it. The picture is fitted so that its plot covers the footprint.
-    const square = def.size[0] === def.size[1]
-    if (square && !padded && !/_q(_\d+)?$/.test(name)) {
-      const measured = measurePlot(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height)
-      if (measured) {
-        // enlarged only a little (see plotFit.ts); a plot that stays too small gets ground added around it
-        const plan = planFit(measured, canvas.width, def.pictureScale)
-        const fitted = document.createElement('canvas')
-        fitted.width = canvas.width
-        fitted.height = plan.height
-        const fittedCtx = fitted.getContext('2d', { willReadFrequently: true })
-        if (fittedCtx) {
-          fittedCtx.imageSmoothingQuality = 'high'
-          fittedCtx.drawImage(image, plan.dx, 0, image.naturalWidth * plan.scale, image.naturalHeight * plan.scale)
-          if (plan.plot) {
-            const grown = fittedCtx.getImageData(0, 0, fitted.width, fitted.height)
-            if (growPlot(grown.data, fitted.width, fitted.height, plan.plot, name.length * 31 + name.charCodeAt(name.length - 1))) fittedCtx.putImageData(grown, 0, 0)
-          }
-          canvas = fitted
-          ctx = fittedCtx
-        }
-      }
-    }
-    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height)
-    // a pier painted on a block of water: the block goes, the real sea shows instead
-    if (def.pier) clearPaintedWater(pixels.data, canvas.width, canvas.height)
-    // a picture with an overhang border is meant to reach beyond its footprint: it is not cut, only filled
-    cleanPlotPixels(pixels.data, canvas.width, canvas.height, { w: def.size[0], h: def.size[1], pads: this.pads(key) }, !padded)
-    naturalLook(pixels.data, canvas.width, canvas.height, name.length)
-    ctx.putImageData(pixels, 0, 0)
-    return canvas
-  }
-
-  /** Any other picture of the map (ground, roads, yards, trees, ships) in the natural look of the buildings. */
-  private natural(key: string, image: HTMLImageElement): SpriteImage {
-    const canvas = document.createElement('canvas')
-    canvas.width = image.naturalWidth
-    canvas.height = image.naturalHeight
-    const ctx = canvas.getContext('2d', { willReadFrequently: true })
-    if (!ctx) return image
-    ctx.drawImage(image, 0, 0)
-    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height)
-    naturalLook(pixels.data, canvas.width, canvas.height, key.length, !key.startsWith('ground/'))
-    ctx.putImageData(pixels, 0, 0)
-    return canvas
+  /**
+   * Where the chimney opens in a picture that was made smaller than its master (see scripts/assets/bake.mjs), as a
+   * share of the picture. Undefined for a picture that kept its size: then the place in the building data holds.
+   */
+  smoke(key: string): [number, number] | undefined {
+    return this.smokeData[key.replace(/^buildings\//, '')]
   }
 
   get(key: string): SpriteImage | undefined {
@@ -163,9 +110,6 @@ class SpriteStore {
       list = []
       if (this.images.has(base)) list.push(base)
       for (let n = 1; n <= 32; n++) if (this.images.has(`${base}_${n}`)) list.push(`${base}_${n}`)
-      // cropped pictures are not offered, unless there is nothing else
-      const whole = list.filter((key) => !this.flawed.has(key))
-      if (whole.length > 0) list = whole
       if (this.ready) this.variantCache.set(base, list)
     }
     return list
