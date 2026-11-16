@@ -6,7 +6,9 @@ import { PICTURE_BUDGET, picturesToDrop } from '../src/render/built'
 import { keptRoads } from '../src/render/roadLayer'
 import { SHADE_BAND, shadeAtHeight, toneOf } from '../src/render/crossShade'
 import { swayOf } from '../src/render/decorDraw'
-import { sparkAt } from '../src/render/glitter'
+import { capAt, cellGrowth, sparkAt } from '../src/render/glitter'
+import { layerScale, layShadows } from '../src/render/shadowLayer'
+import { SHADOW_DEPTH } from '../src/render/built/shadowCast'
 import { gullAt } from '../src/render/birds'
 import { tornFoam } from '../src/render/surf'
 import { crownParts, SWAY_FROM_ZOOM, swaysHere } from '../src/render/forestSway'
@@ -119,6 +121,82 @@ describe('what keeps a town from looking stamped and still', () => {
     expect(lit).toBeGreaterThan(0)
     expect(lit / 800).toBeLessThan(0.25)
     expect(sparkAt(3, 7, 500)).toBeLessThanOrEqual(1)
+  })
+
+  it('lets crests break: a cap shows for part of its beat and is gone for the rest, each cell on its own', () => {
+    let white = 0
+    let most = 0
+    for (let t = 0; t < 60000; t += 100) {
+      const cap = capAt(5, 2, t)
+      expect(cap).toBeGreaterThanOrEqual(0)
+      expect(cap).toBeLessThanOrEqual(1)
+      if (cap > 0.08) white++
+      most = Math.max(most, cap)
+    }
+    expect(white / 600).toBeGreaterThan(0.2)
+    expect(white / 600).toBeLessThan(0.55)
+    expect(most).toBeGreaterThan(0.3)
+    // neighbours do not break in step
+    let together = 0
+    for (let t = 0; t < 60000; t += 100) if (capAt(5, 2, t) > 0.08 === capAt(6, 2, t) > 0.08) together++
+    expect(together).toBeLessThan(590)
+  })
+
+  it('shows a screen full of sea about as many caps and sparks from afar as from near', () => {
+    expect(cellGrowth(3)).toBe(1)
+    expect(cellGrowth(2.25)).toBe(1)
+    // a phone zoomed out all the way: four times the sea on screen, cells four times the area
+    expect(cellGrowth(1.5)).toBe(2)
+    expect(cellGrowth(0.5)).toBeLessThanOrEqual(4)
+    for (const scale of [0.4, 0.8, 1.2, 2, 4]) expect(cellGrowth(scale)).toBeGreaterThanOrEqual(cellGrowth(scale * 1.5))
+  })
+
+  it('lays all shadows on the ground as one: they are drawn into a layer, and the layer once, as dark as one shadow', () => {
+    const calls: string[] = []
+    const context = (name: string, canvas: object): Record<string, unknown> => ({
+      canvas,
+      globalAlpha: 1,
+      getTransform: () => ({ a: 3, d: 3, e: -300, f: -150 }),
+      setTransform: () => undefined,
+      clearRect: () => calls.push(`${name} clear`),
+      save: () => undefined,
+      restore: () => undefined,
+      drawImage(this: { globalAlpha: number }) {
+        calls.push(`${name} draw ${this.globalAlpha}`)
+      },
+    })
+    const layer: Record<string, unknown> = { width: 0, height: 0 }
+    layer.getContext = () => context('layer', layer)
+    const world = globalThis as { document?: unknown }
+    const before = world.document
+    world.document = { createElement: () => layer }
+    try {
+      const screen = context('screen', { width: 900, height: 600 })
+      layShadows(screen as unknown as CanvasRenderingContext2D, SHADOW_DEPTH, (g) => {
+        // two houses whose shadows overlap
+        g.drawImage({} as CanvasImageSource, 0, 0)
+        g.drawImage({} as CanvasImageSource, 10, 0)
+      })
+    } finally {
+      world.document = before
+    }
+    expect(calls).toEqual(['layer clear', 'layer draw 1', 'layer draw 1', `screen draw ${SHADOW_DEPTH}`])
+    // one layer pixel per world pixel: a third of the screen in each direction at three device pixels per world pixel
+    expect(layer.width as number).toBeLessThan(900 / 3 + 4)
+    expect(SHADOW_DEPTH).toBeGreaterThan(0.45)
+    expect(SHADOW_DEPTH).toBeLessThan(0.7)
+  })
+
+  it('keeps the shadow layer small: a pixel per world pixel on a phone, fewer on a large screen that shows much of the world', () => {
+    // a phone held sideways, zoomed in and all the way out
+    expect(layerScale(6, 2532, 1170)).toBe(1)
+    expect(layerScale(1.5, 2532, 1170)).toBe(1)
+    // a large screen far out: never more than about one and a half million pixels
+    const far = layerScale(1, 5120, 2880)
+    expect(far).toBeLessThan(0.4)
+    expect(5120 * far * 2880 * far).toBeLessThan(1.7e6)
+    // and never more pixels than the screen has
+    expect(layerScale(0.5, 800, 400)).toBeLessThanOrEqual(0.5)
   })
 
   it('tears the white edge of the surf: whole where the froth is thick, gone where it is thin', () => {

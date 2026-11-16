@@ -12,7 +12,6 @@ import { SettingsPanel } from './SettingsPanel'
 import { SlotList } from './SlotList'
 import { useSlots } from './slots'
 import { t } from '../i18n/language'
-import { Backdrop } from './Backdrop'
 import { Wordmark } from './Wordmark'
 
 type Screen = 'main' | 'new' | 'load'
@@ -77,7 +76,6 @@ export function MainMenu({ onStart }: MainMenuProps) {
 
   return (
     <div className="menu-screen">
-      <Backdrop />
       <div className="menu-panel">
         <Wordmark className="menu-logo" />
         {screen === 'main' && (

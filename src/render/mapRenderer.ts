@@ -1,7 +1,7 @@
 import { world } from '../data'
 import type { ToolSnapshot } from '../game/buildController'
 import type { IslandState } from '../sim/state'
-import { inMap, Terrain, type GameMap } from '../world/terrain'
+import { inMap, type GameMap } from '../world/terrain'
 import { t } from '../i18n/language'
 import {
   clampCamera,
@@ -14,6 +14,7 @@ import {
 } from './camera'
 import { mapBounds, tileToWorld, worldToTile, type Bounds, type Point } from './iso'
 import { yardField } from '../world/settlement'
+import { townGround } from './townGround'
 import { drawBuildings, type TileRange } from './buildingRenderer'
 import { MarkLayer, type Mark } from './markLayer'
 import { drawGlitter } from './glitter'
@@ -38,7 +39,7 @@ import { drawReflections } from './reflections'
 import { Surf } from './surf'
 import { groundTextures } from './groundTextures'
 import { CHUNK_H, CHUNK_W, TerrainCache } from './terrainCache'
-import { SEA_COLOR, diamondPath, paintTile } from './terrainStyle'
+import { SEA_COLOR, diamondPath, paintTile, terrainName } from './terrainStyle'
 
 const SELECTION_COLOR = '#ffd23f'
 const ZOOM_LIMITS = { min: world.minZoom, max: world.maxZoom }
@@ -222,10 +223,13 @@ export class MapRenderer {
     const view = visibleWorldRect(this.camera, this.viewport)
     const area = { x: view.minX - 2, y: view.minY - 2, w: view.maxX - view.minX + 4, h: view.maxY - view.minY + 4 }
     this.drawWater(area, now, settings.waterAnimation)
-    if (settings.waterAnimation && !settings.reducedMotion) drawGlitter(ctx, area, now)
     const state = this.getState()
-    // the shore follows the buildings at the water; reflections lie on the still water, under the foam
-    this.surf.draw(this.ctx, map, state.id, range, now, settings.waterAnimation, state, () => drawReflections(ctx, state, range, now, settings.waterAnimation))
+    // the shore follows the buildings at the water; the crossing waves, the sparks and the reflections lie on the shallows, under the foam
+    this.surf.draw(this.ctx, map, state.id, range, now, settings.waterAnimation, state, () => {
+      this.water?.ripple(ctx, area, settings.waterAnimation ? now : 0)
+      if (settings.waterAnimation && !settings.reducedMotion) drawGlitter(ctx, area, now)
+      drawReflections(ctx, state, range, now, settings.waterAnimation)
+    })
     this.drawTerrain(map, state)
     drawYards(ctx, state, range)
     this.roads.draw(ctx, state, range, this.chunkScale)
@@ -299,7 +303,7 @@ export class MapRenderer {
     }
 
     const request = textures
-      ? { map, seed: state.id, climate: state.climate, occupancy: state.occupancy, roads: state.roads, yard: this.yardOf(state), textures }
+      ? { map, seed: state.id, climate: state.climate, occupancy: state.occupancy, roads: state.roads, yard: this.yardOf(state), town: townGround(state), textures }
       : null
     if (request) {
       for (const { rx, ry } of wanted) this.cache.request(rx, ry, request)
@@ -380,23 +384,5 @@ export class MapRenderer {
       ctx.fillStyle = '#ffffff'
       ctx.fillText(line, 12, y)
     })
-  }
-}
-
-/** Name of a terrain code for the developer display. */
-function terrainName(terrain: number): string {
-  switch (terrain) {
-    case Terrain.Water:
-      return t('Wasser', 'Water')
-    case Terrain.Beach:
-      return t('Strand', 'Beach')
-    case Terrain.Grass:
-      return t('Gras', 'Grass')
-    case Terrain.Forest:
-      return t('Wald', 'Forest')
-    case Terrain.Mountain:
-      return t('Berg', 'Mountain')
-    default:
-      return String(terrain)
   }
 }

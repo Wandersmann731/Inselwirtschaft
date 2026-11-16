@@ -4,7 +4,7 @@
 // look right in a cool shade, and under eaves and at the foot of a wall it gets darker. Nothing has an outline.
 // From the same solids it works out the shadow the building throws on the ground, and where its windows glow.
 import { hash2 } from '../../world/noise2d'
-import { castShadow, type Solid } from './shadowCast'
+import { castShadow, SHADOW_DEPTH, type Solid } from './shadowCast'
 import { wear } from './wear'
 import { baseColour, material, type Mat } from './materials'
 
@@ -301,9 +301,13 @@ export class Scene {
     const shadow = castShadow(this.items)
     if (shadow && this.grounds.length > 0) {
       g.globalCompositeOperation = 'source-atop'
+      g.globalAlpha = SHADOW_DEPTH
       g.drawImage(shadow.canvas, shadow.left, shadow.top)
+      g.globalAlpha = 1
       g.globalCompositeOperation = 'source-over'
     }
+    // the dark line where the walls stand on the ground belongs to the picture: it lies under everything that is drawn now
+    if (shadow) g.drawImage(shadow.seam, shadow.left, shadow.top)
     // back to front: always one that nothing else still has to be drawn before
     const left = [...this.items]
     while (left.length > 0) {

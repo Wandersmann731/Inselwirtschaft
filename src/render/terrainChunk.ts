@@ -8,6 +8,7 @@ import { hash2 } from '../world/noise2d'
 import { GRAIN_SCALE, GRAIN_SPAN, groundGrain, paintGround } from './groundTextures'
 import { world } from '../data'
 import { Terrain, type GameMap } from '../world/terrain'
+import { layFlags, pavedAt, type TownGround } from './townGround'
 
 /** The terrain is drawn in rectangles of this size (world pixels). Each rectangle is its own picture. */
 export const CHUNK_W = 512
@@ -28,6 +29,8 @@ export interface ChunkContext {
   roads: number[]
   /** Village yard strength per tile (see settlement.ts), or null while there are no houses. */
   yard: Float32Array | null
+  /** The flags and gardens of the town (see townGround.ts), if there is one. */
+  town?: TownGround | null
   textures: GroundTextures
 }
 
@@ -82,11 +85,12 @@ function tilesAnchoredIn(map: GameMap, minX: number, maxX: number, minY: number,
   return found
 }
 
-/** Changes when a building or road appears or disappears on one of the tiles. */
-export function layoutSignature(tiles: number[], occupancy: number[], roads: number[]): number {
+/** Changes when a building or road appears or disappears on one of the tiles, or the paving or a garden of the town (`plots`, see TownGround.code) changes there. */
+export function layoutSignature(tiles: number[], occupancy: number[], roads: number[], plots?: Uint8Array | null): number {
   let hash = 0
   for (const index of tiles) {
     if (occupancy[index] !== 0 || roads[index] !== 0) hash = (Math.imul(hash, 31) + index * 3 + (roads[index] ? 1 : 2)) | 0
+    if (plots && plots[index] !== 0) hash = (Math.imul(hash, 37) + index * 8 + plots[index]) | 0
   }
   return hash
 }
@@ -119,16 +123,17 @@ export function decorOf(ctx: ChunkContext, tiles: number[]): { item: DecorItem; 
 /** How trodden a tile is: full on roads, a little under buildings, less on the tiles beside them. */
 const WEAR = { road: 1, building: 0.3, besideRoad: [0.1, 0.34], besideBuilding: [0, 0.16], corner: 0.5 }
 
-const wearCache = new WeakMap<number[], { roads: number[]; yard: Float32Array | null; field: Float32Array }>()
+const wearCache = new WeakMap<number[], { roads: number[]; yard: Float32Array | null; town: TownGround | null; field: Float32Array }>()
 
 /**
  * How worn the ground of each tile is (0..1): people walk on and along the roads and around every building, and
  * the village yard of the houses (see settlement.ts) is part of it. The tiles beside a road or building are worn
  * unevenly, so the bare earth does not follow the tile grid.
  */
-export function wearField(ctx: Pick<ChunkContext, 'map' | 'occupancy' | 'roads' | 'yard'>): Float32Array {
+export function wearField(ctx: Pick<ChunkContext, 'map' | 'occupancy' | 'roads' | 'yard' | 'town'>): Float32Array {
   const hit = wearCache.get(ctx.occupancy)
-  if (hit && hit.roads === ctx.roads && hit.yard === ctx.yard) return hit.field
+  const town = ctx.town ?? null
+  if (hit && hit.roads === ctx.roads && hit.yard === ctx.yard && hit.town === town) return hit.field
   const { width, height } = ctx.map
   const field = new Float32Array(width * height)
   const raise = (x: number, y: number, value: number): void => {
@@ -156,7 +161,9 @@ export function wearField(ctx: Pick<ChunkContext, 'map' | 'occupancy' | 'roads' 
     const strength = world.settlement.strength
     for (let i = 0; i < field.length; i++) field[i] = Math.max(field[i], ctx.yard[i] * strength)
   }
-  wearCache.set(ctx.occupancy, { roads: ctx.roads, yard: ctx.yard, field })
+  // nobody walks over a garden: there the grass stays
+  if (town) for (let i = 0; i < field.length; i++) if (town.lawn[i]) field[i] = 0
+  wearCache.set(ctx.occupancy, { roads: ctx.roads, yard: ctx.yard, town, field })
   return field
 }
 
@@ -172,8 +179,8 @@ export function wearAt(field: Float32Array, width: number, height: number, u: nu
   return (at(x0, y0) * (1 - tx) + at(x0 + 1, y0) * tx) * (1 - ty) + (at(x0, y0 + 1) * (1 - tx) + at(x0 + 1, y0 + 1) * tx) * ty
 }
 
-/** How dark the shadows of trees, bushes and rocks lie on the ground. */
-const TREE_SHADOW = 0.36
+/** How dark the shadows of trees, bushes and rocks lie on the ground: a crown lets some light through, so less than a wall's. */
+const TREE_SHADOW = 0.46
 
 /** How strongly the fine grain lies over grown and over bare ground. */
 const GRAIN_ALPHA = { grown: 0.85, bare: 0.7 }
@@ -235,11 +242,16 @@ export function renderChunk(rx: number, ry: number, tiles: number[], ctx: ChunkC
   const solid = (x: number, y: number): boolean => ctx.occupancy[y * map.width + x] !== 0 || ctx.roads[y * map.width + x] !== 0
   const field = wearField(ctx)
   const wear = (u: number, v: number): number => wearAt(field, map.width, map.height, u, v)
+  // flags lie in this rectangle only if one of its tiles is paved
+  const town = ctx.town && tiles.some((index) => ctx.town!.paved[index] > 0) ? ctx.town : null
+  const paved = town?.paved
   for (let y = 0; y < CHUNK_H; y++) {
     for (let x = 0; x < CHUNK_W; x++) {
       const offset = (y * CHUNK_W + x) * 4
-      const share = paintGround(map, ctx.textures, ctx.seed, x0 + x + 0.5, y0 + y + 0.5, image.data, offset, solid, wear)
+      let share = paintGround(map, ctx.textures, ctx.seed, x0 + x + 0.5, y0 + y + 0.5, image.data, offset, solid, wear)
       if (share < 0) continue
+      // where flags will lie nothing grows: the grain of stone goes there, not that of grass
+      if (paved && share > 0 && pavedAt(paved, map.width, map.height, ((y0 + y + 0.5) / HALF_H + (x0 + x + 0.5) / HALF_W) / 2, ((y0 + y + 0.5) / HALF_H - (x0 + x + 0.5) / HALF_W) / 2) > 0.5) share = 0
       grown.data[offset + 3] = 255 * share
       bare.data[offset + 3] = image.data[offset + 3] * (1 - share)
     }
@@ -255,6 +267,7 @@ export function renderChunk(rx: number, ry: number, tiles: number[], ctx: ChunkC
   if (!out) return null
   out.imageSmoothingEnabled = true
   out.drawImage(ground, 0, 0, canvas.width, canvas.height)
+  if (town) layFlags(out, town, map, x0, y0, scale, ctx.seed)
   layGrain(out, canvas.width, canvas.height, scale, grownMask, bareMask)
   out.scale(scale, scale)
 

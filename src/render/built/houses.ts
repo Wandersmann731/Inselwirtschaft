@@ -10,17 +10,22 @@ import { dormerOn, lookOf, stack, type Look } from './look'
 import { body, type Body, type Built, type Facade } from './parts'
 import { barrel, block, boulder, bush, crate, fence, sack, woodpile } from './props'
 import { aristocrats, merchants } from './townhouses'
+import { border, enclose, path, type Gates } from './courts'
+import { plotOf, type Plot } from './plots'
 
 export { HOUSE_VARIANTS } from './look'
 
 export function house(scene: Scene, tier: string, variant: number): void {
   const look = lookOf(variant)
+  const plot = plotOf(tier, variant)
   if (tier === 'ruin') ruin(scene, variant)
   else if (tier === 'pioneers') pioneers(scene, look)
   else if (tier === 'settlers') settlers(scene, look)
-  else if (tier === 'citizens') citizens(scene, look)
-  else if (tier === 'merchants') merchants(scene, look)
-  else aristocrats(scene, look)
+  else {
+    // a house of the town: what it stands on follows from its plan, and a garden is closed towards the street
+    const gates = tier === 'citizens' ? citizens(scene, look, plot) : tier === 'merchants' ? merchants(scene, look, plot) : aristocrats(scene, look, plot)
+    if (plot.enclosure) enclose(scene, plot.enclosure, gates, tier === 'aristocrats')
+  }
   // a cottage keeps a piece of fence at the back of its plot, here on one side and there on the other: against the
   // neighbour's goats, and never before its door
   if (tier === 'pioneers' || tier === 'settlers') {
@@ -82,7 +87,7 @@ function dormerOnRight(scene: Scene, _b: Body, main: Built): void {
 }
 
 /** A town house of two storeys, timber on a stone foot, the upper storey a hand's breadth over the street. */
-function citizens(scene: Scene, look: Look): void {
+function citizens(scene: Scene, look: Look, plot: Plot): Gates {
   const { variant, wash, shutters, doorColour, frame } = look
   const turned = variant === 1 || variant === 4
   const slate = variant === 2
@@ -92,7 +97,7 @@ function citizens(scene: Scene, look: Look): void {
   const ground = variant === 4 ? ('stone' as const) : undefined
   const long: Facade = { storeys: 2, windows: 3, door: turned ? null : variant === 3 ? 0.2 : 0.5, doorColour, timber: true, frame, base, ground, window }
   const short: Facade = { storeys: 2, windows: 2, door: turned ? 0.5 : null, doorColour, timber: true, frame, base, ground, window }
-  const b: Body = { at, wall: 'plaster', tint: wash, sw: turned ? short : long, se: turned ? long : short, roof: slate ? 'slate' : 'tile', rise: turned ? 24 : 21, shape: turned ? 'v' : 'u', over: 0.08, attic: true, jetty: variant === 5 ? 0 : 0.045, loft: variant === 1 }
+  const b: Body = { at, wall: 'plaster', tint: wash, sw: turned ? short : long, se: turned ? long : short, roof: slate ? 'slate' : 'tile', rise: turned ? 24 : 21, shape: turned ? 'v' : 'u', over: 0.08, attic: true, jetty: variant === 5 ? 0 : 0.045, loft: variant === 1, paved: plot.ground === 'flags', garden: plot.ground === 'garden' }
   const main = body(scene, b)
   const [u0, v0, u1, v1] = main.top
   if (turned) {
@@ -105,8 +110,16 @@ function citizens(scene: Scene, look: Look): void {
   if (variant === 3) wing(scene, b, main, { side: 'sw', from: 0.9, to: 1.56, out: 0.2, front: { storeys: 2, windows: 1, timber: true, frame, base, window }, rise: 17 })
   if (variant === 5) shed(scene, 'se', 0.66, 1.3, at[2], 0.2, 10, { mat: 'boards' }, 'tile', { storeys: 1, storey: 10, door: 0.5, doorStyle: 'barn', doorSize: [7.4, 8.4] })
   if (variant === 0) bush(scene, 0.3, 1.74, 3)
-  barrel(scene, 1.8, 1.5)
-  crate(scene, 1.84, 1.26)
+  // in a garden the barrel and the crate stand inside the hedge
+  const inside = plot.enclosure ? 0.1 : 0
+  barrel(scene, 1.8 - inside, 1.5)
+  crate(scene, 1.84 - inside, 1.26)
+  const door = at[0] + (at[2] - at[0]) * (typeof b.sw.door === 'number' ? b.sw.door : 0.5)
+  if (plot.ground === 'garden') {
+    border(scene, at[0] + 0.06, at[2] - 0.06, at[3], door)
+    path(scene, door, at[3])
+  }
+  return { sw: door }
 }
 
 /** What is left when a house has been given up: walls broken down in steps, a window that looks at nothing, charred beams, rubble, and green that takes it all back. */

@@ -79,4 +79,27 @@ describe('the coast in pieces', () => {
     }
     for (const piece of pieces) for (const rough of piece.rough) expect(rough >= 0 && rough <= 1).toBe(true)
   })
+
+  it('has points close enough for a frayed froth edge, and says for each how the edge is pushed about there', () => {
+    const pieces = buildPieces(island(30, 9), 4)
+    let steps = 0
+    let long = 0
+    let turns = 0
+    for (const piece of pieces) {
+      expect(piece.fray).toHaveLength(piece.x.length)
+      expect(piece.tuft).toHaveLength(piece.x.length)
+      for (let k = 0; k < piece.x.length; k++) {
+        for (const value of [piece.fray[k], piece.tuft[k]]) expect(value >= 0 && value <= 1).toBe(true)
+        if (k === 0) continue
+        long += Math.hypot(piece.x[k] - piece.x[k - 1], piece.y[k] - piece.y[k - 1])
+        steps++
+        // the froth lies in heaps: from one point to the next but one it may be there and gone
+        if (k > 1 && Math.abs(piece.tuft[k] - piece.tuft[k - 2]) > 0.25) turns++
+      }
+    }
+    // a few world pixels from point to point (a tile is 64 wide)
+    expect(long / steps).toBeLessThan(7)
+    expect(long / steps).toBeGreaterThan(1.5)
+    expect(turns).toBeGreaterThan(steps * 0.1)
+  })
 })

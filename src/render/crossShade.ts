@@ -6,6 +6,7 @@
 import { buildingRect } from '../sim/coverage'
 import type { IslandState } from '../sim/state'
 import { LIGHT } from './built/light'
+import { SHADOW_DEPTH } from './built/shadowCast'
 import { tileToWorld } from './iso'
 import { placeSprite, type SpritePlacement } from './spriteDraw'
 import type { TileRect } from './shapes'
@@ -191,18 +192,20 @@ export function drawCrossShade(ctx: CanvasRenderingContext2D, state: IslandState
   let entry = entries.get(building.id)
   if (!entry || entry.buildings !== state.buildings) {
     // the old one shows until its turn comes: a shadow a frame late is better than a frame that stalls
-    if (madeNow >= PER_FRAME) {
-      if (entry?.canvas) ctx.drawImage(entry.canvas, placed.x, placed.y)
-      return
-    }
-    madeNow++
-    entry = { buildings: state.buildings, canvas: overlay(state, building, rect, placed) }
-    entries.set(building.id, entry)
-    // buildings that were torn down are forgotten now and then
-    if (entries.size > state.buildings.length * 2 + 50) {
-      const alive = new Set(state.buildings.map((b) => b.id))
-      for (const id of entries.keys()) if (!alive.has(id)) entries.delete(id)
+    if (madeNow < PER_FRAME) {
+      madeNow++
+      entry = { buildings: state.buildings, canvas: overlay(state, building, rect, placed) }
+      entries.set(building.id, entry)
+      // buildings that were torn down are forgotten now and then
+      if (entries.size > state.buildings.length * 2 + 50) {
+        const alive = new Set(state.buildings.map((b) => b.id))
+        for (const id of entries.keys()) if (!alive.has(id)) entries.delete(id)
+      }
     }
   }
-  if (entry.canvas) ctx.drawImage(entry.canvas, placed.x, placed.y)
+  if (!entry?.canvas) return
+  // the overlay holds the shapes of the shadows; like those on the ground they are as dark as one shadow
+  ctx.globalAlpha = SHADOW_DEPTH
+  ctx.drawImage(entry.canvas, placed.x, placed.y)
+  ctx.globalAlpha = 1
 }

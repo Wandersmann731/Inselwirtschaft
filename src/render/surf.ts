@@ -1,11 +1,12 @@
-// The shore, seen from the land outwards: dry sand that turns damp (the ground itself), a band of wet sand, the edge
-// of froth that runs up and back over it, shallow water that turns from turquoise to blue-green with the distance
-// from the coast, and waves that roll in and break. The shallow water never changes: it is drawn once per rectangle
-// of sea and kept. Wet sand and foam are a few shapes along the coast, drawn anew in every frame.
+// The shore, seen from the land outwards: dry sand that turns damp (the ground itself), a band of bare wet sand, the
+// edge of froth that runs up and back over it, shallow water that turns from turquoise to blue-green with the
+// distance from the coast, and waves that roll in and break. What lies still (the shallows and the wet sand) is
+// worked out once per rectangle of sea and kept (shoreMade.ts). The froth is a few shapes along the coast, drawn
+// anew in every frame and filled with the foam pictures (foam.ts).
 import type { TileRange } from './buildingRenderer'
 import { buildPieces, toWorld, type Piece, type Solid } from './coastLine'
-import { HALF_H, HALF_W } from './iso'
-import { LACE_RES, makeLace } from './water'
+import { BARE_SAND, renderShore, SHALLOW_REACH, SHORE_H, SHORE_W, type ShorePicture } from './shoreMade'
+import { LACE_RES, makeFroth, makeLace } from './foam'
 import { Terrain, type GameMap } from '../world/terrain'
 
 export { findCoastLines, type TilePoint } from './coastLine'
@@ -17,66 +18,19 @@ const REACH = 1.7
 /** Foam of similar strength is drawn in one go: this many strengths are told apart. */
 const LEVELS = 6
 const FOAM = '244, 250, 248'
-/** Wet sand reaches this far from the land (tiles); the froth edge runs between `SWASH.near` and `SWASH.far`. */
-const WET_SAND = 0.4
+/** The froth edge runs up the bare wet sand (see shoreMade.ts) and back: between these distances from the land, in tiles. */
 const SWASH = { near: 0.12, far: 0.4 }
 /** The thin film of water a wave leaves on the sand behind its froth, the shade the froth throws, the dark water before a breaking wave and its lit back. */
 const FILM = 'rgba(96, 176, 172, 0.3)'
 const SHADE = 'rgba(58, 44, 30, 0.3)'
-const TROUGH = 'rgba(8, 46, 66, 0.14)'
-const BACK = 'rgba(150, 214, 204, 0.1)'
-/** World pixels the two foam nets cover before they repeat: a close one for fresh froth, a wide one for what drifts off. */
-const LACE_SPAN = { dense: 96, wide: 150 }
-/** Shallow water: how far it reaches (tiles), its colour at the sand and far out, and how much of the sea it covers at the sand. */
-const SHALLOW = { reach: 3.2, near: [92, 176, 160], far: [40, 120, 136], cover: 0.72, steps: 16 }
-/** Wet sand, and its outer edge that is already under water. Drawn in every frame, over the reflections. */
-const SAND = { wet: 'rgb(184, 150, 104)', edge: 'rgb(150, 142, 116)' }
-/** The static part of the shore is kept in pictures of this many world pixels. */
-const SHORE_W = 512
-const SHORE_H = 256
+const TROUGH = 'rgba(8, 46, 66, 0.1)'
+const BACK = 'rgba(150, 214, 204, 0.08)'
+/** World pixels the foam pictures cover before they repeat: the net that drifts off behind a wave, and froth. */
+const LACE_SPAN = { wide: 150, froth: 132 }
+/** How far the tongues and bays of a froth edge reach from its middle line, in tiles. */
+const FRAY = 0.2
 /** Shore pictures made per frame at most: the rest follows in the next frames. */
 const SHORE_PER_FRAME = 3
-/** World pixels along a tile axis on the ground plane (a tile is 64 by 32 on screen, so 45 on the ground). */
-const TILE_GROUND = Math.hypot(HALF_W, 2 * HALF_H)
-
-/**
- * The shallow water of one rectangle of sea, by its distance from the coast line. The coast is stroked many times, wide and faint first, then narrower: the strokes add up to
- * a smooth run of colour. It is drawn on the ground plane (twice as high as on screen), so a distance is the same
- * in every direction on the ground. What falls on the land is hidden by the ground picture. Null without a coast.
- */
-function renderShore(pieces: Piece[], rx: number, ry: number): HTMLCanvasElement | null {
-  const x0 = rx * SHORE_W
-  const y0 = ry * SHORE_H
-  const reach = SHALLOW.reach * TILE_GROUND
-  const near = pieces.filter((p) => p.box.maxX > x0 - reach && p.box.minX < x0 + SHORE_W + reach && p.box.maxY > y0 - reach / 2 && p.box.minY < y0 + SHORE_H + reach / 2)
-  if (near.length === 0) return null
-  const canvas = document.createElement('canvas')
-  canvas.width = SHORE_W
-  canvas.height = SHORE_H
-  const g = canvas.getContext('2d')
-  if (!g) return null
-  g.translate(-x0, -y0)
-  g.scale(1, 0.5)
-  g.lineCap = 'round'
-  g.lineJoin = 'round'
-  g.beginPath()
-  for (const piece of near) {
-    g.moveTo(piece.x[0], piece.y[0] * 2)
-    for (let k = 1; k < piece.x.length; k++) g.lineTo(piece.x[k], piece.y[k] * 2)
-  }
-  // every step adds the same share of what is still missing, so the cover grows evenly to the sand
-  const share = 1 - Math.pow(1 - SHALLOW.cover, 1 / SHALLOW.steps)
-  for (let step = 0; step < SHALLOW.steps; step++) {
-    const t = step / (SHALLOW.steps - 1)
-    // more steps close to the sand, where the colour changes fastest
-    const tiles = WET_SAND + (SHALLOW.reach - WET_SAND) * (1 - t) * (1 - t)
-    const colour = SHALLOW.far.map((far, c) => Math.round(far + (SHALLOW.near[c] - far) * t * t))
-    g.strokeStyle = `rgba(${colour.join(', ')}, ${share})`
-    g.lineWidth = 2 * tiles * TILE_GROUND
-    g.stroke()
-  }
-  return canvas
-}
 
 /** A stretch of coast along which one wave front runs unbroken. */
 interface Run {
@@ -92,6 +46,10 @@ interface Run {
   climb: number[]
   /** For each point how thick the froth is there, 0 to 1 (see Piece.rough). */
   rough: number[]
+  /** For each point how far the edge of the froth is pushed in or out there, -0.5 to 0.5 (see Piece.fray). */
+  fray: number[]
+  /** For each point how much froth is heaped up there, 0 to 1 (see Piece.tuft): the back of a band of froth is as ragged as this. */
+  tuft: number[]
   /** Strength of the wave, of its breaking and of the froth edge in the middle of the run, as levels from 0 (nothing to draw) to LEVELS. */
   waveLevel: number
   breakLevel: number
@@ -100,14 +58,9 @@ interface Run {
 
 type Offset = (run: Run, index: number) => number
 
-/** A whole piece of coast as a run with no wave on it: for what lies still along the shore. */
-function stillRun(piece: Piece): Run {
-  const none = piece.x.map(() => 0)
-  return { piece, first: 0, count: piece.x.length, progress: none, out: none, edge: none, climb: none, rough: piece.rough, waveLevel: 0, breakLevel: 0, swashLevel: 0 }
-}
-
 function makeRun(piece: Piece, all: number[], first: number, last: number): Run {
   const progress = all.slice(first, last + 1)
+  const fray = piece.fray.slice(first, last + 1).map((value) => value - 0.5)
   // the froth edge on the sand runs up as the wave arrives and drains back slowly
   const climb = progress.map((p) => Math.sin(Math.PI * Math.min(1, p * 1.6)) ** 2)
   const middle = progress.length >> 1
@@ -119,10 +72,13 @@ function makeRun(piece: Piece, all: number[], first: number, last: number): Run 
     first,
     count: progress.length,
     progress,
-    out: progress.map((p) => SWASH.far + (REACH - SWASH.far) * (1 - p)),
-    edge: climb.map((share, i) => SWASH.far - (SWASH.far - SWASH.near) * share + 0.05 * (piece.rough[first + i] - 0.5)),
+    // a wave front is no ruled line either: it runs ahead in one place and hangs back in the next
+    out: progress.map((p, i) => SWASH.far + (REACH - SWASH.far) * (1 - p) + FRAY * 0.8 * fray[i]),
+    edge: climb.map((share, i) => SWASH.far - (SWASH.far - SWASH.near) * share + 0.05 * (piece.rough[first + i] - 0.5) + FRAY * fray[i]),
     climb,
     rough: piece.rough.slice(first, last + 1),
+    fray,
+    tuft: piece.tuft.slice(first, last + 1),
     waveLevel: Math.round(wave * LEVELS),
     breakLevel: Math.round(breaking * LEVELS),
     swashLevel: Math.max(1, Math.round(climb[middle] * LEVELS)),
@@ -134,9 +90,9 @@ interface Shore {
   signature: number
   pieces: Piece[]
   /** The static shore pictures by rectangle; null where no coast is near. */
-  pictures: Map<string, HTMLCanvasElement | null>
+  pictures: Map<string, ShorePicture | null>
   /** Pictures of the coast before it last changed: shown until their new ones are made, so the shore never blinks. */
-  stale: Map<string, HTMLCanvasElement | null>
+  stale: Map<string, ShorePicture | null>
 }
 
 /** Buildings and roads of an island, as the surf needs them: the sand reaches out around those at the water. */
@@ -182,7 +138,8 @@ export function tornFoam(thick: number): number {
 export class Surf {
   private cache = new WeakMap<GameMap, Shore>()
   private signatures = new WeakMap<number[], { roads: number[]; value: number }>()
-  private lace: { dense: CanvasPattern; wide: CanvasPattern } | null | undefined
+  private lace: CanvasPattern | null | undefined
+  private froth: CanvasPattern[] | null | undefined
 
   /**
    * Draws the shore of the visible sea. `layout` are the buildings and roads of the island. `between` is called
@@ -190,28 +147,29 @@ export class Surf {
    */
   draw(ctx: CanvasRenderingContext2D, map: GameMap, seed: number, range: TileRange, now: number, animated: boolean, layout?: ShoreLayout, between?: () => void): void {
     const shore = this.shoreOf(map, seed, layout)
-    const reach = Math.ceil(SHALLOW.reach) + 1
+    const reach = Math.ceil(SHALLOW_REACH) + 1
     const visible = shore.pieces.filter((p) => p.maxU >= range.minI - reach && p.minU <= range.maxI + reach && p.maxV >= range.minJ - reach && p.minV <= range.maxJ + reach)
-    if (visible.length > 0) this.drawStill(ctx, shore, range)
+    if (visible.length > 0) this.drawStill(ctx, shore, range, seed, 'water')
     between?.()
     if (visible.length === 0) return
-    // wet sand over the shallows (and over what is mirrored in them), with a soft outer edge that is already under water
-    const still = visible.map(stillRun)
-    this.fillBand(ctx, still, () => -0.06, () => WET_SAND + 0.12, SAND.edge, 0.35)
-    this.fillBand(ctx, still, () => -0.06, () => WET_SAND + 0.05, SAND.edge, 0.6)
-    this.fillBand(ctx, still, () => -0.06, () => WET_SAND - 0.04, SAND.wet, 0.7)
-    this.fillBand(ctx, still, () => -0.06, () => WET_SAND * 0.6, SAND.wet, 0.8)
+    // the bare wet sand lies over the shallows, over the waves that cross them and over what is mirrored in them
+    this.drawStill(ctx, shore, range, seed, 'sand')
+    // the foam pictures are worked out once, one kind per frame: both at once would hold the first frame up twice as long
     if (this.lace === undefined) {
-      const dense = makeLace(ctx, true)
-      const wide = makeLace(ctx, false)
-      this.lace = dense && wide ? { dense, wide } : null
+      this.lace = makeLace(ctx, false)
+      return
     }
+    if (this.froth === undefined) {
+      this.froth = makeFroth(ctx)
+      return
+    }
+    if (!this.lace || !this.froth) return
+    const foam = { lace: this.lace, froth: this.froth }
 
     const t = animated ? now / 1000 : 0
-    if (this.lace) {
-      this.lace.dense.setTransform(new DOMMatrix().translate(t * 1.6, t * 0.8).scale(LACE_SPAN.dense / LACE_RES))
-      this.lace.wide.setTransform(new DOMMatrix().translate(t * 2.6, t * 1.3).scale(LACE_SPAN.wide / LACE_RES))
-    }
+    foam.lace.setTransform(new DOMMatrix().translate(t * 2.6, t * 1.3).scale(LACE_SPAN.wide / LACE_RES))
+    // the three densities of froth are one heap of bubbles: they move as one
+    for (const froth of foam.froth) froth.setTransform(new DOMMatrix().translate(t * 1.6, t * 0.8).scale(LACE_SPAN.froth / LACE_RES))
     // A wave is one front along the whole coast: at every point it is at another moment of its run. `progress` is
     // 0 far out and 1 at the shore. Still water shows a fixed moment.
     const clock = animated ? t / WAVE_SECONDS : 0.35
@@ -237,29 +195,32 @@ export class Surf {
         this.fillBand(ctx, wave, (run, i) => run.out[i], (run, i) => run.out[i] + 0.2, BACK, share)
       }
       const breaking = runs.filter((run) => run.breakLevel === level)
-      if (breaking.length > 0 && this.lace) {
-        // where it breaks: the net of foam it trails behind (thinning out seawards), and froth on the crest
-        this.fillBand(ctx, breaking, (run, i) => run.out[i] + 0.04, (run, i) => run.out[i] + 0.3 + 0.5 * run.progress[i], this.lace.wide, 0.35 * share)
-        this.fillBand(ctx, breaking, (run, i) => run.out[i] + 0.02, (run, i) => run.out[i] + 0.16 + 0.25 * run.progress[i], this.lace.wide, 0.45 * share)
-        this.fillBand(ctx, breaking, (run, i) => run.out[i] - 0.01, (run, i) => run.out[i] + 0.07 + 0.14 * (1 - run.rough[i]), this.lace.dense, 0.9 * share)
-        // the crest is white only where the wave is breaking hardest: elsewhere the line tears and only the net of foam is left
-        this.fillBand(ctx, breaking, (run, i) => run.out[i] - (0.015 + 0.02 * (1 - run.rough[i])) * tornFoam(1 - run.rough[i]), (run, i) => run.out[i] + (0.01 + 0.05 * (1 - run.rough[i])) * tornFoam(1 - run.rough[i]), solidFoam, 0.72 * share)
+      if (breaking.length > 0) {
+        // where it breaks: the net of foam it trails behind (thinning out seawards), and froth that is thin at its rim and closed on the crest
+        this.fillBand(ctx, breaking, (run, i) => run.out[i] + 0.04, (run, i) => run.out[i] + 0.34 + 0.5 * run.progress[i], foam.lace, 0.4 * share)
+        this.fillBand(ctx, breaking, (run, i) => run.out[i] - 0.05, (run, i) => run.out[i] + 0.26 + 0.2 * run.progress[i], foam.froth[0], 0.8 * share)
+        // the same clumps laid on twice, the second time closer to the crest: the froth thickens towards it without an edge
+        this.fillBand(ctx, breaking, (run, i) => run.out[i] - 0.03, (run, i) => run.out[i] + 0.06 + 0.2 * run.tuft[i], foam.froth[1], 0.6 * share)
+        this.fillBand(ctx, breaking, (run, i) => run.out[i] - 0.02, (run, i) => run.out[i] + 0.03 + 0.12 * run.tuft[i], foam.froth[1], 0.6 * share)
+        this.fillBand(ctx, breaking, (run, i) => run.out[i] - 0.012, (run, i) => run.out[i] + 0.08 * Math.max(0, run.tuft[i] - 0.35), foam.froth[2], 0.85 * share)
       }
     }
     for (let level = 1; level <= LEVELS; level++) {
       const share = level / LEVELS
       const swash = runs.filter((run) => run.swashLevel === level)
       if (swash.length === 0) continue
-      // on the sand: a film of water, the net of foam the last wave left, and the edge of froth with its shade
-      this.fillBand(ctx, swash, (run, i) => run.edge[i], () => WET_SAND + 0.1, FILM, 1)
-      if (this.lace) {
-        this.fillBand(ctx, swash, (run, i) => run.edge[i] + 0.05, (run, i) => run.edge[i] + 0.3 + 0.35 * run.climb[i], this.lace.wide, 0.3 + 0.25 * share)
-        this.fillBand(ctx, swash, (run, i) => run.edge[i] + 0.03, (run, i) => run.edge[i] + 0.16 + 0.2 * run.climb[i], this.lace.wide, 0.4 + 0.3 * share)
-        this.fillBand(ctx, swash, (run, i) => run.edge[i], (run, i) => run.edge[i] + 0.06 + 0.14 * run.rough[i] + 0.08 * run.climb[i], this.lace.dense, 0.8 + 0.2 * share)
-      }
-      // the froth is thick in one place and thin in the next
-      this.fillBand(ctx, swash, (run, i) => run.edge[i] - 0.045 - 0.015 * run.rough[i], (run, i) => run.edge[i] - 0.01, SHADE, 0.4 + 0.5 * share)
-      this.fillBand(ctx, swash, (run, i) => run.edge[i] - (0.016 + 0.012 * run.rough[i]) * tornFoam(run.rough[i]), (run, i) => run.edge[i] + (0.012 + 0.065 * run.rough[i]) * tornFoam(run.rough[i]), solidFoam, 0.66 + 0.24 * share)
+      // on the sand: a film of water, the net of foam the last wave left, and the froth: flecks ahead of it, clumps, and a closed white edge
+      // the film ends where the bare sand ends: beyond it lies water anyway, and no edge of it shows in the shallows
+      this.fillBand(ctx, swash, (run, i) => run.edge[i], (run, i) => Math.max(run.edge[i], BARE_SAND + 0.1), FILM, 1)
+      this.fillBand(ctx, swash, (run, i) => run.edge[i] + 0.05, (run, i) => run.edge[i] + 0.34 + 0.35 * run.climb[i], foam.lace, 0.35 + 0.3 * share)
+      // the froth throws a little shade on the sand in front of it
+      this.fillBand(ctx, swash, (run, i) => run.edge[i] - 0.04 - 0.015 * run.rough[i], (run, i) => run.edge[i] - 0.005, SHADE, 0.35 + 0.4 * share)
+      this.fillBand(ctx, swash, (run, i) => run.edge[i] - 0.02, (run, i) => run.edge[i] + 0.24 + 0.16 * run.climb[i], foam.froth[0], 0.7 + 0.2 * share)
+      this.fillBand(ctx, swash, (run, i) => run.edge[i] - 0.014, (run, i) => run.edge[i] + 0.06 + 0.2 * run.tuft[i], foam.froth[1], 0.55 + 0.15 * share)
+      this.fillBand(ctx, swash, (run, i) => run.edge[i] - 0.01, (run, i) => run.edge[i] + 0.03 + 0.12 * run.tuft[i], foam.froth[1], 0.55 + 0.15 * share)
+      this.fillBand(ctx, swash, (run, i) => run.edge[i] - 0.008, (run, i) => run.edge[i] + 0.012 + 0.1 * Math.max(0, run.tuft[i] - 0.3), foam.froth[2], 0.8 + 0.15 * share)
+      // the very edge is white only where the froth is thick: it swells, thins out and breaks off
+      this.fillBand(ctx, swash, (run, i) => run.edge[i] - 0.012 * tornFoam(run.rough[i]), (run, i) => run.edge[i] + (0.008 + 0.03 * run.rough[i]) * tornFoam(run.rough[i]), solidFoam, 0.6 + 0.3 * share)
     }
   }
 
@@ -285,7 +246,7 @@ export class Surf {
   }
 
   /** Draws the kept shore pictures of the visible sea and makes a few of the missing ones. */
-  private drawStill(ctx: CanvasRenderingContext2D, shore: Shore, range: TileRange): void {
+  private drawStill(ctx: CanvasRenderingContext2D, shore: Shore, range: TileRange, seed: number, part: 'water' | 'sand'): void {
     const corners = [toWorld(range.minI, range.minJ), toWorld(range.maxI + 1, range.minJ), toWorld(range.minI, range.maxJ + 1), toWorld(range.maxI + 1, range.maxJ + 1)]
     const minX = Math.min(...corners.map((c) => c[0]))
     const maxX = Math.max(...corners.map((c) => c[0]))
@@ -299,9 +260,9 @@ export class Surf {
       for (let rx = Math.floor(minX / SHORE_W); rx <= Math.floor(maxX / SHORE_W); rx++) {
         const key = `${rx},${ry}`
         let picture = shore.pictures.get(key)
-        if (picture === undefined && made < SHORE_PER_FRAME) {
+        if (picture === undefined && part === 'water' && made < SHORE_PER_FRAME) {
           made++
-          picture = renderShore(shore.pieces, rx, ry)
+          picture = renderShore(shore.pieces, rx, ry, seed)
           shore.pictures.set(key, picture)
           shore.stale.delete(key)
         }
@@ -312,7 +273,7 @@ export class Surf {
         const top = Math.round(view.d * ry * SHORE_H + view.f)
         const right = Math.round(view.a * (rx + 1) * SHORE_W + view.e)
         const bottom = Math.round(view.d * (ry + 1) * SHORE_H + view.f)
-        ctx.drawImage(picture, left, top, right - left, bottom - top)
+        ctx.drawImage(picture[part], left, top, right - left, bottom - top)
       }
     }
     ctx.restore()

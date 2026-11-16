@@ -8,6 +8,8 @@
 // picture (see shadePlot, used by coastFade.ts when it makes the copy with the soft rim).
 import { buildingRect } from '../sim/coverage'
 import { LIGHT } from './built/light'
+import { SHADOW_DEPTH } from './built/shadowCast'
+import { layShadows } from './shadowLayer'
 import type { IslandState } from '../sim/state'
 import type { TileRange } from './buildingRenderer'
 import type { FadeFrame } from './coastFade'
@@ -23,8 +25,8 @@ export { LIGHT }
 const TINT = [20, 28, 58]
 const DEPTH = 0.52
 const CONTACT = 0.42
-/** How dark the shadows of trees, bushes and rocks beside buildings are. */
-const DECOR_SHADOW = 0.3
+/** How dark the shadows of trees, bushes and rocks beside buildings are, as a share of the shadow of a wall. */
+const DECOR_SHADOW = 0.72
 /** A shadow gets lighter towards its tip: by this share over this many world pixels of height. */
 const THIN = { share: 0.35, over: 80 }
 /** Free cells around the shadow, so its soft edge is not cut off. */
@@ -320,33 +322,37 @@ function castOf(id: string, image: CanvasImageSource, width: number, height: num
   return made
 }
 
-/** Draws the shadows the buildings throw on the ground around them. Before the buildings, after the ground. */
+/**
+ * Draws the shadows the buildings throw on the ground around them, and those of the trees, bushes and rocks that
+ * stand beside them. Before the buildings, after the ground. All of them are laid down as one (see shadowLayer.ts).
+ */
 export function drawShadows(ctx: CanvasRenderingContext2D, state: IslandState, range: TileRange): void {
   const blocks = quarterBlocks(state)
-  for (const building of state.buildings) {
-    const rect = buildingRect(building)
-    if (rect.x > range.maxI + 5 || rect.x + rect.w < range.minI - 5 || rect.y > range.maxJ + 5 || rect.y + rect.h < range.minJ - 5) continue
-    const block = building.quarter !== undefined ? (blocks.get(building.quarter) ?? null) : null
-    const key = buildingKey(building, block)
-    const placed = placeSprite(building, key)
-    if (!placed) continue
-    if (placed.made) {
-      const cast = placed.made.shadow
-      if (cast) ctx.drawImage(cast.canvas, placed.x + cast.left, placed.y + cast.top)
-      continue
+  layShadows(ctx, SHADOW_DEPTH, (g) => {
+    for (const building of state.buildings) {
+      const rect = buildingRect(building)
+      if (rect.x > range.maxI + 5 || rect.x + rect.w < range.minI - 5 || rect.y > range.maxJ + 5 || rect.y + rect.h < range.minJ - 5) continue
+      const block = building.quarter !== undefined ? (blocks.get(building.quarter) ?? null) : null
+      const key = buildingKey(building, block)
+      const placed = placeSprite(building, key)
+      if (!placed) continue
+      if (placed.made) {
+        const cast = placed.made.shadow
+        if (cast) g.drawImage(cast.canvas, placed.x + cast.left, placed.y + cast.top)
+        continue
+      }
+      // a painted picture: its shadow is read from the picture and already has its strength, so it goes straight on the ground
+      const corner = tileToWorld(rect.x, rect.y)
+      const frame: FadeFrame = { originX: corner.x - placed.x, originY: corner.y - placed.y, scale: 1, w: rect.w, h: rect.h, mirrored: placed.mirrored }
+      const cast = castOf(`${key}|${placed.mirrored ? 'm' : ''}|${rect.w}x${rect.h}`, placed.image, placed.width, placed.height, frame)
+      if (cast) ctx.drawImage(cast.picture, placed.x + cast.left, placed.y + cast.top)
     }
-    const corner = tileToWorld(rect.x, rect.y)
-    // the footprint in the small picture, which has one pixel per world pixel
-    const frame: FadeFrame = { originX: corner.x - placed.x, originY: corner.y - placed.y, scale: 1, w: rect.w, h: rect.h, mirrored: placed.mirrored }
-    const cast = castOf(`${key}|${placed.mirrored ? 'm' : ''}|${rect.w}x${rect.h}`, placed.image, placed.width, placed.height, frame)
-    if (cast) ctx.drawImage(cast.picture, placed.x + cast.left, placed.y + cast.top)
-  }
-  // the trees, bushes and rocks beside buildings, which are drawn together with them (see frontDecor.ts)
-  ctx.save()
-  ctx.globalAlpha = DECOR_SHADOW
-  for (const decor of frontDecorIn(state, range)) {
-    // hedges, beds and gardens carry their own shade in their picture
-    if (decor.item.kind !== 'bed' && decor.item.kind !== 'hedge' && decor.item.kind !== 'garden') drawDecorShadow(ctx, decor.item, decor.wx, decor.wy, LIGHT)
-  }
-  ctx.restore()
+    // a crown lets some light through: its shadow is not as dark as that of a wall
+    g.globalAlpha = DECOR_SHADOW
+    for (const decor of frontDecorIn(state, range)) {
+      // hedges, beds and gardens carry their own shade in their picture
+      if (decor.item.kind !== 'bed' && decor.item.kind !== 'hedge' && decor.item.kind !== 'garden') drawDecorShadow(g, decor.item, decor.wx, decor.wy, LIGHT)
+    }
+    g.globalAlpha = 1
+  })
 }

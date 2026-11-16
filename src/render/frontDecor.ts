@@ -29,6 +29,8 @@ export interface FrontItem {
 /** Houses from this tier on keep clipped hedges, and from the next one on gardens inside a hedge instead of a fence. */
 const HEDGE_FROM = tierIndex('settlers')
 const LAWN_FROM = tierIndex('citizens')
+/** From this tier on a lawn lies inside a low wall of stone as often as inside a hedge. */
+const WALL_FROM = tierIndex('merchants')
 /**
  * On a free tile beside a house: the chance that the whole tile is a fenced garden; if not, the chance of a hedge
  * along the house (where hedges are kept), of a bed, of a bush.
@@ -77,7 +79,8 @@ export function gardenItems(state: Pick<IslandState, 'map' | 'buildings' | 'occu
       if (!planted.has(index) && tile(1) < GARDEN.plot) {
         planted.set(index, 2)
         const lawn = tier >= LAWN_FROM && tile(2) < GARDEN.lawn
-        add('garden', lawn ? 4 : 1 + Math.floor(tile(3) * 3), tx + 0.5, ty + 0.5, tx, ty, 1)
+        const walled = lawn && tier >= WALL_FROM && tile(4) < 0.5
+        add('garden', lawn ? (walled ? 5 : 4) : 1 + Math.floor(tile(3) * 3), tx + 0.5, ty + 0.5, tx, ty, 1)
       }
       if (planted.get(index) === 2) continue
       const r = (n: number): number => hash2(tx * 13 + n, ty * 7 + dx * 3 + dy, state.id + 91)

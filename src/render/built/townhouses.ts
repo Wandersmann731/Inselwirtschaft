@@ -8,17 +8,20 @@ import { dormerOn, stack, WASHES, type Look } from './look'
 import { body, type Body, type Facade } from './parts'
 import { barrel, block, bush, crate, sack } from './props'
 import { cylinder } from './round'
+import { border, path, type Gates } from './courts'
+import type { Plot } from './plots'
 import { gable, hip } from './roofs'
 
-export function merchants(scene: Scene, look: Look): void {
+export function merchants(scene: Scene, look: Look, plot: Plot): Gates {
   const { variant, wash, shutters, doorColour, frame } = look
+  const [paved, garden] = [plot.ground === 'flags', plot.ground === 'garden']
   const window = { shutters: variant % 2 === 1 ? shutters : undefined, flowers: variant % 3 === 0, leaded: variant === 5 }
   const ground = variant === 1 ? ('brick' as const) : ('stone' as const)
   const timber = { timber: true, frame, ground, window }
 
   if (variant === 0) {
     // the long side to the street: shop windows below, a bay over the door, two dormers
-    const b: Body = { at: [0.3, 0.42, 1.62, 1.5], wall: 'plaster', tint: wash, sw: { ...timber, storeys: 3, windows: 3, door: 0.5, doorStyle: 'arch', doorColour, shop: true }, se: { ...timber, storeys: 3, windows: 2 }, roof: 'slate', rise: 23, shape: 'u', over: 0.08, attic: true, jetty: 0.045 }
+    const b: Body = { at: [0.3, 0.42, 1.62, 1.5], wall: 'plaster', tint: wash, sw: { ...timber, storeys: 3, windows: 3, door: 0.5, doorStyle: 'arch', doorColour, shop: true }, se: { ...timber, storeys: 3, windows: 2 }, roof: 'slate', rise: 23, shape: 'u', over: 0.08, attic: true, jetty: 0.045, paved, garden }
     const main = body(scene, b)
     const [u0, v0, u1, v1] = main.top
     for (const u of [u0 + 0.36, u1 - 0.4]) stack(scene, main, u, (v0 + v1) / 2, 6)
@@ -28,12 +31,12 @@ export function merchants(scene: Scene, look: Look): void {
     barrel(scene, 0.24, 1.72)
     barrel(scene, 0.4, 1.8, 0.9)
     crate(scene, 1.86, 1.44, 0.17, 6)
-    return
+    return { sw: 0.96 }
   }
 
   if (variant === 1) {
     // the gable to the street: a steep roof, a loft door under the ridge and a beam to hoist the bales up to it
-    const b: Body = { at: [0.44, 0.34, 1.48, 1.5], wall: 'plaster', tint: wash, sw: { ...timber, storeys: 3, windows: 2, door: 0.5, doorStyle: 'arch', doorColour }, se: { ...timber, storeys: 3, windows: 3 }, roof: 'tile', rise: 27, shape: 'v', over: 0.07, jetty: 0.045, loft: true }
+    const b: Body = { at: [0.44, 0.34, 1.48, 1.5], wall: 'plaster', tint: wash, sw: { ...timber, storeys: 3, windows: 2, door: 0.5, doorStyle: 'arch', doorColour }, se: { ...timber, storeys: 3, windows: 3 }, roof: 'tile', rise: 27, shape: 'v', over: 0.07, jetty: 0.045, loft: true, paved, garden }
     const main = body(scene, b)
     const [u0, v0, u1, v1] = main.top
     hoist(scene, 'sw', (u0 + u1) / 2, v1, main.eaves + 12.5, 15)
@@ -43,28 +46,36 @@ export function merchants(scene: Scene, look: Look): void {
     sack(scene, 0.4, 1.76, [176, 150, 112])
     crate(scene, 0.22, 1.5, 0.16, 5.6)
     barrel(scene, 1.82, 1.46)
-    return
+    return { sw: 0.96 }
   }
 
   if (variant === 2) {
     // a house with a wing: the wing turns its own gable to the street
-    const b: Body = { at: [0.3, 0.34, 1.64, 1.3], wall: 'plaster', tint: wash, sw: { ...timber, storeys: 3, windows: 3, door: 0.2, doorStyle: 'arch', doorColour }, se: { ...timber, storeys: 3, windows: 2 }, roof: 'slate', rise: 22, shape: 'u', over: 0.08, attic: true, jetty: 0.04 }
+    const b: Body = { at: [0.3, 0.34, 1.64, 1.3], wall: 'plaster', tint: wash, sw: { ...timber, storeys: 3, windows: 3, door: 0.2, doorStyle: 'arch', doorColour }, se: { ...timber, storeys: 3, windows: 2 }, roof: 'slate', rise: 22, shape: 'u', over: 0.08, attic: true, jetty: 0.04, paved, garden }
     const main = body(scene, b)
     const [u0, v0, , v1] = main.top
     wing(scene, b, main, { side: 'sw', from: 1.0, to: 1.66, out: 0.24, front: { ...timber, storeys: 3, windows: 2 }, rise: 18 })
     stack(scene, main, u0 + 0.3, (v0 + v1) / 2, 6)
     dormerOn(scene, b, main, u0 + 0.36, v1 - 0.12)
-    barrel(scene, 0.3, 1.52)
-    crate(scene, 0.5, 1.6, 0.16, 5.6)
-    bush(scene, 0.8, 1.7, 2.8)
-    return
+    const door = b.at[0] + (b.at[2] - b.at[0]) * 0.2
+    if (garden) {
+      // a border before the wing, a path to the door, a bush in the corner of the lawn
+      border(scene, 1.04, 1.62, b.at[3] + 0.24)
+      path(scene, door, b.at[3])
+      bush(scene, 0.22, 1.7, 2.8)
+    } else {
+      barrel(scene, 0.3, 1.52)
+      crate(scene, 0.5, 1.6, 0.16, 5.6)
+      bush(scene, 0.8, 1.7, 2.8)
+    }
+    return { sw: door }
   }
 
   if (variant === 3) {
     // a house of plastered stone, washed yellow, under a hipped roof with a small lantern on its ridge
     const ochre = 'rgb(242, 214, 146)'
     const stone = { storey: 18, base: ['ashlar', 4] as [Body['wall'], number], quoins: true, window: { shutters, flowers: true } }
-    const b: Body = { at: [0.34, 0.42, 1.64, 1.58], wall: 'plaster', tint: ochre, sw: { ...stone, storeys: 3, windows: 3, door: 0.5, doorStyle: 'arch', doorColour }, se: { ...stone, storeys: 3, windows: 3, ivy: 0.72 }, roof: 'tile', roofTint: 'rgb(214, 196, 178)', rise: 19, shape: 'hip', over: 0.08 }
+    const b: Body = { at: [0.34, 0.42, 1.64, 1.58], wall: 'plaster', tint: ochre, sw: { ...stone, storeys: 3, windows: 3, door: 0.5, doorStyle: 'arch', doorColour }, se: { ...stone, storeys: 3, windows: 3, ivy: 0.72 }, roof: 'tile', roofTint: 'rgb(214, 196, 178)', rise: 19, shape: 'hip', over: 0.08, paved, garden }
     const main = body(scene, b)
     const [u0, v0, u1, v1] = main.top
     const [cu, cv] = [(u0 + u1) / 2, (v0 + v1) / 2]
@@ -74,16 +85,21 @@ export function merchants(scene: Scene, look: Look): void {
     stack(scene, main, u0 + 0.26, cv - 0.2, 8)
     stack(scene, main, u1 - 0.3, cv - 0.2, 8)
     block(scene, 0.99, b.at[3] + 0.06, 0.34, 0.1, 1.5, 'ashlar')
-    crate(scene, 0.4, 1.8, 0.17, 6)
-    barrel(scene, 0.22, 1.72)
-    return
+    if (garden) {
+      border(scene, b.at[0] + 0.06, b.at[2] - 0.06, b.at[3], 0.99)
+      path(scene, 0.99, b.at[3] + 0.1)
+    } else {
+      crate(scene, 0.4, 1.8, 0.17, 6)
+      barrel(scene, 0.22, 1.72)
+    }
+    return { sw: 0.99 }
   }
 
   if (variant === 4) {
     // two narrow houses wall to wall, each with its gable to the street, of unequal height
-    const left: Body = { at: [0.3, 0.42, 0.96, 1.52], wall: 'plaster', tint: wash, sw: { ...timber, storeys: 3, windows: 2, door: 0.32, doorColour }, se: { ...timber, storeys: 3, windows: 2 }, roof: 'tile', rise: 21, shape: 'v', over: 0.05, jetty: 0.03, attic: true }
+    const left: Body = { at: [0.3, 0.42, 0.96, 1.52], wall: 'plaster', tint: wash, sw: { ...timber, storeys: 3, windows: 2, door: 0.32, doorColour }, se: { ...timber, storeys: 3, windows: 2 }, roof: 'tile', rise: 21, shape: 'v', over: 0.05, jetty: 0.03, attic: true, paved, garden }
     const other = WASHES[(variant + 2) % WASHES.length]
-    const right: Body = { at: [1.04, 0.5, 1.68, 1.58], wall: 'plaster', tint: other, sw: { storeys: 2, windows: 2, door: 0.68, doorStyle: 'arch', doorColour: 'rgb(110, 134, 120)', timber: true, frame: 'cross', base: ['stone', 3], window: { shutters } }, se: { storeys: 2, windows: 3, timber: true, frame: 'cross', base: ['stone', 3], window: { shutters } }, roof: 'slate', rise: 25, shape: 'v', over: 0.05, jetty: 0.035, loft: true }
+    const right: Body = { at: [1.04, 0.5, 1.68, 1.58], wall: 'plaster', tint: other, sw: { storeys: 2, windows: 2, door: 0.68, doorStyle: 'arch', doorColour: 'rgb(110, 134, 120)', timber: true, frame: 'cross', base: ['stone', 3], window: { shutters } }, se: { storeys: 2, windows: 3, timber: true, frame: 'cross', base: ['stone', 3], window: { shutters } }, roof: 'slate', rise: 25, shape: 'v', over: 0.05, jetty: 0.035, loft: true, paved, garden }
     const a = body(scene, left)
     const c = body(scene, right)
     stack(scene, a, (a.top[0] + a.top[2]) / 2 - 0.14, a.top[1] + 0.4, 6)
@@ -91,11 +107,11 @@ export function merchants(scene: Scene, look: Look): void {
     hoist(scene, 'sw', (c.top[0] + c.top[2]) / 2, c.top[3], c.eaves + 11.5, 12)
     barrel(scene, 0.22, 1.66)
     crate(scene, 1.86, 1.5, 0.16, 5.6)
-    return
+    return { sw: 0.51 }
   }
 
   // a corner house: a round turret hangs on the corner between its two walls
-  const b: Body = { at: [0.3, 0.4, 1.58, 1.48], wall: 'plaster', tint: wash, sw: { ...timber, storeys: 3, windows: 3, door: 0.34, doorStyle: 'arch', doorColour }, se: { ...timber, storeys: 3, windows: 2 }, roof: 'tile', roofTint: 'rgb(222, 200, 176)', rise: 22, shape: 'u', over: 0.08, attic: true, jetty: 0.04 }
+  const b: Body = { at: [0.3, 0.4, 1.58, 1.48], wall: 'plaster', tint: wash, sw: { ...timber, storeys: 3, windows: 3, door: 0.34, doorStyle: 'arch', doorColour }, se: { ...timber, storeys: 3, windows: 2 }, roof: 'tile', roofTint: 'rgb(222, 200, 176)', rise: 22, shape: 'u', over: 0.08, attic: true, jetty: 0.04, paved, garden }
   const main = body(scene, b)
   const [u0, v0, , v1] = main.top
   turret(scene, b, main, 19, 0.15, { mat: 'plaster', tint: wash }, 'slate', window)
@@ -104,10 +120,11 @@ export function merchants(scene: Scene, look: Look): void {
   sign(scene, 'sw', 0.4, b.at[3], 12, 'rgb(74, 96, 124)')
   barrel(scene, 0.26, 1.7)
   sack(scene, 0.44, 1.78)
+  return { sw: b.at[0] + (b.at[2] - b.at[0]) * 0.34 }
 }
 
 /** A wide house of two high storeys under a hipped roof of slate: plastered or of brick, with a pavilion, a portico or a wing. */
-export function aristocrats(scene: Scene, look: Look): void {
+export function aristocrats(scene: Scene, look: Look, plot: Plot): Gates {
   const { variant, wash, shutters, doorColour } = look
   const brick = variant === 1 || variant === 3
   const tint = brick ? undefined : variant === 5 ? 'rgb(244, 224, 172)' : wash
@@ -116,7 +133,7 @@ export function aristocrats(scene: Scene, look: Look): void {
   const centre = variant === 2
   const long: Facade = { ...fine, storeys: 2, windows: 5, door: centre ? null : 0.5, doorStyle: 'arch', doorColour }
   const short: Facade = { ...fine, storeys: 2, windows: 3, ivy: variant === 3 ? 0.3 : undefined }
-  const b: Body = { at: variant === 5 ? [0.2, 0.36, 1.66, 1.62] : [0.2, 0.36, 1.8, 1.64], wall: brick ? 'brick' : 'plaster', tint, sw: long, se: short, roof: 'slate', rise: 19, shape: 'hip', over: 0.07, paved: false }
+  const b: Body = { at: variant === 5 ? [0.2, 0.36, 1.66, 1.62] : [0.2, 0.36, 1.8, 1.64], wall: brick ? 'brick' : 'plaster', tint, sw: long, se: short, roof: 'slate', rise: 19, shape: 'hip', over: 0.07, paved: plot.ground === 'flags', garden: plot.ground === 'garden' }
   const main = body(scene, b)
   const [u0, v0, u1, v1] = main.top
   const stone = brick ? 'brick' : 'ashlar'
@@ -138,6 +155,17 @@ export function aristocrats(scene: Scene, look: Look): void {
     block(scene, 1.0, v1 + 0.06, 0.3, 0.1, 1.6, 'ashlar')
   }
   if (variant === 5) wing(scene, b, main, { side: 'se', from: 0.56, to: 1.16, out: 0.12, front: { ...fine, storeys: 2, windows: 2 }, rise: 14 })
-  bush(scene, 0.34, 1.82, 3.2)
-  bush(scene, variant === 5 ? 1.5 : 1.66, 1.82, 3.2)
+  const door = (b.at[0] + b.at[2]) / 2
+  if (plot.ground === 'garden') {
+    // flowers along the front on both sides of the steps, clipped bushes inside the corners of the hedge
+    border(scene, b.at[0] + 0.08, door - 0.36, b.at[3])
+    border(scene, door + 0.36, b.at[2] - 0.08, b.at[3])
+    path(scene, door, b.at[3] + (centre ? 0.26 : 0.12))
+    bush(scene, 0.26, 1.76, 2.6)
+    bush(scene, variant === 5 ? 1.5 : 1.7, 1.76, 2.6)
+  } else {
+    bush(scene, 0.34, 1.82, 3.2)
+    bush(scene, variant === 5 ? 1.5 : 1.66, 1.82, 3.2)
+  }
+  return { sw: door }
 }

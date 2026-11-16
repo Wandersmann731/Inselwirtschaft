@@ -100,19 +100,19 @@ const RECIPES: Record<Mat, { base: [number, number, number]; at: Texel }> = {
   },
   // upright boards, weathered grey-brown, with dark gaps
   boards: {
-    base: [128, 98, 68],
+    base: [118, 95, 71],
     at: (x, y) => {
       const board = Math.floor(x / 16)
       const gap = smooth(Math.min(x % 16, 16 - (x % 16)) / 1.5)
       const tone = 0.84 + 0.3 * hash2(board, 1, 61)
       const grain = 0.92 + 0.16 * noise(x * 4, y, 16, 62 + board)
       const w = weather(x, y, 63) * tone * grain * (0.55 + 0.45 * gap)
-      return [134 * w, 102 * w, 70 * w]
+      return [124 * w, 99 * w, 74 * w]
     },
   },
   // boards that lie: the wall of a shed, the hull of a hut
   planks: {
-    base: [146, 114, 80],
+    base: [132, 107, 79],
     at: (x, y) => {
       const board = Math.floor(y / 16)
       const gap = smooth(Math.min(y % 16, 16 - (y % 16)) / 1.5)
@@ -120,12 +120,12 @@ const RECIPES: Record<Mat, { base: [number, number, number]; at: Texel }> = {
       const grain = 0.92 + 0.16 * noise(x, y * 4, 16, 72 + board)
       const lit = 1 + 0.1 * (0.5 - (y % 16) / 16)
       const w = weather(x, y, 73) * tone * grain * lit * (0.55 + 0.45 * gap)
-      return [152 * w, 118 * w, 82 * w]
+      return [138 * w, 111 * w, 82 * w]
     },
   },
   // round logs laid on each other: light on their upper side, dark between them
   logs: {
-    base: [120, 86, 56],
+    base: [104, 79, 56],
     at: (x, y) => {
       const log = Math.floor(y / 16)
       const round = Math.sin(((y % 16) / 16) * Math.PI)
@@ -133,7 +133,7 @@ const RECIPES: Record<Mat, { base: [number, number, number]; at: Texel }> = {
       const grain = 0.9 + 0.2 * noise(x, y * 6, 16, 82 + log)
       const lit = 0.5 + 0.62 * round * (1.12 - 0.3 * ((y % 16) / 16))
       const w = weather(x, y, 83) * tone * grain * lit
-      return [138 * w, 100 * w, 64 * w]
+      return [120 * w, 91 * w, 64 * w]
     },
   },
   // dark oak of a timber frame

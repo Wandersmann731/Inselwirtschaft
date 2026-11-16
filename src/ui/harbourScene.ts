@@ -8,6 +8,9 @@ import { forgetShips, SHIP_ORIGIN, SHIP_SIZE, shipPicture, shipsKept } from '../
 import { hash2 } from '../world/noise2d'
 import { paintGround } from './harbourGround'
 import { drawSails, sailAngle } from '../render/built/sails'
+import { plotOf } from '../render/built/plots'
+import { SHADOW_DEPTH } from '../render/built/shadowCast'
+import { WaterPattern } from '../render/water'
 
 
 /** What stands on the island: buildings by their picture and where their plot begins (tiles), trees by kind. */
@@ -62,6 +65,16 @@ export function islandPlace(W: number, H: number, free: Area): { s: number; orig
   const middle = Math.min(free.y + free.h - H * 0.05 - (ISLAND.h / 2) * s, free.y + free.h / 2 + (ISLAND.above / 2) * s)
   const origin: [number, number] = [free.x + free.w / 2 - ISLAND.x * s, middle - ISLAND.y * s]
   return { s, origin, horizon: Math.max(H * 0.14, Math.min(H * 0.3, middle - (ISLAND.h / 2) * s - H * 0.03)) }
+}
+
+/** The plots of the town whose houses stand on stone flags (see built/plots.ts), by their first tile. Pure. */
+export function flaggedPlots(): [number, number][] {
+  const plots: [number, number][] = []
+  for (const [name, u, v] of TOWN) {
+    const house = /^house_([a-z]+?)(?:_(\d))?$/.exec(name)
+    if (house && plotOf(house[1], house[2] ? Number(house[2]) - 1 : 0).ground === 'flags') plots.push([u, v])
+  }
+  return plots
 }
 
 /** What was kept of pictures before the scene was first painted: all that came after was made for it alone. */
@@ -139,24 +152,47 @@ export function paintHarbour(canvas: HTMLCanvasElement, unit: number, free?: Are
   sea.addColorStop(1, '#0d3550')
   g.fillStyle = sea
   g.fillRect(0, horizon, W, H - horizon)
-  // waves: short strokes of light and dark that grow towards the viewer; under the sun they glitter
-  for (let i = 0; i < 2600; i++) {
+  // its waves are those of the game's own sea, at the size of the island; towards the horizon they are lost in the haze
+  const water = new WaterPattern(g)
+  g.save()
+  g.beginPath()
+  g.rect(0, horizon, W, H - horizon)
+  g.clip()
+  g.setTransform(s, 0, 0, s, origin[0], origin[1])
+  const waves = { x: -origin[0] / s, y: (horizon - origin[1]) / s, w: W / s, h: (H - horizon) / s }
+  g.globalAlpha = 0.5
+  water.fill(g, waves, 0, false)
+  g.globalAlpha = 0.9
+  water.ripple(g, waves, 0)
+  g.restore()
+  const far = g.createLinearGradient(0, horizon, 0, horizon + (H - horizon) * 0.3)
+  far.addColorStop(0, 'rgba(150, 196, 190, 0.96)')
+  far.addColorStop(0.3, 'rgba(92, 158, 170, 0.6)')
+  far.addColorStop(1, 'rgba(60, 130, 150, 0)')
+  g.fillStyle = far
+  g.fillRect(0, horizon, W, (H - horizon) * 0.3)
+  // under the sun the water glitters: short strokes of light that grow towards the viewer
+  for (let i = 0; i < 1500; i++) {
     const depth = hash2(i, 1, 81) ** 1.6
     const y = horizon + depth * (H - horizon)
-    const x = hash2(i, 2, 81) * W
-    const long = unit * (3 + 26 * depth) * (0.5 + hash2(i, 3, 81))
+    const x = sun[0] + (hash2(i, 2, 81) - 0.5) * 2 * W * (0.05 + 0.22 * depth)
     const near = Math.max(0, 1 - Math.abs(x - sun[0]) / (W * (0.05 + 0.22 * depth)))
-    const light = hash2(i, 4, 81) < 0.5 + 0.4 * near
-    g.fillStyle = light ? `rgba(255, ${238 - 30 * depth}, ${200 - 20 * depth}, ${0.06 + 0.5 * near * (1 - depth * 0.6)})` : 'rgba(8, 30, 52, 0.12)'
+    g.fillStyle = `rgba(255, ${238 - 30 * depth}, ${200 - 20 * depth}, ${0.5 * near * (1 - depth * 0.6)})`
     g.beginPath()
-    g.ellipse(x, y, long, unit * (0.5 + 1.6 * depth), 0, 0, Math.PI * 2)
+    g.ellipse(x, y, unit * (2 + 12 * depth) * (0.5 + hash2(i, 3, 81)), unit * (0.4 + 1 * depth), 0, 0, Math.PI * 2)
     g.fill()
   }
   // the island: shallows, surf, beach, meadow and streets, worked out point by point
   const at = (u: number, v: number): [number, number] => [origin[0] + (u - v) * 32 * s, origin[1] + (u + v) * 16 * s]
-  paintGround(g, origin, s)
+  paintGround(g, origin, s, flaggedPlots())
   // everything that stands on the island, from the back to the front
   const things: { depth: number; draw: () => void }[] = []
+  // the shadows go into a layer of their own and on the ground together: where two overlap it is no darker
+  const layer = document.createElement('canvas')
+  layer.width = W
+  layer.height = H
+  const shade = layer.getContext('2d')
+  const shades: (() => void)[] = []
   for (const [name, u, v] of TOWN) {
     const made = built(`buildings/${name}`)
     if (!made) continue
@@ -164,7 +200,8 @@ export function paintHarbour(canvas: HTMLCanvasElement, unit: number, free?: Are
     const left = made.pads.l / 4 + size[1] * 32
     const rise = made.image.height / 4 - (size[0] + size[1]) * 16 - made.pads.b / 4
     const [x, y] = at(u, v)
-    if (made.shadow) g.drawImage(made.shadow.canvas, x - left * s + made.shadow.left * s, y - rise * s + made.shadow.top * s, made.shadow.canvas.width * s, made.shadow.canvas.height * s)
+    const cast = made.shadow
+    if (cast) shades.push(() => shade?.drawImage(cast.canvas, x - left * s + cast.left * s, y - rise * s + cast.top * s, cast.canvas.width * s, cast.canvas.height * s))
     things.push({ depth: u + v + size[0] + size[1], draw: () => {
       g.drawImage(made.image, x - left * s, y - rise * s, (made.image.width / 4) * s, (made.image.height / 4) * s)
       if (!made.spin) return
@@ -183,6 +220,10 @@ export function paintHarbour(canvas: HTMLCanvasElement, unit: number, free?: Are
     const [w, h] = [picture.width * grownScale(kind) * s * scale, picture.height * grownScale(kind) * s * scale]
     things.push({ depth: u + v, draw: () => g.drawImage(picture, x - w / 2, y - h, w, h) })
   }
+  for (const lay of shades) lay()
+  g.globalAlpha = SHADOW_DEPTH
+  g.drawImage(layer, 0, 0)
+  g.globalAlpha = 1
   things.sort((a, b) => a.depth - b.depth)
   for (const thing of things) thing.draw()
   // the ships, each with its broken picture in the water and a line of foam at its side

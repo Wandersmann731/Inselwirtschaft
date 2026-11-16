@@ -17,9 +17,16 @@ export interface Solid {
   shadow: boolean
 }
 
-/** How dark a shadow is where it is deepest, and the seam at the foot of a wall. */
-const DEPTH = 0.42
-const CONTACT = 0.4
+/**
+ * How dark a shadow is where it is deepest. A shadow picture holds the shape only, with full cover in its middle:
+ * whoever lays shadows down gives them this strength, all of them at once, so two shadows that overlap are no
+ * darker than one.
+ */
+export const SHADOW_DEPTH = 0.56
+/** The cool dark a shadow turns the ground to, as the sky lights it. */
+export const SHADOW_TINT = [18, 24, 52]
+/** The seam at the foot of a wall. */
+const CONTACT = 0.44
 
 /** Convex hull of points (monotone chain). */
 export function hull(points: P2[]): P2[] {
@@ -38,8 +45,11 @@ export function hull(points: P2[]): P2[] {
   return [...half(sorted), ...half(sorted.reverse())]
 }
 
-/** The shadow of all solids on the ground, one pixel per world pixel: where their corners land, seen from the sun. */
-export function castShadow(items: Solid[]): { canvas: HTMLCanvasElement; left: number; top: number } | null {
+/**
+ * The shadow of all solids on the ground, one pixel per world pixel: where their corners land, seen from the sun.
+ * `canvas` is the shadow they cast, `seam` the dark line where they stand on the ground.
+ */
+export function castShadow(items: Solid[]): { canvas: HTMLCanvasElement; seam: HTMLCanvasElement; left: number; top: number } | null {
   const land = (p: P3): P2 => [(p[0] - p[1]) * HW + LIGHT.x * p[2], (p[0] + p[1]) * HH + LIGHT.y * p[2]]
   const solids = items.filter((item) => item.shadow)
   const casts = solids.map((item) => hull(item.pts.map(land)))
@@ -53,10 +63,12 @@ export function castShadow(items: Solid[]): { canvas: HTMLCanvasElement; left: n
   const w = Math.ceil(Math.max(...points.map((p) => p[0]))) - left + pad
   const h = Math.ceil(Math.max(...points.map((p) => p[1]))) - top + pad
   const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
+  const seam = document.createElement('canvas')
+  canvas.width = seam.width = w
+  canvas.height = seam.height = h
   const g = canvas.getContext('2d', { willReadFrequently: true })
-  if (!g) return null
+  const s = seam.getContext('2d')
+  if (!g || !s) return null
   const mask = (polys: P2[][], grow: number): Float32Array => {
     g.setTransform(1, 0, 0, 1, 0, 0)
     g.clearRect(0, 0, w, h)
@@ -77,18 +89,20 @@ export function castShadow(items: Solid[]): { canvas: HTMLCanvasElement; left: n
     for (let i = 0; i < out.length; i++) out[i] = data[i * 4 + 3] / 255
     return out
   }
-  const cast = soften(soften(mask(casts, 0), w, h, 2), w, h, 2)
+  // the afternoon sun draws a clear edge: the shadow is softened only a little
+  const cast = soften(soften(mask(casts, 0), w, h, 1), w, h, 1)
   const contact = soften(mask(feet, 3), w, h, 2)
   const pixels = g.createImageData(w, h)
+  const line = s.createImageData(w, h)
   for (let i = 0; i < cast.length; i++) {
-    pixels.data[i * 4] = 20
-    pixels.data[i * 4 + 1] = 28
-    pixels.data[i * 4 + 2] = 58
-    pixels.data[i * 4 + 3] = 255 * (1 - (1 - cast[i] * DEPTH) * (1 - contact[i] * CONTACT))
+    for (let c = 0; c < 3; c++) pixels.data[i * 4 + c] = line.data[i * 4 + c] = SHADOW_TINT[c]
+    pixels.data[i * 4 + 3] = 255 * cast[i]
+    line.data[i * 4 + 3] = 255 * contact[i] * CONTACT
   }
   g.setTransform(1, 0, 0, 1, 0, 0)
   g.putImageData(pixels, 0, 0)
-  return { canvas, left, top }
+  s.putImageData(line, 0, 0)
+  return { canvas, seam, left, top }
 }
 
 /** Blurs a map: every cell becomes the mean of the cells up to `radius` away. */

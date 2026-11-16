@@ -742,11 +742,11 @@ body,
   display: flex;
   align-items: center;
   justify-content: center;
-  /* the scene is made of runs of colour and drawn shapes, see --scene in index.html */
+  /* the painted harbour town, see --scene in index.html */
   background: var(--scene, #0d2433);
 }
 
-/* The menu stands aside so that the town behind it shows: at the left on a wide screen, at the top on a tall one. */
+/* The menu stands aside so that the town of the picture shows: at the left on a wide screen, at the top on a tall one. */
 @media (orientation: landscape) {
   .menu-screen {
     justify-content: flex-start;
@@ -761,7 +761,7 @@ body,
   }
 }
 
-/* The harbour scene: painted by code a moment after the menu shows, then faded in over the evening sky. */
+/* The harbour scene drawn by code (ui/Backdrop.tsx): not shown at present, the start menu stands before the painted picture. */
 .menu-backdrop {
   position: absolute;
   inset: 0;
@@ -1468,7 +1468,7 @@ button.hud-stats {
 .map-shade {
   position: fixed;
   inset: 0;
-  background: radial-gradient(ellipse at center, transparent 58%, rgba(24, 14, 6, 0.3) 100%);
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(24, 14, 6, 0.2) 100%);
   pointer-events: none;
 }
 

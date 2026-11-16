@@ -3,7 +3,7 @@ import { getTier } from '../sim/tiers'
 import type { IslandState } from '../sim/state'
 import { Terrain } from '../world/terrain'
 import { HALF_H, HALF_W, mapBounds, tileToWorld, type Bounds, type Point } from './iso'
-import { SEA_COLOR, TILE_COLORS } from './terrainStyle'
+import { SEA_COLOR, SHALLOW_COLOR, TILE_COLORS } from './terrainStyle'
 
 export interface MiniLayout {
   /** Size of the minimap in CSS pixels. */
@@ -41,14 +41,20 @@ export function drawMiniTerrain(ctx: CanvasRenderingContext2D, map: IslandState[
   const h = Math.max(1, HALF_H * 2 * k + 0.6)
   ctx.fillStyle = SEA_COLOR
   ctx.fillRect(0, 0, layout.width * pixelRatio, layout.height * pixelRatio)
-  for (let y = 0; y < map.height; y++) {
-    for (let x = 0; x < map.width; x++) {
-      const terrain = map.tiles[y * map.width + x]
-      if (terrain === Terrain.Water) continue
-      const top = tileToWorld(x, y)
-      const p = worldToMini(layout, top.x, top.y + HALF_H)
-      ctx.fillStyle = TILE_COLORS[terrain]
-      ctx.fillRect(p.x * pixelRatio - w / 2, p.y * pixelRatio - h / 2, w, h)
+  const land = (x: number, y: number): boolean => x >= 0 && y >= 0 && x < map.width && y < map.height && map.tiles[y * map.width + x] !== Terrain.Water
+  // the sea is lighter along a coast: the island gets an outline of shallows, as on the map itself. It is drawn
+  // first, because the squares of neighbouring tiles overlap and the land must lie on top
+  for (const shallows of [true, false]) {
+    for (let y = 0; y < map.height; y++) {
+      for (let x = 0; x < map.width; x++) {
+        const terrain = map.tiles[y * map.width + x]
+        if (shallows !== (terrain === Terrain.Water)) continue
+        if (shallows && !land(x - 1, y) && !land(x + 1, y) && !land(x, y - 1) && !land(x, y + 1)) continue
+        const top = tileToWorld(x, y)
+        const p = worldToMini(layout, top.x, top.y + HALF_H)
+        ctx.fillStyle = shallows ? SHALLOW_COLOR : TILE_COLORS[terrain]
+        ctx.fillRect(p.x * pixelRatio - w / 2, p.y * pixelRatio - h / 2, w, h)
+      }
     }
   }
 }

@@ -37,12 +37,15 @@ export function groundTexel(name: GroundName, tx: number, ty: number): [number, 
   const y = ((ty % GROUND_SIZE) + GROUND_SIZE) % GROUND_SIZE
   const grit = hash2(x, y, 911) - 0.5
   if (name === 'grass') {
-    // blades: fine streaks that lean a little, light ones and dark ones; clumps of longer grass; dry and lush patches
-    const blades = noise(x + y, y, 1, 4, 921) * 54 + grit * 40
-    const clumps = layered(x, y, 931, [44, 34, 22, 15, 4, 1])
+    // soft clumps of longer and shorter grass, single dark tufts in it, fine blades over all; dry and lush patches.
+    // Dark grass is the greener, light grass the yellower: sun on dry tips, shade between the stalks.
+    const blades = noise(x + y, y, 1, 4, 921) * 26 + grit * 16
+    const clumps = layered(x, y, 931, [12, 26, 40, 34, 18, 6])
+    const tuft = noise(x, y, 8, 6, 925) + noise(x, y, 4, 3, 926) * 0.6
+    const dark = tuft > 0.14 ? (tuft - 0.14) * 170 : 0
     const dry = noise(x, y, 32, 32, 941) * 0.6 + noise(x, y, 8, 8, 942) * 0.5
-    const light = blades + clumps
-    return [114 + light * 1.0 + dry * 18, 141 + light * 0.96 + dry * 4, 97 + light * 0.72 - dry * 12]
+    const light = blades + clumps - dark
+    return [112 + light * 1.04 + dry * 22, 125 + light * 0.94 + dry * 6, 56 + light * 0.44 - dry * 8]
   }
   if (name === 'forest') {
     // dark earth and moss, with the litter of leaves and twigs lying on it
@@ -53,10 +56,13 @@ export function groundTexel(name: GroundName, tx: number, ty: number): [number, 
     return [54 + litter * 0.95 + fallen * 0.9 - moss * 16, 57 + litter * 1.0 + fallen * 0.6 + moss * 14, 42 + litter * 0.7 + fallen * 0.2 - moss * 8]
   }
   if (name === 'sand') {
-    // ripples the wind and the water left, and the sparkle of single grains
+    // ripples the wind and the water left, soft heaps and hollows, the sparkle of single grains, and here and there
+    // a pebble, a shell or a bit of dark weed
     const warp = noise(x, y, 32, 32, 981) * 5 + noise(x, y, 8, 8, 982) * 1.6
     const ripple = Math.sin(((x * 5 + y * 26) / GROUND_SIZE) * Math.PI * 2 + warp)
-    const light = ripple * 5.6 + grit * 10 + noise(x, y, 4, 4, 983) * 13 + noise(x, y, 64, 64, 984) * 3
+    let light = ripple * 7 + grit * 13 + noise(x, y, 4, 4, 983) * 17 + noise(x, y, 16, 16, 985) * 16 + noise(x, y, 64, 64, 984) * 9
+    const speck = noise(x, y, 2, 2, 986)
+    if (speck > 0.33) light += (hash2(x >> 1, y >> 1, 987) > 0.62 ? 30 : -52) * Math.min(1, (speck - 0.33) * 14)
     return [245 + light * 0.8, 233 + light, 210 + light * 1.3]
   }
   // rock: grit of many sizes, darker in cracks, single lighter stones

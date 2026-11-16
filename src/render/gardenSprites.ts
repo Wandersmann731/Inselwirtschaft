@@ -17,13 +17,16 @@ const HEDGE = { length: 0.8, clump: 0.085, height: 4.4 }
 const BED = { length: 0.56, width: 0.3 }
 /** A garden reaches this far from the middle of its tile; its fence has posts this high (world pixels). */
 const GARDEN = { half: 0.43, post: 5.6, posts: 6 }
+/** A garden wall: knee high (world pixels) and a hand thick (tiles). */
+const WALL = { high: 3.8, thick: 0.05 }
 
 const cache = new Map<string, HTMLCanvasElement | null>()
 
 /**
  * The picture of a hedge, a bed or a garden. Hedges and beds: variants 1 and 2 run along the tile axis that goes
  * down to the right, 3 and 4 along the one that goes down to the left. Gardens: 1 and 2 are fenced vegetable plots
- * (rows one way or the other), 3 a fenced flower garden, 4 a lawn with flowers inside a hedge.
+ * (rows one way or the other), 3 a fenced flower garden, 4 a lawn with flowers inside a hedge, 5 the same lawn
+ * inside a low wall of stone.
  */
 export function gardenSprite(kind: GardenKind, variant: number): HTMLCanvasElement | null {
   const id = `${kind}_${variant}`
@@ -103,6 +106,44 @@ function hedgeRun([u0, v0, u1, v1]: number[], seed: number): Leaf[] {
     }
   }
   return leaves
+}
+
+/**
+ * A clipped hedge along a line on the ground, from (u0, v0) to (u1, v1) in tiles from where `g` has its origin:
+ * for a picture that brings its own hedge along (a house with a garden, see built/courts.ts).
+ */
+export function paintHedge(g: CanvasRenderingContext2D, run: number[], seed: number): void {
+  paintLeaves(g, hedgeRun(run, seed))
+}
+
+/**
+ * A border of flowers along a line on the ground, in tiles from where `g` has its origin: a strip of dug earth a
+ * hand's breadth wide, and plants in two rows on it, most of them in flower.
+ */
+export function paintBorder(g: CanvasRenderingContext2D, u0: number, v0: number, u1: number, v1: number, seed: number): void {
+  const long = Math.hypot(u1 - u0, v1 - v0)
+  if (long < 0.05) return
+  const [au, av] = [(u1 - u0) / long, (v1 - v0) / long]
+  const wide = 0.085
+  for (let i = 0; i < long * 560; i++) {
+    const t = hash2(i, 1, seed) * long
+    const off = (hash2(i, 2, seed) - 0.5) * wide
+    const [x, y] = screen(u0 + au * t - av * off, v0 + av * t + au * off)
+    const tone = 0.82 + 0.36 * hash2(i, 3, seed)
+    dab(g, x, y, 0.6 + 0.4 * hash2(i, 4, seed), 104 * tone, 78 * tone, 52 * tone, 0.85)
+  }
+  const plants: Plant[] = []
+  const perRow = Math.max(2, Math.round(long / 0.07))
+  for (let row = 0; row < 2; row++) {
+    for (let i = 0; i < perRow; i++) {
+      const n = row * perRow + i
+      if (hash2(n, 6, seed) < 0.1) continue
+      const t = ((i + 0.5 + (hash2(n, 7, seed) - 0.5) * 0.5) / perRow) * long
+      const off = (row - 0.5) * wide * 0.56
+      plants.push({ u: u0 + au * t - av * off, v: v0 + av * t + au * off, n, size: 0.75 + 0.45 * hash2(n, 8, seed), flower: hash2(n, 9, seed) < 0.8 })
+    }
+  }
+  paintPlants(g, plants, seed)
 }
 
 /** Paints leaves from the back to the front. */
@@ -228,10 +269,51 @@ function paintFence(g: CanvasRenderingContext2D, u0: number, v0: number, u1: num
   }
 }
 
+/**
+ * One side of a low garden wall from (u0, v0) to (u1, v1), along u or along v: two courses of rough stone under a
+ * coping, the side that looks left in the sun, the one that looks right in the shade.
+ */
+function paintWall(g: CanvasRenderingContext2D, [u0, v0, u1, v1]: number[], seed: number): void {
+  const alongU = v0 === v1
+  const t = WALL.thick / 2
+  // the face one sees is the one towards the viewer: at the larger v of a wall along u, at the larger u of one along v
+  const [fa, fb] = alongU ? [screen(u0, v0 + t), screen(u1, v0 + t)] : [screen(u0 + t, v0), screen(u0 + t, v1)]
+  const [ba, bb] = alongU ? [screen(u0, v0 - t), screen(u1, v0 - t)] : [screen(u0 - t, v0), screen(u0 - t, v1)]
+  const quad = (points: number[][], colour: string): void => {
+    g.fillStyle = colour
+    g.beginPath()
+    points.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)))
+    g.closePath()
+    g.fill()
+  }
+  // its shade on the ground, to the right
+  quad([[fa[0], fa[1]], [fb[0], fb[1]], [fb[0] + 3, fb[1] + 1.2], [fa[0] + 3, fa[1] + 1.2]], 'rgba(20, 28, 52, 0.2)')
+  const face = alongU ? [176, 166, 146] : [124, 120, 118]
+  quad([fa, fb, [fb[0], fb[1] - WALL.high], [fa[0], fa[1] - WALL.high]], 'rgb(74, 68, 62)')
+  const stones = Math.max(3, Math.round(Math.hypot(u1 - u0, v1 - v0) / 0.085))
+  for (let course = 0; course < 2; course++) {
+    for (let k = 0; k < stones; k++) {
+      // the stones of the upper course lie over the joints of the lower one
+      const from = Math.max(0, (k + (course ? 0.5 : 0) + 0.06) / stones)
+      const to = Math.min(1, (k + (course ? 0.5 : 0) + 0.94) / stones)
+      if (to <= from) continue
+      const at = (share: number, up: number): number[] => [fa[0] + (fb[0] - fa[0]) * share, fa[1] + (fb[1] - fa[1]) * share - up]
+      const tone = 0.86 + 0.26 * hash2(k, course, seed)
+      const [low, high] = [course * (WALL.high / 2) + 0.12, (course + 1) * (WALL.high / 2) - 0.12]
+      quad([at(from, low), at(to, low), at(to, high), at(from, high)], `rgb(${Math.round(face[0] * tone)}, ${Math.round(face[1] * tone)}, ${Math.round(face[2] * tone)})`)
+    }
+  }
+  // the coping: a little wider than the wall, light on top
+  const lift = (p: number[]): number[] => [p[0], p[1] - WALL.high]
+  quad([lift(fa), lift(fb), [fb[0], fb[1] - WALL.high - 0.8], [fa[0], fa[1] - WALL.high - 0.8]], alongU ? 'rgb(202, 194, 176)' : 'rgb(146, 142, 140)')
+  quad([lift(fa), lift(fb), lift(bb), lift(ba)].map(([x, y]) => [x, y - 0.8]), 'rgb(214, 207, 190)')
+}
+
 function paintGarden(g: CanvasRenderingContext2D, variant: number, seed: number): void {
   const half = GARDEN.half
   const hedged = variant === 4
-  const inner = half - (hedged ? 0.1 : 0.05)
+  const walled = variant === 5
+  const inner = half - (hedged ? 0.1 : walled ? 0.07 : 0.05)
   // the ground of the garden: dug earth for vegetables, grass for flowers and lawn
   if (variant <= 2) paintSoil(g, inner, inner, seed, 2600, [106, 80, 54])
   else paintSoil(g, inner, inner, seed, 2600, [98, 128, 62])
@@ -242,7 +324,8 @@ function paintGarden(g: CanvasRenderingContext2D, variant: number, seed: number)
       if (hedged) {
         hedgeShade(g, sides[i], seed + i)
         paintLeaves(g, hedgeRun(sides[i], seed + i * 7))
-      } else paintFence(g, sides[i][0], sides[i][1], sides[i][2], sides[i][3], seed + i * 7)
+      } else if (walled) paintWall(g, sides[i], seed + i * 7)
+      else paintFence(g, sides[i][0], sides[i][1], sides[i][2], sides[i][3], seed + i * 7)
     }
   }
   enclose(0, 2)

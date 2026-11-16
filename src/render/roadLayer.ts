@@ -244,16 +244,17 @@ function renderRoads(state: IslandState, tiles: number[], paved: Uint8Array, rx:
       const cover = smooth((a + ragged * 0.15 - EDGE.track) / 0.07 + 0.5)
       if (cover <= 0 && stone <= 0) continue
       // the track: darker in its two ruts, and grass comes back in its middle where no wheel runs
-      const rut = 1 - 0.2 * (1 - smooth(Math.abs(a - RUT) / 0.035))
+      // a rut is no ruled line: it is deep in one place and trodden flat in the next
+      const rut = 1 - (0.06 + 0.16 * valueNoise(u * 1.7, v * 1.7, seed + 815)) * (1 - smooth(Math.abs(a - RUT) / 0.05))
       const grass = smooth((a - MIDDLE) / 0.05) * smooth((valueNoise(u * 2.6, v * 2.6, seed + 814) - 0.35) / 0.3) * 0.6
       // the rim lies a little lower and in shade
       const rim = (0.84 + 0.16 * smooth((a - EDGE.track) / 0.12)) * slow * rut
       let r = track[t] * rim
       let g = track[t + 1] * rim
       let b = track[t + 2] * rim
-      r += (118 - r) * grass
-      g += (132 - g) * grass
-      b += (76 - b) * grass
+      r += (112 - r) * grass
+      g += (124 - g) * grass
+      b += (58 - b) * grass
       if (stone > 0) {
         // worn a little lighter where everybody walks
         const worn = slow * (1 + 0.07 * smooth((a - RUT) / 0.1))

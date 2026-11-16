@@ -19,12 +19,12 @@ const HALF_W = 32
 const HALF_H = 16
 /** Bare, trodden earth: where the grass is worn away. */
 const EARTH = [172, 141, 96]
-const BEACH_TINT = [0.92, 0.78, 0.55]
+const BEACH_TINT = [0.86, 0.76, 0.56]
 /** Land share (see landShare) at which the land begins, and up to where its ground is damp from the sea. */
 const COAST = 0.5
 const DAMP_TO = 0.74
 /** How much darker damp ground is, per colour channel. */
-const DAMP = [0.13, 0.16, 0.2]
+const DAMP = [0.2, 0.22, 0.26]
 /**
  * Sand under buildings and roads at the water: their tiles count this many times towards the land, so the ground
  * reaches a little beyond them in a rounded apron instead of ending at the straight tile edge. The apron follows
@@ -67,7 +67,7 @@ const scratchB = [0, 0, 0]
 /**
  * Colour of one land terrain at a position in tile coordinates. Two layers of the texture at different scales and
  * directions are mixed, so there is no visible repetition. Grass and forest floor come in patches: dry and yellow,
- * lush and dark, with a mottle of about a tile, and their green is a little muted.
+ * lush and dark, with a mottle of about a tile.
  */
 function landColor(terrain: number, tex: GroundTextures, u: number, v: number, seed: number, out: number[]): void {
   const texture =
@@ -79,7 +79,7 @@ function landColor(terrain: number, tex: GroundTextures, u: number, v: number, s
   for (let k = 0; k < 3; k++) out[k] = (scratchA[k] * 0.6 + scratchB[k] * 0.4) * drift * base
   if (terrain === Terrain.Beach) {
     // an ochre tint, and the sand lies in lighter and darker drifts
-    const drifts = 0.93 + 0.14 * fbm(u * 0.7 + 3, v * 0.7 + 8, seed + 36, 2)
+    const drifts = 0.87 + 0.26 * fbm(u * 0.7 + 3, v * 0.7 + 8, seed + 36, 3)
     for (let k = 0; k < 3; k++) out[k] *= BEACH_TINT[k] * drifts
     return
   }
@@ -89,15 +89,10 @@ function landColor(terrain: number, tex: GroundTextures, u: number, v: number, s
   const blotch = fbm(u * 0.42, v * 0.42, seed + 33, 3)
   const lush = Math.max(0, 0.47 - blotch) * 2.4
   const pale = Math.max(0, blotch - 0.58) * 1.6
-  const mottle = (0.9 + 0.2 * fbm(u * 1.9, v * 1.9, seed + 34, 2)) * (1 - 0.3 * lush)
-  out[0] = (out[0] + 34 * dry + 18 * pale) * mottle
-  out[1] = (out[1] + 14 * dry + 16 * pale) * mottle
-  out[2] = (out[2] - 12 * dry - 8 * pale) * mottle
-  // muted, slightly warm green
-  const grey = 0.3 * out[0] + 0.59 * out[1] + 0.11 * out[2]
-  out[0] = (grey + (out[0] - grey) * 0.92) * 1.03
-  out[1] = grey + (out[1] - grey) * 0.92
-  out[2] = (grey + (out[2] - grey) * 0.92) * 0.96
+  const mottle = (0.88 + 0.24 * fbm(u * 1.9, v * 1.9, seed + 34, 2)) * (1 - 0.36 * lush)
+  out[0] = (out[0] + 30 * dry + 22 * pale - 10 * lush) * mottle
+  out[1] = (out[1] + 12 * dry + 14 * pale) * mottle
+  out[2] = (out[2] - 8 * dry - 4 * pale - 6 * lush) * mottle
 }
 
 const shares = [0, 0, 0]
@@ -298,7 +293,7 @@ function tiledNoise(x: number, y: number, period: number, seed: number): number 
  * layers as [cell size in picture pixels, strength]; `stretch` pulls the cells upright like blades of grass;
  * `flecks` is the share of pixels that become a light or dark speck.
  */
-function makeGrain(seed: number, layers: [number, number][], stretch: number, speckle: number, flecks: number): HTMLCanvasElement | null {
+function makeGrain(seed: number, layers: [number, number][], stretch: number, speckle: number, flecks: number, tufts = 0): HTMLCanvasElement | null {
   const size = GRAIN_SPAN * GRAIN_SCALE
   const canvas = document.createElement('canvas')
   canvas.width = size
@@ -321,7 +316,37 @@ function makeGrain(seed: number, layers: [number, number][], stretch: number, sp
     }
   }
   ctx.putImageData(image, 0, 0)
+  layTufts(ctx, size, seed + 21, tufts)
   return canvas
+}
+
+/**
+ * Tufts of grass over the grain: a few blades each, fanned out from one foot, some in the light and some in the
+ * shade of the others. A tuft that crosses an edge is drawn again one picture further on, so the picture still
+ * joins itself.
+ */
+function layTufts(ctx: CanvasRenderingContext2D, size: number, seed: number, count: number): void {
+  ctx.lineCap = 'round'
+  ctx.lineWidth = 0.9
+  for (let n = 0; n < count; n++) {
+    const x = hash2(n, 1, seed) * size
+    const y = hash2(n, 2, seed) * size
+    const blades = 3 + Math.floor(hash2(n, 3, seed) * 4)
+    const grey = hash2(n, 4, seed) > 0.45 ? 228 : 34
+    for (const [ox, oy] of [[0, 0], [size, 0], [-size, 0], [0, size], [0, -size]]) {
+      if (x + ox < -9 || x + ox > size + 9 || y + oy < -9 || y + oy > size + 9) continue
+      for (let k = 0; k < blades; k++) {
+        const lean = (hash2(n, 10 + k, seed) - 0.5) * 5
+        const long = 3 + hash2(n, 20 + k, seed) * 5
+        const root = x + ox + (hash2(n, 30 + k, seed) - 0.5) * 3
+        ctx.strokeStyle = `rgba(${grey}, ${grey}, ${grey}, ${0.28 + 0.3 * hash2(n, 40 + k, seed)})`
+        ctx.beginPath()
+        ctx.moveTo(root, y + oy)
+        ctx.quadraticCurveTo(root + lean * 0.3, y + oy - long * 0.6, root + lean, y + oy - long)
+        ctx.stroke()
+      }
+    }
+  }
 }
 
 export interface GroundGrain {
@@ -336,8 +361,8 @@ let grain: GroundGrain | null | undefined
 /** The two grain pictures, made once. Null if no canvas is to be had. */
 export function groundGrain(): GroundGrain | null {
   if (grain !== undefined) return grain
-  const grown = makeGrain(811, [[16, 16], [8, 34], [4, 46], [2, 38]], 1.5, 30, 0.03)
-  const bare = makeGrain(977, [[16, 16], [4, 26], [2, 30]], 1, 30, 0.012)
+  const grown = makeGrain(811, [[32, 14], [16, 22], [8, 32], [4, 34], [2, 18]], 1.5, 14, 0.014, 2400)
+  const bare = makeGrain(977, [[32, 20], [16, 20], [8, 16], [4, 22], [2, 16]], 1, 20, 0.02)
   grain = grown && bare ? { grown, bare } : null
   return grain
 }

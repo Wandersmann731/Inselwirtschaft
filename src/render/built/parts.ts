@@ -35,6 +35,8 @@ export interface Body {
   loft?: boolean
   /** No grass along the foot of the walls: it stands on a floor of stone or planks. */
   paved?: boolean
+  /** It stands in a garden: grass along its walls, but no trodden earth and nothing lying about. */
+  garden?: boolean
   /** Its roof runs back into the slope of another roof (a nave into its transept). */
   join?: Join
   /** How much it leans (1 is an old timber house, 0 a wall that stands true); by default that follows from its walls. */
@@ -102,10 +104,12 @@ export function body(scene: Scene, b: Body): Built {
     tufts(scene, 'sw', u0, u1, v1, scene.seed + 3, doorGap(b.sw, u0, u1))
     // on the right wall a place along it runs from the front corner to the back one
     tufts(scene, 'se', v0, v1, u1, scene.seed + 4, doorGap(b.se, v1, v0))
-    yardLitter(scene, u0, v0, u1, v1, scene.seed + 7)
-    // and before every door the ground is trodden bare
-    if (typeof b.sw.door === 'number') threshold(scene, 'sw', u0 + (u1 - u0) * b.sw.door, v1, scene.seed + 5)
-    if (typeof b.se.door === 'number') threshold(scene, 'se', v1 + (v0 - v1) * b.se.door, u1, scene.seed + 6)
+    if (!b.garden) {
+      yardLitter(scene, u0, v0, u1, v1, scene.seed + 7)
+      // and before every door the ground is trodden bare
+      if (typeof b.sw.door === 'number') threshold(scene, 'sw', u0 + (u1 - u0) * b.sw.door, v1, scene.seed + 5)
+      if (typeof b.se.door === 'number') threshold(scene, 'se', v1 + (v0 - v1) * b.se.door, u1, scene.seed + 6)
+    }
   }
   const out = jetty * (storeys - 1)
   const top: [number, number, number, number] = [u0 + lu * storeys, v0 + lv * storeys, u1 + out + lu * storeys, v1 + out + lv * storeys]

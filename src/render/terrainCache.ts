@@ -1,5 +1,6 @@
 import type { GroundTextures } from '../world/ground'
 import type { GameMap } from '../world/terrain'
+import type { TownGround } from './townGround'
 import { CHUNK_H, CHUNK_W, chunkDependencies, chunkTiles, layoutSignature, renderChunk } from './terrainChunk'
 
 interface Entry {
@@ -22,6 +23,8 @@ export interface ChunkRequest {
   occupancy: number[]
   roads: number[]
   yard: Float32Array | null
+  /** The flags and gardens of the town, if there is one (see townGround.ts). */
+  town?: TownGround | null
   textures: GroundTextures
 }
 
@@ -65,7 +68,7 @@ export class TerrainCache {
     }
     this.entries.set(key, entry)
     this.frameKeys.add(key)
-    const signature = layoutSignature(entry.deps, request.occupancy, request.roads)
+    const signature = layoutSignature(entry.deps, request.occupancy, request.roads, request.town?.code)
     if ((!entry.ready || signature !== entry.signature || entry.scale !== this.scale) && !entry.queued) {
       entry.queued = true
       this.queue.push({ rx, ry })
@@ -89,7 +92,7 @@ export class TerrainCache {
       const request = this.latest
       if (!entry || !request) continue
       entry.canvas = renderChunk(job.rx, job.ry, entry.tiles, request, this.scale)
-      entry.signature = layoutSignature(entry.deps, request.occupancy, request.roads)
+      entry.signature = layoutSignature(entry.deps, request.occupancy, request.roads, request.town?.code)
       entry.scale = this.scale
       entry.ready = true
       entry.queued = false

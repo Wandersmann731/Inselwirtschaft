@@ -10,9 +10,9 @@ export type TilePoint = [number, number]
 export type Solid = (x: number, y: number) => boolean
 
 /** Points per piece of coast; pieces share their end points, so the foam is one line. */
-const PIECE = 14
+const PIECE = 27
 /** A wave reaches the shore this much later per point of coast, in wave periods: its front meets the land at an angle. */
-const LAG = 0.011
+const LAG = 0.0055
 /** How far from its first place a point may be moved onto the real coast, in tiles, and the steps of the search. */
 const SNAP = 0.55
 const SNAP_STEPS = 6
@@ -146,7 +146,8 @@ export function coastCurves(map: GameMap, seed: number, solid?: Solid): { line: 
       line[k] = [u + nu * ((low + high) / 2), v + nv * ((low + high) / 2)]
     }
     line[last] = line[0]
-    const smooth = rounded(line)
+    // cut twice: the points lie a few world pixels apart, close enough for the frayed edge of the froth
+    const smooth = rounded(rounded(line))
     // which side is the sea: asked at a few points, the line never changes sides
     const out = across(smooth)
     let votes = 0
@@ -170,6 +171,10 @@ export interface Piece {
   lag: number[]
   /** For each point a value from 0 to 1 that changes slowly along the coast: where the froth is thick and where thin. */
   rough: number[]
+  /** For each point a value from 0 to 1 that changes from point to point: the tongues and bays of a froth edge. */
+  fray: number[]
+  /** For each point a value from 0 to 1 that changes faster still: where froth lies in a heap and where it has gone. */
+  tuft: number[]
   minU: number
   maxU: number
   minV: number
@@ -185,7 +190,7 @@ export function buildPieces(map: GameMap, seed: number, solid?: Solid): Piece[] 
     const last = line.length - 1
     for (let from = 0; from < last; from += PIECE - 1) {
       const to = Math.min(last, from + PIECE - 1)
-      const piece: Piece = { x: [], y: [], nx: [], ny: [], lag: [], rough: [], minU: Infinity, maxU: -Infinity, minV: Infinity, maxV: -Infinity, box: { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity } }
+      const piece: Piece = { x: [], y: [], nx: [], ny: [], lag: [], rough: [], fray: [], tuft: [], minU: Infinity, maxU: -Infinity, minV: Infinity, maxV: -Infinity, box: { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity } }
       for (let k = from; k <= to; k++) {
         const [u, v] = line[k]
         const [wx, wy] = toWorld(u, v)
@@ -195,7 +200,9 @@ export function buildPieces(map: GameMap, seed: number, solid?: Solid): Piece[] 
         piece.nx.push(nx)
         piece.ny.push(ny)
         piece.lag.push(k * LAG)
-        piece.rough.push(valueNoise(k * 0.27, line.length * 0.37, seed + 61))
+        piece.rough.push(valueNoise(k * 0.135, line.length * 0.37, seed + 61))
+        piece.fray.push(0.62 * valueNoise(k * 0.1, 3.7, seed + 63) + 0.38 * valueNoise(k * 0.41, 9.1, seed + 64))
+        piece.tuft.push(valueNoise(k * 0.57, 5.3, seed + 65))
         piece.minU = Math.min(piece.minU, u)
         piece.maxU = Math.max(piece.maxU, u)
         piece.minV = Math.min(piece.minV, v)

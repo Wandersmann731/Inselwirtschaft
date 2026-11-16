@@ -2,6 +2,8 @@
 // how far a place lies from the waterline decides what it is - deep water, the green shallows over the sand, the
 // surf, wet sand, dry sand, dune grass, meadow - and noise of several sizes moves every one of these borders, so
 // the coast has bays and spits and no line in it is smooth. Sand and grass are the game's own grounds.
+import { flagAt, type Flag } from '../render/flagstones'
+import { frothAt } from '../render/foam'
 import { GROUND_SIZE, groundPixels } from '../render/groundMade'
 import { fbm, valueNoise } from '../world/noise2d'
 
@@ -13,6 +15,10 @@ const MID: [number, number] = [5.7, 5.4]
 const REACH = 9
 /** How far out the sea is still lighter over the sand, in tiles. */
 const SHALLOWS = 3.4
+/** World pixels the froth picture covers before it repeats, as in the surf of the game. */
+const FROTH_SPAN = 132
+/** The swells that break before the beach, as [tiles out, how much they wander, half their width, density of their froth, how torn, strength]. */
+const SWELLS: [number, number, number, number, number, number][] = [[0.95, 2.4, 0.13, 1, 0.3, 0.85], [1.9, 3, 0.1, 0, 0.42, 0.6]]
 
 /** The streets of the town, as lines from tile to tile: trodden earth between the houses. */
 const STREETS: [number, number, number, number][] = [[4.4, 2.7, 11.8, 2.7], [4.4, 5.2, 11.8, 5.2], [4.4, 7.85, 11.8, 7.85], [4.5, -0.4, 4.5, 10.6], [0.2, 5.65, 4.5, 5.65], [0.2, 8, 4.5, 8], [11.8, 2.7, 11.8, 7.85], [4.5, 10.6, 3.6, 12.4]]
@@ -42,10 +48,26 @@ export function streetAt(u: number, v: number): number {
 const step = (t: number): number => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t))
 
 /**
- * Paints shallows, shore and ground into `g`. `origin` is where the tile (0, 0) lies in the canvas and `s` the size
- * of a world pixel there. It is worked out for every second canvas pixel and laid on softly: ground has no edges.
+ * How much of a place (in tiles) is paved because it lies on or just beside one of the plots of two by two tiles
+ * that begin at `plots`: 1 on a plot, falling to 0 a third of a tile outside it. Pure.
  */
-export function paintGround(g: Ctx, origin: [number, number], s: number): void {
+export function flaggedAt(u: number, v: number, plots: [number, number][]): number {
+  let most = 0
+  for (const [pu, pv] of plots) {
+    const out = Math.max(pu - u, u - pu - 2, pv - v, v - pv - 2)
+    most = Math.max(most, 1 - out / 0.34)
+  }
+  return Math.max(0, Math.min(1, most))
+}
+
+const flag: Flag = { r: 0, g: 0, b: 0, body: 0, cu: 0, cv: 0, pick: 0 }
+
+/**
+ * Paints shallows, shore and ground into `g`. `origin` is where the tile (0, 0) lies in the canvas and `s` the size
+ * of a world pixel there. `flagged` are the plots (two by two tiles, by their first tile) whose houses stand on
+ * stone flags. It is worked out for every second canvas pixel and laid on softly: ground has no edges.
+ */
+export function paintGround(g: Ctx, origin: [number, number], s: number, flagged: [number, number][] = []): void {
   const COARSE = 2
   const reach = (REACH * 1.2 + 1.2 + SHALLOWS) * 1.42
   const [left, top] = [Math.floor(origin[0] + (MID[0] - MID[1] - reach) * 32 * s), Math.floor(origin[1] + (MID[0] + MID[1] - reach) * 16 * s)]
@@ -85,14 +107,21 @@ export function paintGround(g: Ctx, origin: [number, number], s: number): void {
         r += (214 - r) * sandy * 0.5
         gg += (200 - gg) * sandy * 0.3
         b += (150 - b) * sandy * 0.3
-        // surf: the line where the waves break, the lace they leave behind, and two swells that follow further out
+        // surf: froth at the edge of the sand (closed at its very edge, clumps behind it, flecks further out), the
+        // lace the last wave left, and two swells that break further out. The froth is the game's own (foam.ts).
         const wander = (valueNoise(u * 1.3, v * 1.3, 21) - 0.5) * 0.3
         const torn = valueNoise(u * 4.4, v * 4.4, 22)
         const lace = valueNoise(u * 11, v * 11, 23)
-        let foam = step(1 - Math.abs(deep - 0.16 - wander) / 0.13) * step((torn - 0.2) / 0.25)
-        foam = Math.max(foam, step(1 - deep / 0.42) * step((lace - 0.45) / 0.2) * 0.75)
-        foam = Math.max(foam, step(1 - Math.abs(deep - 0.95 - wander * 2.4) / 0.09) * step((torn - 0.42) / 0.2) * 0.62)
-        foam = Math.max(foam, step(1 - Math.abs(deep - 1.9 - wander * 3) / 0.07) * step((torn - 0.5) / 0.2) * 0.34)
+        const edge = deep - 0.1 - wander * 0.6
+        let foam = step(1 - deep / 0.42) * step((lace - 0.45) / 0.2) * 0.6
+        if (edge > -0.08 && edge < 0.5) {
+          const [fx, fy] = [wx / FROTH_SPAN, wy / FROTH_SPAN]
+          foam = Math.max(foam, step(1 - Math.abs(edge) / 0.06) * frothAt(fx, fy, 2), step(1 - Math.abs(edge - 0.07) / 0.15) * frothAt(fx, fy, 1) * 0.92, step(1 - Math.abs(edge - 0.2) / 0.3) * frothAt(fx, fy, 0) * 0.8)
+        }
+        for (const [out, lean, wide, level, from, strong] of SWELLS) {
+          const off = Math.abs(deep - out - wander * lean)
+          if (off < wide) foam = Math.max(foam, step(1 - off / wide) * frothAt(wx / FROTH_SPAN, wy / FROTH_SPAN, level) * step((torn - from) / 0.2) * strong)
+        }
         r += (250 - r) * foam
         gg += (253 - gg) * foam
         b += (250 - b) * foam
@@ -119,6 +148,16 @@ export function paintGround(g: Ctx, origin: [number, number], s: number): void {
         r += (176 * earth - r) * Math.min(1, street) * 0.88
         gg += (146 * earth - gg) * Math.min(1, street) * 0.88
         b += (100 * earth - b) * Math.min(1, street) * 0.88
+        // stone flags around the houses that have laid them, slab by slab as in the game (flagstones.ts)
+        if (flaggedAt(u, v, flagged) > 0) {
+          flagAt(u, v, flag)
+          if (flaggedAt(flag.cu, flag.cv, flagged) + (flag.pick - 0.5) * 0.3 > 0.5) {
+            const cover = 0.4 + 0.6 * flag.body
+            r += (flag.r - r) * cover
+            gg += (flag.g - gg) * cover
+            b += (flag.b - b) * cover
+          }
+        }
       }
       data[o] = r
       data[o + 1] = gg

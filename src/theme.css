@@ -370,9 +370,9 @@
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(130% 110% at 50% 45%, transparent 55%, rgba(18, 22, 30, 0.34) 100%),
+    radial-gradient(130% 110% at 50% 45%, transparent 58%, rgba(18, 22, 30, 0.22) 100%),
     radial-gradient(90% 80% at 12% 8%, rgba(255, 232, 190, 0.2), transparent 60%),
-    linear-gradient(160deg, transparent 40%, rgba(40, 52, 78, 0.12) 100%);
+    linear-gradient(160deg, transparent 40%, rgba(40, 52, 78, 0.1) 100%);
 }
 
 /* Hints over the buildings (render/markLayer.ts): each a small glowing sphere of the colour of the problem, without

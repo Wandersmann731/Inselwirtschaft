@@ -54,11 +54,13 @@ describe('the grounds of the map, made by code', () => {
     }
   })
 
-  it('keep the colours the map was tuned for: green meadow, dark forest floor, pale sand, grey rock', () => {
+  it('keep the colours the map was tuned for: a warm green meadow, dark forest floor, pale sand, grey rock', () => {
     const [grass, forest, sand, rock] = all.map(mean)
+    // a meadow in afternoon light, as measured in docs/ziel/zielbild.jpg: green leads, red follows close, hardly any blue
     expect(grass[1]).toBeGreaterThan(grass[0])
-    expect(grass[1]).toBeGreaterThan(grass[2])
-    expect(Math.abs(grass[1] - 146)).toBeLessThan(6)
+    expect(grass[0]).toBeGreaterThan(grass[1] * 0.8)
+    expect(grass[2]).toBeLessThan(grass[1] * 0.55)
+    expect(Math.abs(grass[1] - 118)).toBeLessThan(6)
     expect((forest[0] + forest[1] + forest[2]) / 3).toBeLessThan(70)
     expect(sand[0]).toBeGreaterThan(235)
     expect(sand[2]).toBeLessThan(sand[0])

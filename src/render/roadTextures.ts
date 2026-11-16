@@ -5,7 +5,7 @@ import { hash2 } from '../world/noise2d'
 export const TEX = 256
 /** A texture covers this many tiles before it repeats. */
 export const TEX_TILES = 2
-const COBBLES_PER_TILE = 10
+const COBBLES_PER_TILE = 13
 const PEBBLES_PER_TILE = 9
 
 const smooth = (t: number): number => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t))
@@ -66,25 +66,26 @@ export interface Stone {
 }
 
 /**
- * The cobble pavement at a position in tiles (it repeats every TEX_TILES): small stones of uneven size and of many
- * greys, some of them brown or blue, each a little rounded (light on the side of the sun, dark on the other). Pure.
+ * The cobble pavement at a position in tiles (it repeats every TEX_TILES): small setts in rows, of many greys, some
+ * of them brown or blue, each a little rounded (light on the side of the sun, dark on the other). Pure.
  */
 export function stoneAt(u: number, v: number, out: Stone): void {
   u = ((u % TEX_TILES) + TEX_TILES) % TEX_TILES
   v = ((v % TEX_TILES) + TEX_TILES) % TEX_TILES
   const period = COBBLES_PER_TILE * TEX_TILES
-  cells(u * COBBLES_PER_TILE, v * COBBLES_PER_TILE, period, 301, 0.86, scratch)
-  out.body = smooth((scratch.f2 - scratch.f1) / 0.2)
+  // setts are cut to one size and laid in rows: they differ a little, not much
+  cells(u * COBBLES_PER_TILE, v * COBBLES_PER_TILE, period, 301, 0.58, scratch)
+  out.body = smooth((scratch.f2 - scratch.f1) / 0.17)
   out.du = -scratch.dx / COBBLES_PER_TILE
   out.dv = -scratch.dy / COBBLES_PER_TILE
   out.pick = hash2(scratch.id, 6, 306)
   out.luck = hash2(scratch.id, 7, 307)
-  const tone = 0.74 + 0.4 * hash2(scratch.id, 1, 303)
+  const tone = 0.78 + 0.34 * hash2(scratch.id, 1, 303)
   const kind = hash2(scratch.id, 2, 304)
   // most stones are grey, some warm brown, a few slate blue
-  const [r, g, b] = kind < 0.64 ? [150, 143, 130] : kind < 0.9 ? [162, 142, 118] : [134, 136, 140]
+  const [r, g, b] = kind < 0.56 ? [150, 143, 132] : kind < 0.8 ? [160, 142, 120] : [132, 134, 142]
   // the sun stands in the top left of the screen: that is towards smaller u
-  const lit = 1 + 0.22 * Math.max(-1, Math.min(1, (-scratch.dx * 0.95 + scratch.dy * 0.3) / 0.35))
+  const lit = 1 + 0.17 * Math.max(-1, Math.min(1, (-scratch.dx * 0.95 + scratch.dy * 0.3) / 0.35))
   const grain = 0.94 + 0.12 * hash2(Math.floor(u * 97), Math.floor(v * 97), 305)
   const shade = tone * lit * grain * (0.6 + 0.4 * out.body)
   out.r = r * shade
@@ -118,11 +119,11 @@ export function trackAt(u: number, v: number, out: number[]): void {
     const at = (ix: number, iy: number): number => hash2(((ix % size) + size) % size, ((iy % size) + size) % size, n)
     return (at(x0, y0) * (1 - fx) + at(x0 + 1, y0) * fx) * (1 - fy) + (at(x0, y0 + 1) * (1 - fx) + at(x0 + 1, y0 + 1) * fx) * fy
   }
-  const mottle = 0.88 + 0.14 * wrap(311, 3) + 0.1 * wrap(312, 12)
-  const grain = 0.95 + 0.1 * hash2(Math.floor(u * 97), Math.floor(v * 97), 313)
-  let r = 182 * mottle * grain
-  let g = 154 * mottle * grain
-  let b = 112 * mottle * grain
+  const mottle = 0.82 + 0.2 * wrap(311, 3) + 0.16 * wrap(312, 12)
+  const grain = 0.94 + 0.12 * hash2(Math.floor(u * 97), Math.floor(v * 97), 313)
+  let r = 172 * mottle * grain
+  let g = 139 * mottle * grain
+  let b = 92 * mottle * grain
   cells(u * PEBBLES_PER_TILE, v * PEBBLES_PER_TILE, period, 314, 0.6, scratch)
   if (hash2(scratch.id, 3, 315) < 0.4) {
     const radius = 0.1 + 0.14 * hash2(scratch.id, 4, 316)
