@@ -15,9 +15,16 @@ import { plotOf, type Plot } from './plots'
 
 export { HOUSE_VARIANTS } from './look'
 
+/**
+ * How much steeper the roofs of a tier are than its plans say: the narrow houses of a town stand tall under steep
+ * roofs, a cottage under its straw a little less so, and a villa keeps the low hipped roof of its kind.
+ */
+export const ROOF_PITCH: Record<string, number> = { pioneers: 1.2, settlers: 1.25, citizens: 1.34, merchants: 1.34, aristocrats: 1.12 }
+
 export function house(scene: Scene, tier: string, variant: number): void {
   const look = lookOf(variant)
   const plot = plotOf(tier, variant)
+  scene.pitch = ROOF_PITCH[tier] ?? 1
   if (tier === 'ruin') ruin(scene, variant)
   else if (tier === 'pioneers') pioneers(scene, look)
   else if (tier === 'settlers') settlers(scene, look)

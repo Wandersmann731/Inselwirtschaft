@@ -95,7 +95,7 @@ export function wing(scene: Scene, b: Body, main: Built, w: Wing): void {
   if (sw) wallShade(scene, w.from, w.to, wall, front - wall, z, main.eaves, main.top[2])
   wallBox(scene, w.side, w.from, w.to, wall + main.over, front, z, main.eaves, face, { ...plain, detail: flank(null, true) })
   const half = (w.to - w.from) / 2
-  const rise = Math.min(w.rise, main.rise)
+  const rise = Math.min(w.rise * scene.pitch, main.rise)
   // its eaves must not hang lower than those of the house
   const over = Math.min(0.05, ((main.eaves - main.low) * half) / rise)
   const drop = (rise * over) / half

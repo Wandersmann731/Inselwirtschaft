@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { stretches } from '../src/render/built/courts'
 import { HOUSE_VARIANTS } from '../src/render/built/look'
 import { plotOf } from '../src/render/built/plots'
+import { ROOF_PITCH } from '../src/render/built/houses'
+import { YARD_VARIANTS } from '../src/render/yardSprites'
+import { DECOR_VARIANTS, isTall } from '../src/world/decor'
+import { STREETS, targetTown, TOWN, WOODS } from './scene/targetTown'
+import { toIslandState } from '../src/sim/islands'
 import { FLAG_TILES, flagAt, type Flag } from '../src/render/flagstones'
 import { gardenItems } from '../src/render/frontDecor'
 import { pickVariant } from '../src/render/spriteKeys'
@@ -205,5 +210,81 @@ describe('gardens on free tiles beside rich houses', () => {
     const rich = kinds('merchants')
     expect(rich.includes(5)).toBe(true)
     expect(rich.includes(4)).toBe(true)
+  })
+})
+
+describe('what stands about between houses', () => {
+  const houses = (tier: string): PlacedBuilding[] => Array.from({ length: 16 }, (_, i) => house(i + 1, 4 + (i % 4) * 8, 4 + Math.floor(i / 4) * 8, tier))
+
+  it('is a cart, crates, firewood or a well on free tiles beside houses that carry neither garden nor bed nor bush', () => {
+    const items = gardenItems(town(houses('settlers')))
+    const yards = items.filter((entry) => entry.item.kind === 'yard')
+    expect(yards.length).toBeGreaterThan(8)
+    expect(new Set(yards.map((entry) => entry.item.variant)).size).toBeGreaterThan(3)
+    for (const { item, tx, ty } of yards) {
+      expect(item.variant).toBeGreaterThanOrEqual(1)
+      expect(item.variant).toBeLessThanOrEqual(YARD_VARIANTS)
+      // it has its tile to itself, but for a hedge along the house
+      const others = items.filter((entry) => entry.tx === tx && entry.ty === ty && entry.item !== item).map((entry) => entry.item.kind)
+      expect(others.every((kind) => kind === 'hedge')).toBe(true)
+    }
+    expect(DECOR_VARIANTS.yard).toBe(YARD_VARIANTS)
+    // drawn with the buildings, in the order of their depth, not into the picture of the ground
+    expect(isTall('yard')).toBe(true)
+    expect(gardenItems(town(houses('settlers')))).toEqual(items)
+  })
+
+  it('takes the place of gardens in a lane paved from wall to wall, and brings no hay or firewood there', () => {
+    // two rows of town houses with a lane of one tile between them
+    const rows = [0, 1, 2, 3].flatMap((i) => [house(i * 2 + 1, 6 + i * 3, 10, 'merchants'), house(i * 2 + 2, 6 + i * 3, 13, 'merchants')])
+    const state = town(rows)
+    const paved = townGround(state)!.paved
+    const lane = gardenItems(state).filter((entry) => paved[entry.ty * SIZE + entry.tx] >= 1)
+    expect(lane.length).toBeGreaterThan(0)
+    for (const entry of lane) {
+      expect(entry.item.kind).toBe('yard')
+      expect([3, 6]).not.toContain(entry.item.variant)
+    }
+  })
+})
+
+describe('the roofs of a town', () => {
+  it('are steeper than their plans say, most of all on the narrow houses of citizens and merchants', () => {
+    for (const tier of ['pioneers', 'settlers', 'citizens', 'merchants', 'aristocrats']) expect(ROOF_PITCH[tier]).toBeGreaterThan(1)
+    expect(ROOF_PITCH.merchants).toBeGreaterThan(ROOF_PITCH.aristocrats + 0.1)
+    expect(ROOF_PITCH.citizens).toBeGreaterThan(ROOF_PITCH.pioneers)
+    expect(ROOF_PITCH.merchants).toBeLessThan(1.6)
+  })
+})
+
+describe('the town of the comparison picture', () => {
+  const game = targetTown(1)
+  const island = toIslandState(game, game.islands[0].id)
+  const post = island.buildings.find((b) => b.type === 'kontor')!
+  const at = (dx: number, dy: number): number => (post.y + dy) * island.map.width + post.x + dx
+
+  it('stands as it is laid out: houses of all five tiers, full of people, on dry land, and the game is paused', () => {
+    expect(game.speed).toBe(0)
+    const placed = TOWN.filter(([, dx, dy]) => island.occupancy[at(dx, dy)] !== 0)
+    expect(placed).toHaveLength(TOWN.length)
+    const tiers = new Set(island.buildings.filter((b) => b.house).map((b) => b.house!.tier))
+    expect([...tiers].sort()).toEqual(['aristocrats', 'citizens', 'merchants', 'pioneers', 'settlers'])
+    for (const building of island.buildings) {
+      expect(island.map.tiles[building.y * island.map.width + building.x]).not.toBe(Terrain.Water)
+      if (building.house) expect(building.house.residents).toBeGreaterThan(0)
+    }
+    // two houses lack food, as two carry a red mark in the target picture
+    expect(island.buildings.filter((b) => b.house && b.house.needs.food === 0)).toHaveLength(2)
+  })
+
+  it('has streets between its rows and a wood beside it', () => {
+    let roads = 0
+    for (const [x0, y0, x1, y1] of STREETS) for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) roads += island.roads[at(x, y)] ? 1 : 0
+    expect(roads).toBeGreaterThan(25)
+    let forest = 0
+    for (const [x0, y0, x1, y1] of WOODS) for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) forest += island.map.tiles[at(x, y)] === Terrain.Forest ? 1 : 0
+    expect(forest).toBeGreaterThan(100)
+    // and it is a town in the sense of the ground: flags lie around its houses
+    expect(townGround(island)).not.toBeNull()
   })
 })

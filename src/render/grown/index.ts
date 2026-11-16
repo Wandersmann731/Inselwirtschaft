@@ -14,7 +14,7 @@ export const RES = 4
 
 /** What is painted here, with the size of its picture in world pixels and how many variants there are. */
 export const GROWN: Record<string, { w: number; h: number; variants: number; res?: number; paint: (g: Ctx, w: number, h: number, variant: number) => void }> = {
-  tree: { w: 64, h: 80, variants: 4, paint: tree },
+  tree: { w: 92, h: 110, variants: 4, paint: tree },
   pine: { w: 48, h: 88, variants: 3, paint: pine },
   palm: { w: 64, h: 88, variants: 2, paint: palm },
   bush: { w: 48, h: 36, variants: 3, paint: bush },

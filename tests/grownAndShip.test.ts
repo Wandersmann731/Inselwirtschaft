@@ -16,14 +16,17 @@ describe('what grows wild is painted by code', () => {
   it('covers every kind of the map with as many variants as the map asks for', () => {
     for (const [kind, variants] of Object.entries(DECOR_VARIANTS)) {
       // hedges, beds and gardens beside houses have their own painter (gardenSprites.ts)
-      if (kind === 'hedge' || kind === 'bed' || kind === 'garden') continue
+      if (kind === 'hedge' || kind === 'bed' || kind === 'garden' || kind === 'yard') continue
       expect(GROWN[kind]?.variants, kind).toBe(variants)
     }
   })
 
   it('keeps the measure: a tree is several doors high, a tuft of grass far lower than one', () => {
     expect(GROWN.tree.h / DOOR).toBeGreaterThan(4)
-    expect(GROWN.pine.h).toBeGreaterThan(GROWN.tree.h)
+    // an old broad-leaved tree stands as tall as a town house and is wider than a fir, which stays the slimmer of the two
+    expect(GROWN.tree.h / DOOR).toBeGreaterThan(7)
+    expect(GROWN.tree.w).toBeGreaterThan(GROWN.pine.w * 1.5)
+    expect(GROWN.pine.h / GROWN.pine.w).toBeGreaterThan(GROWN.tree.h / GROWN.tree.w)
     expect(GROWN.tuft.h / DOOR).toBeLessThan(2)
     expect(GROWN.peak_large.h).toBeGreaterThan(GROWN.peak_medium.h)
     expect(GROWN.peak_medium.h).toBeGreaterThan(GROWN.peak_small.h)

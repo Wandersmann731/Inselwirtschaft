@@ -111,13 +111,15 @@ export function body(scene: Scene, b: Body): Built {
       if (typeof b.se.door === 'number') threshold(scene, 'se', v1 + (v0 - v1) * b.se.door, u1, scene.seed + 6)
     }
   }
+  // the houses of a town carry steeper roofs than their plans say (see Scene.pitch)
+  const rise = b.rise * scene.pitch
   const out = jetty * (storeys - 1)
   const top: [number, number, number, number] = [u0 + lu * storeys, v0 + lv * storeys, u1 + out + lu * storeys, v1 + out + lv * storeys]
   const roof: Surface = { mat: b.roof, tint: b.roofTint }
   const over = b.over ?? 0.07
   const shape = b.shape ?? 'u'
   const span = (shape === 'u' ? top[3] - top[1] : shape === 'v' ? top[2] - top[0] : Math.min(top[2] - top[0], top[3] - top[1])) / 2
-  if (shape === 'hip') hip(scene, top[0], top[1], top[2], top[3], eaves, b.rise, over, roof)
+  if (shape === 'hip') hip(scene, top[0], top[1], top[2], top[3], eaves, rise, over, roof)
   else {
     const side = shape === 'u' ? b.se : b.sw
     const width = (shape === 'u' ? top[3] - top[1] : top[2] - top[0]) * EDGE
@@ -144,13 +146,13 @@ export function body(scene: Scene, b: Body): Built {
             }
           }
         }
-        if (b.loft && b.rise > 13) doorway(g, width / 2 - 2.3, h - 1.2, 4.6, 8.4, 'rgb(118, 92, 68)')
-        else if (b.attic && b.rise > 13) windowPane(scene, g, width / 2 - 2, h - 9.5, 4, 5.5, side.window)
+        if (b.loft && rise > 13) doorway(g, width / 2 - 2.3, h - 1.2, 4.6, 8.4, 'rgb(118, 92, 68)')
+        else if (b.attic && rise > 13) windowPane(scene, g, width / 2 - 2, h - 9.5, 4, 5.5, side.window)
       },
     }
-    gable(scene, top[0], top[1], top[2], top[3], eaves, b.rise, shape, over, roof, end, b.join)
+    gable(scene, top[0], top[1], top[2], top[3], eaves, rise, shape, over, roof, end, b.join)
   }
-  return { eaves, ridge: eaves + b.rise, top, low: eaves - (b.rise * over) / span, rise: b.rise, span, over, shape }
+  return { eaves, ridge: eaves + rise, top, low: eaves - (rise * over) / span, rise, span, over, shape }
 }
 
 /** A chimney that stands on a roof at the height `z` and rises `high` above it. Smoke comes out of it if `smokes`. */

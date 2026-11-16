@@ -1,17 +1,19 @@
 import type { DecorItem } from '../world/decor'
 import { gardenSprite } from './gardenSprites'
 import { grown, grownScale } from './grown'
+import { yardSprite } from './yardSprites'
 import { PICTURE_SCALE, type SpriteImage } from './sprites'
 
 /** The picture of an object, made by code: what grows wild (see grown/) and what is planted beside houses. */
 export function decorSprite(item: Pick<DecorItem, 'kind' | 'variant'>): SpriteImage | null {
   if (item.kind === 'hedge' || item.kind === 'bed' || item.kind === 'garden') return gardenSprite(item.kind, item.variant)
+  if (item.kind === 'yard') return yardSprite(item.variant)
   return grown(item.kind, item.variant)
 }
 
 /** World pixels per picture pixel of the picture of an object. */
 export function decorScale(item: Pick<DecorItem, 'kind'>): number {
-  return item.kind === 'hedge' || item.kind === 'bed' || item.kind === 'garden' ? PICTURE_SCALE : grownScale(item.kind)
+  return item.kind === 'hedge' || item.kind === 'bed' || item.kind === 'garden' || item.kind === 'yard' ? PICTURE_SCALE : grownScale(item.kind)
 }
 
 /**

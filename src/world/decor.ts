@@ -8,16 +8,18 @@ export type DecorKind =
   | 'peak_small' | 'peak_medium' | 'peak_large' | 'peak_snow'
   // planted beside houses and drawn by code (see render/gardenSprites.ts): never part of the wild growth below
   | 'hedge' | 'bed' | 'garden'
+  // what stands about between houses: carts, crates, firewood, a well (see render/yardSprites.ts)
+  | 'yard'
 
 /** How many picture variants each kind has (decor/<kind>_<n>). */
 export const DECOR_VARIANTS: Record<DecorKind, number> = {
   tree: 4, pine: 3, palm: 2, bush: 3, rock: 3, tuft: 3, flowers: 2, pebbles: 2,
   peak_small: 3, peak_medium: 3, peak_large: 3, peak_snow: 2,
-  hedge: 4, bed: 4, garden: 4,
+  hedge: 4, bed: 4, garden: 5, yard: 7,
 }
 
 /** Tall objects stand in front of nearby buildings and are drawn together with them. Low ones stay in the ground picture. */
-const TALL: ReadonlySet<DecorKind> = new Set(['tree', 'pine', 'palm', 'bush', 'rock', 'peak_small', 'peak_medium', 'peak_large', 'peak_snow', 'hedge', 'bed', 'garden'])
+const TALL: ReadonlySet<DecorKind> = new Set(['tree', 'pine', 'palm', 'bush', 'rock', 'peak_small', 'peak_medium', 'peak_large', 'peak_snow', 'hedge', 'bed', 'garden', 'yard'])
 
 export function isTall(kind: DecorKind): boolean {
   return TALL.has(kind)

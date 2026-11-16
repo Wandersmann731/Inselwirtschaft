@@ -1,9 +1,28 @@
 {
-  "comment": "The fixed test scene behind docs/ziel/zielbild.jpg: the bot town of this seed after this many game minutes, paused, seen from this camera. The camera centre is in tiles, counted from the top-left tile of the Kontor.",
+  "comment": "The fixed test scene behind docs/ziel/zielbild.jpg: the town built by hand after the target picture (tests/scene/targetTown.ts) on the home island of this seed, paused, seen from this camera. With --bot it is the bot town of this seed after this many game minutes instead, seen from botCamera. A camera centre is in tiles, counted from the top-left tile of the Kontor.",
   "seed": 1,
   "minutes": 55,
-  "viewport": { "width": 1376, "height": 768, "deviceScaleFactor": 2 },
-  "camera": { "fromKontorX": 2.45, "fromKontorY": -2.15, "zoom": 1.75 },
+  "viewport": {
+    "width": 1376,
+    "height": 768,
+    "deviceScaleFactor": 2
+  },
+  "camera": {
+    "fromKontorX": 3.2,
+    "fromKontorY": -4.2,
+    "zoom": 1.75
+  },
   "frozenTimeMs": 60000,
-  "keep": [".map-canvas", ".map-light", ".map-marks", ".map-shade"]
+  "keep": [
+    ".map-canvas",
+    ".map-light",
+    ".map-marks",
+    ".map-shade"
+  ],
+  "town": true,
+  "botCamera": {
+    "fromKontorX": 2.45,
+    "fromKontorY": -2.15,
+    "zoom": 1.75
+  }
 }

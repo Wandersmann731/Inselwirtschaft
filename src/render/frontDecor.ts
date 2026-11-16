@@ -6,6 +6,8 @@ import type { IslandState } from '../sim/state'
 import { tierIndex } from '../sim/tiers'
 import { Terrain } from '../world/terrain'
 import { GARDEN_DROP } from './gardenSprites'
+import { townGround } from './townGround'
+import { YARD_DROP, YARD_VARIANTS } from './yardSprites'
 
 /** Share of the trees, bushes and rocks next to a building that are kept, and how much smaller they are drawn. */
 const FRONT_KEEP = 0.45
@@ -36,6 +38,13 @@ const WALL_FROM = tierIndex('merchants')
  * along the house (where hedges are kept), of a bed, of a bush.
  */
 const GARDEN = { plot: 0.62, lawn: 0.45, hedge: 0.6, bed: 0.42, bush: 0.3 }
+/**
+ * Where neither a garden nor a bed nor a bush stands, the chance that something stands about there (a cart, crates,
+ * firewood, a well); and the chance of that on a tile of a paved lane, where nobody digs a garden.
+ */
+const YARD = { beside: 0.7, lane: 0.55 }
+/** What may stand in a paved lane: carts, crates and barrels, a well, a table. No hay and no firewood on stone flags. */
+const LANE_YARDS = [1, 2, 7, 2, 4, 5]
 
 /**
  * What people plant around their houses: a free tile beside a house becomes a fenced garden of vegetables or
@@ -58,10 +67,11 @@ export function gardenItems(state: Pick<IslandState, 'map' | 'buildings' | 'occu
     return true
   }
   const items: FrontItem[] = []
+  const paved = townGround(state)?.paved
   /** What stands on a tile already: 1 a bed or bush, 2 a garden (nothing else goes there). */
   const planted = new Map<number, number>()
-  const add = (kind: 'hedge' | 'bed' | 'garden' | 'bush', variant: number, x: number, y: number, tx: number, ty: number, scale: number): void => {
-    const drop = kind === 'bush' ? 0 : GARDEN_DROP[kind]
+  const add = (kind: 'hedge' | 'bed' | 'garden' | 'bush' | 'yard', variant: number, x: number, y: number, tx: number, ty: number, scale: number): void => {
+    const drop = kind === 'bush' ? 0 : kind === 'yard' ? YARD_DROP : GARDEN_DROP[kind]
     items.push({ item: { kind, variant, x, y, scale, flip: false }, tx, ty, wx: (x - y) * HALF_W, wy: (x + y) * HALF_H + drop, depth: x + y })
   }
   for (const building of state.buildings) {
@@ -76,6 +86,11 @@ export function gardenItems(state: Pick<IslandState, 'map' | 'buildings' | 'occu
       if (!free(tx, ty)) continue
       const index = ty * map.width + tx
       const tile = (n: number): number => hash2(tx * 13 + n, ty * 7, state.id + 93)
+      // a lane paved from wall to wall is no place for a garden: things stand about there, or nothing does
+      if (!planted.has(index) && paved && paved[index] >= 1) {
+        planted.set(index, 2)
+        if (tile(5) < YARD.lane) add('yard', LANE_YARDS[Math.floor(tile(6) * LANE_YARDS.length)], tx + 0.5, ty + 0.5, tx, ty, 1)
+      }
       if (!planted.has(index) && tile(1) < GARDEN.plot) {
         planted.set(index, 2)
         const lawn = tier >= LAWN_FROM && tile(2) < GARDEN.lawn
@@ -91,6 +106,7 @@ export function gardenItems(state: Pick<IslandState, 'map' | 'buildings' | 'occu
       planted.set(index, 1)
       if (r(3) < GARDEN.bed) add('bed', 1 + along + (r(4) < 0.5 ? 0 : 1), tx + 0.5 - dx * 0.08 + (r(5) - 0.5) * 0.1, ty + 0.5 - dy * 0.08 + (r(6) - 0.5) * 0.1, tx, ty, 1)
       else if (r(7) < GARDEN.bush) add('bush', 1 + Math.floor(r(8) * 3), tx + 0.3 + r(9) * 0.4, ty + 0.3 + r(10) * 0.4, tx, ty, 0.55 + 0.25 * r(11))
+      else if (r(12) < YARD.beside) add('yard', 1 + Math.floor(r(13) * YARD_VARIANTS), tx + 0.5, ty + 0.5, tx, ty, 1)
     }
   }
   return items

@@ -5,6 +5,7 @@
 //   npm run compare -- phase1       -> docs/ziel/aktuell-phase1.png and docs/ziel/vergleich-phase1.jpg
 //   npm run compare -- phase1 --zoom=1.4 --x=2 --y=-1   tries another camera without editing scene.json
 //   npm run compare -- abend --tick=430                  the same town at another game time (430 is evening)
+//   npm run compare -- bot --bot                         the town the bot plays instead of the one built after the target
 //
 // Everything runs on this computer: its own Vite dev server, the Chrome that is installed, no service from outside.
 import fs from 'node:fs'
@@ -20,6 +21,10 @@ const scene = JSON.parse(fs.readFileSync(path.join(here, 'scene.json'), 'utf8'))
 
 const args = process.argv.slice(2)
 const label = args.find((arg) => !arg.startsWith('--'))
+if (args.includes('--bot')) {
+  scene.town = false
+  Object.assign(scene.camera, scene.botCamera)
+}
 for (const arg of args) {
   const match = /^--(zoom|x|y|tick)=(-?[\d.]+)$/.exec(arg)
   if (!match) continue
@@ -65,11 +70,11 @@ async function shootScene(browser, url) {
   page.on('pageerror', (error) => console.log('page error:', error.message))
   await page.goto(url, { waitUntil: 'networkidle0' })
   // the saved game of the scene: the bot plays the seed, then the game is stopped
-  await page.evaluate(async ({ seed, minutes, tick }) => {
-    const { playthrough } = await import('/tests/bot/run.ts')
+  await page.evaluate(async ({ seed, minutes, tick, town }) => {
     const { saveState } = await import('/src/save/saveGame.ts')
     const { setSpeed } = await import('/src/sim/tick.ts')
-    const state = setSpeed(playthrough(seed, minutes).state, 0)
+    // the town that was built by hand after the target picture, or (with --bot) the one the bot plays
+    const state = town ? (await import('/tests/scene/targetTown.ts')).targetTown(seed) : setSpeed((await import('/tests/bot/run.ts')).playthrough(seed, minutes).state, 0)
     await saveState(tick === undefined ? state : { ...state, tick }, 'autosave')
   }, scene)
   await page.reload({ waitUntil: 'networkidle0' })

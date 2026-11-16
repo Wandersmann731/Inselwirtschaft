@@ -11,10 +11,10 @@ export interface Greens {
 }
 
 export const GREENS: Greens[] = [
-  { mid: [56, 88, 40], light: [84, 108, 44] },
-  { mid: [66, 90, 36], light: [96, 110, 42] },
-  { mid: [46, 82, 44], light: [72, 104, 50] },
-  { mid: [62, 84, 36], light: [90, 102, 40] },
+  { mid: [58, 73, 36], light: [100, 112, 48] },
+  { mid: [66, 75, 34], light: [112, 116, 48] },
+  { mid: [50, 69, 38], light: [90, 108, 52] },
+  { mid: [62, 71, 34], light: [106, 108, 44] },
 ]
 
 const BARK: Rgb = [86, 68, 52]
@@ -48,14 +48,17 @@ export function outOf(c: Crown, at: V3): V3 {
   return [(x / far) * pull, (y / far) * pull, (d / far) * pull]
 }
 
-/** Hangs a crown into the volume: boughs from `fork` to their ends, clusters of leaves around those, some at the heart. */
-function crown(v: Volume, c: Crown, fork: V3 | null, boughs: number, size: [number, number], greens: Greens, next: () => number): void {
+/**
+ * Hangs a crown into the volume: boughs from `fork` to their ends, clusters of leaves around those (`perBough` of
+ * them), and `heart` larger masses at its middle, so that nobody looks through it.
+ */
+function crown(v: Volume, c: Crown, fork: V3 | null, boughs: number, size: [number, number], greens: Greens, next: () => number, perBough = 10, heart = 5, shell = 0): void {
   const ends = boughEnds(c, boughs, next)
   for (const end of ends) {
     if (fork) v.limb(fork, end, 1.5, 0.7, BARK)
     // the leaves of one bough are of one green: some boughs stand in better earth than others
     const tone = mix(greens.mid, greens.light, next())
-    for (let k = 0; k < 10; k++) {
+    for (let k = 0; k < perBough; k++) {
       const r = size[0] + next() ** 1.6 * (size[1] - size[0])
       const turn = next() * Math.PI * 2
       const lift = next() * 2 - 1
@@ -65,34 +68,49 @@ function crown(v: Volume, c: Crown, fork: V3 | null, boughs: number, size: [numb
     }
   }
   // the heart of the crown and its top
-  for (let k = 0; k < 5; k++) {
+  for (let k = 0; k < heart; k++) {
     const r = size[1] * (0.9 + 0.2 * next())
     const at: V3 = [c.x + (next() - 0.5) * c.rx * 0.6, c.y - c.ry * (0.1 + 0.4 * next()), (next() - 0.3) * c.rx * 0.4]
     v.mass(at[0], at[1], at[2], r, r * 0.9, r, mix(greens.mid, greens.light, next()), undefined, 0, 0.5, outOf(c, at))
   }
+  // and leaves all around it, a little inside its outline: an old crown is closed, the boughs do not stand out of it one by one
+  for (let k = 0; k < shell; k++) {
+    const turn = (k / shell) * Math.PI * 2 + next() * 0.5
+    const rise = -0.3 + 1.25 * next()
+    const flat = Math.cos(rise)
+    const far = 0.66 + 0.1 * next()
+    const d = Math.sin(turn) * flat * c.rx * far
+    const at: V3 = [c.x + Math.cos(turn) * flat * c.rx * far, c.y - Math.sin(rise) * c.ry * far * 0.92 + d * 0.3, d]
+    const r = size[0] + (0.5 + 0.5 * next()) * (size[1] - size[0])
+    v.mass(at[0], at[1], at[2], r, r * 0.86, r, mix(greens.mid, greens.light, next()), undefined, 0, 0.5, outOf(c, at))
+  }
 }
 
-/** A broad-leaved tree in a picture `w` by `h` world pixels; its foot stands at the lower edge. Four shapes. */
+/**
+ * A broad-leaved tree in a picture `w` by `h` world pixels; its foot stands at the lower edge. Four shapes. An old
+ * tree as it stands at the edge of a town: as tall as a house, its crown wide and heavy and hanging low over a
+ * short trunk, made of many small clusters of leaves.
+ */
 export function tree(g: Ctx, w: number, h: number, variant: number): void {
   const next = numbers(variant * 37 + 3)
   const greens = GREENS[(variant - 1) % GREENS.length]
   const cx = w / 2
   const base = h - 2.5
   // round, wide, tall, or of two crowns
-  const form: Crown = variant === 2 ? { x: cx, y: h * 0.56, rx: w * 0.45, ry: h * 0.32 } : variant === 3 ? { x: cx, y: h * 0.5, rx: w * 0.35, ry: h * 0.42 } : { x: cx, y: h * 0.52, rx: w * 0.42, ry: h * 0.38 }
-  contact(g, cx + 2, base, 12, 3.6)
+  const form: Crown = variant === 2 ? { x: cx, y: h * 0.62, rx: w * 0.46, ry: h * 0.37 } : variant === 3 ? { x: cx, y: h * 0.56, rx: w * 0.36, ry: h * 0.47 } : { x: cx, y: h * 0.59, rx: w * 0.43, ry: h * 0.44 }
+  contact(g, cx + 3, base, 17, 4.6)
   const v = new Volume(w, h)
-  const lean = (next() - 0.5) * 5
-  const fork: V3 = [cx + lean, form.y + form.ry * 0.5, 0]
+  const lean = (next() - 0.5) * 6
+  const fork: V3 = [cx + lean, form.y + form.ry * 0.42, 0]
   const knee: V3 = [cx + lean * 0.3, (base + fork[1]) / 2, 0]
-  v.limb([cx, base, 0], knee, variant === 3 ? 2.3 : 2.7, 2, BARK)
-  v.limb(knee, fork, 2, 1.7, BARK)
+  v.limb([cx, base, 0], knee, variant === 3 ? 3.1 : 3.6, 2.7, BARK)
+  v.limb(knee, fork, 2.7, 2.2, BARK)
   // roots that run out into the ground
-  for (const [dx, dd] of [[-4.4, 0.4], [3.8, 1.2], [0.8, 3.4]]) v.limb([cx + dx * 0.1, base - 4.5, 0], [cx + dx, base + dd * 0.3, dd], 1.5, 0.35, BARK)
+  for (const [dx, dd] of [[-5.6, 0.4], [5, 1.4], [1, 4.2]]) v.limb([cx + dx * 0.1, base - 5.5, 0], [cx + dx, base + dd * 0.3, dd], 1.9, 0.45, BARK)
   if (variant === 4) {
-    crown(v, { x: cx + w * 0.15, y: h * 0.62, rx: w * 0.27, ry: h * 0.22 }, fork, 5, [3.4, 6.4], greens, next)
-    crown(v, { x: cx - w * 0.1, y: h * 0.45, rx: w * 0.33, ry: h * 0.3 }, fork, 7, [3.6, 7.2], greens, next)
-  } else crown(v, form, fork, variant === 3 ? 8 : 9, [3.6, 7.6], greens, next)
+    crown(v, { x: cx + w * 0.17, y: h * 0.7, rx: w * 0.28, ry: h * 0.23 }, fork, 7, [3.3, 6.6], greens, next, 9, 5, 12)
+    crown(v, { x: cx - w * 0.08, y: h * 0.5, rx: w * 0.36, ry: h * 0.36 }, fork, 10, [3.4, 7], greens, next, 9, 8, 18)
+  } else crown(v, form, fork, variant === 3 ? 12 : 13, [3.4, 7.2], greens, next, 9, 9, 26)
   v.paint(g)
 }
 

@@ -350,8 +350,8 @@ export function drawShadows(ctx: CanvasRenderingContext2D, state: IslandState, r
     // a crown lets some light through: its shadow is not as dark as that of a wall
     g.globalAlpha = DECOR_SHADOW
     for (const decor of frontDecorIn(state, range)) {
-      // hedges, beds and gardens carry their own shade in their picture
-      if (decor.item.kind !== 'bed' && decor.item.kind !== 'hedge' && decor.item.kind !== 'garden') drawDecorShadow(g, decor.item, decor.wx, decor.wy, LIGHT)
+      // hedges, beds, gardens and what stands about in a yard carry their own shade in their picture
+      if (decor.item.kind !== 'bed' && decor.item.kind !== 'hedge' && decor.item.kind !== 'garden' && decor.item.kind !== 'yard') drawDecorShadow(g, decor.item, decor.wx, decor.wy, LIGHT)
     }
     g.globalAlpha = 1
   })

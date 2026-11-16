@@ -107,6 +107,8 @@ export class Scene {
   readonly h: number
   /** Makes one building differ from the next of its kind. */
   readonly seed: number
+  /** How much steeper than drawn the roofs of the bodies of this scene are (1: as their plans say). */
+  pitch = 1
 
   constructor(w: number, h: number, seed: number) {
     this.w = w
