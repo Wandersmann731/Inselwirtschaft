@@ -58,6 +58,13 @@ export function windowPane(scene: Scene, g: Ctx, x: number, y: number, w: number
   g.fillStyle = glass
   shape(0.4)
   g.fill()
+  // behind some windows a curtain hangs or a wall shows: the glass is warm there, not dark
+  const room = hash2(Math.round(x * 5), Math.round(y * 5), scene.seed + 67)
+  if (room < 0.5) {
+    g.fillStyle = room < 0.22 ? 'rgba(226, 204, 150, 0.5)' : 'rgba(176, 150, 112, 0.42)'
+    shape(0.4)
+    g.fill()
+  }
   // the sky in the glass: a pale streak across the upper left pane
   g.save()
   shape(0.4)
@@ -291,45 +298,62 @@ function arcade(g: Ctx, w: number, bottom: number, storey: number, count: number
 
 /** Oak beams on plaster for one storey: a sill, a plate, posts between the windows, and what fills the panels. */
 function timberLevel(g: Ctx, w: number, bottom: number, top: number, storey: number, level: number, windows: number, seed: number, frame: Frame): void {
-  const beam = 1.5
-  g.fillStyle = material('timber')
-  const bar = (x: number, y: number, bw: number, bh: number): void => g.fillRect(x, y, bw, bh)
-  const slant = (x0: number, y0: number, x1: number, y1: number, thick = 1.4): void => {
-    g.beginPath()
-    g.moveTo(x0, y0)
-    g.lineTo(x0 + thick, y0)
-    g.lineTo(x1 + thick, y1)
-    g.lineTo(x1, y1)
-    g.closePath()
-    g.fill()
-  }
+  const beam = 2
+  // every beam as a shape: all are laid on in three passes, so no beam's shade falls on another beam
+  const shapes: [number, number][][] = []
+  const bar = (x: number, y: number, bw: number, bh: number): void => void shapes.push([[x, y], [x + bw, y], [x + bw, y + bh], [x, y + bh]])
+  const slant = (x0: number, y0: number, x1: number, y1: number, thick = 1.7): void => void shapes.push([[x0, y0], [x0 + thick, y0], [x1 + thick, y1], [x1, y1]])
   const posts = Math.max(2, windows + 1)
   const rail = bottom - storey * 0.3
   bar(0, bottom - beam, w, beam)
   bar(0, top, w, beam * 0.9)
   for (let i = 0; i <= posts; i++) bar(Math.min(w - beam, (w * i) / posts - (i === 0 ? 0 : beam / 2)), top, beam, bottom - top)
   // a rail under the windows
-  bar(0, rail, w, beam * 0.7)
+  bar(0, rail, w, beam * 0.75)
   const bay = w / posts
   for (let i = 0; i < posts; i++) {
     const x0 = bay * i
     if (frame === 'cross') {
       // a cross in the panel under every window
-      slant(x0 + beam, bottom - beam, x0 + bay - beam - 1.1, rail + 1, 1.1)
-      slant(x0 + bay - beam - 1.1, bottom - beam, x0 + beam, rail + 1, 1.1)
+      slant(x0 + beam, bottom - beam, x0 + bay - beam - 1.3, rail + 1, 1.3)
+      slant(x0 + bay - beam - 1.3, bottom - beam, x0 + beam, rail + 1, 1.3)
       continue
     }
     if (frame === 'studs') {
-      for (const share of [0.3, 0.7]) bar(x0 + bay * share - 0.45, top, 0.9, bottom - top)
+      for (const share of [0.3, 0.7]) bar(x0 + bay * share - 0.6, top, 1.2, bottom - top)
       continue
     }
     // braces: in the outer bays, leaning to the corner; which other bays have one differs from house to house
     const outer = i === 0 || i === posts - 1
     if (!outer && hash2(i, level, seed) < 0.6) continue
     const leanRight = i === 0 ? true : i === posts - 1 ? false : hash2(i, level, seed + 1) < 0.5
-    if (leanRight) slant(x0 + beam, bottom - beam, x0 + bay * 0.62 - 1.4, rail)
-    else slant(x0 + bay - beam - 1.4, bottom - beam, x0 + bay * 0.38, rail)
+    if (leanRight) slant(x0 + beam, bottom - beam, x0 + bay * 0.62 - 1.7, rail)
+    else slant(x0 + bay - beam - 1.7, bottom - beam, x0 + bay * 0.38, rail)
   }
+  const lay = (dx: number, dy: number): void => {
+    g.beginPath()
+    for (const shape of shapes) {
+      shape.forEach(([x, y], k) => (k ? g.lineTo(x + dx, y + dy) : g.moveTo(x + dx, y + dy)))
+      g.closePath()
+    }
+    g.fill()
+  }
+  // the beams stand a finger's breadth before the plaster: their shade lies on it, to the right and below
+  g.fillStyle = `rgba(${DUSK}, 0.3)`
+  lay(0.45, 0.5)
+  g.fillStyle = material('timber')
+  lay(0, 0)
+  // and their upper edges catch the light
+  g.save()
+  g.beginPath()
+  for (const shape of shapes) {
+    shape.forEach(([x, y], k) => (k ? g.lineTo(x, y) : g.moveTo(x, y)))
+    g.closePath()
+  }
+  g.clip()
+  g.fillStyle = 'rgba(255, 226, 180, 0.2)'
+  lay(0, -beam + 0.3)
+  g.restore()
 }
 
 /** Ivy that has climbed a wall from its foot at `x0`: dark leaves below, lighter ones on top, thinning out upwards. */

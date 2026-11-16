@@ -48,7 +48,7 @@ export interface Surface {
 export type Face = Surface | Mat | null
 
 export const surface = (face: Surface | Mat): Surface => (typeof face === 'string' ? { mat: face } : face)
-const SHADE: Record<Light, string | null> = { lit: null, top: null, shade: 'rgb(132, 136, 178)', back: 'rgb(104, 108, 146)' }
+const SHADE: Record<Light, string | null> = { lit: null, top: null, shade: 'rgb(112, 114, 158)', back: 'rgb(96, 98, 138)' }
 export const DUSK = '16, 20, 44'
 
 export function trace(g: Ctx, poly: P2[]): void {
@@ -197,7 +197,7 @@ export class Scene {
       g.fillRect(-1, -1, w + 2, h + 2)
     }
     // a roof in the shade still sees the sky: it is not as dark as a wall
-    const shade = kind === 'roof' && light === 'shade' ? 'rgb(150, 154, 192)' : SHADE[light]
+    const shade = kind === 'roof' && light === 'shade' ? 'rgb(128, 132, 174)' : SHADE[light]
     if (shade) {
       g.globalCompositeOperation = 'multiply'
       g.fillStyle = shade
@@ -214,7 +214,7 @@ export class Scene {
     } else if (light === 'lit') {
       // the afternoon sun: warm, and it lifts the light tones more than the dark ones
       g.globalCompositeOperation = 'overlay'
-      g.fillStyle = 'rgba(255, 222, 168, 0.26)'
+      g.fillStyle = 'rgba(255, 222, 168, 0.34)'
       g.fillRect(-1, -1, w + 2, h + 2)
     }
     g.restore()

@@ -110,6 +110,31 @@ describe('materials', () => {
     }
   })
 
+  it('show roofs tile by tile: a dark joint between two tiles of a row, and a line of shade under the edge of every row', () => {
+    const mean = (mat: Mat, pick: (x: number, y: number) => boolean): number => {
+      let sum = 0
+      let n = 0
+      for (let y = 0; y < 128; y++) {
+        for (let x = 0; x < 128; x++) {
+          if (!pick(x, y)) continue
+          sum += texelOf(mat, x, y)[0]
+          n++
+        }
+      }
+      return sum / n
+    }
+    // rows are 8 texels high; a tile is 8 texels long, a slate 16, and every other row is moved by half
+    for (const [mat, long] of [['tile', 8], ['slate', 16]] as [Mat, number][]) {
+      const along = (x: number, y: number): number => ((x + (Math.floor(y / 8) % 2) * (long / 2)) % 256) % long
+      const joint = mean(mat, (x, y) => along(x, y) === 0 && y % 8 >= 2)
+      const middle = mean(mat, (x, y) => along(x, y) === long / 2 && y % 8 >= 2)
+      expect(joint).toBeLessThan(middle * 0.86)
+      const under = mean(mat, (_x, y) => y % 8 === 0)
+      const face = mean(mat, (_x, y) => y % 8 === 3)
+      expect(under).toBeLessThan(face * 0.8)
+    }
+  })
+
   it('have structure: no material is one flat colour', () => {
     for (const mat of all) {
       let darkest = 255

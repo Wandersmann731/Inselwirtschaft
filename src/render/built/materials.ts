@@ -138,11 +138,11 @@ const RECIPES: Record<Mat, { base: [number, number, number]; at: Texel }> = {
   },
   // dark oak of a timber frame
   timber: {
-    base: [78, 56, 38],
+    base: [66, 46, 32],
     at: (x, y) => {
       const grain = 0.86 + 0.28 * noise(x * 6, y, 16, 91)
       const w = weather(x, y, 92) * grain
-      return [84 * w, 60 * w, 40 * w]
+      return [70 * w, 49 * w, 34 * w]
     },
   },
   // clay roof tiles in rows that overlap: each row throws a shade on the one below, each tile has its own tone
@@ -150,11 +150,14 @@ const RECIPES: Record<Mat, { base: [number, number, number]; at: Texel }> = {
     base: [158, 92, 66],
     at: (x, y) => {
       const c = courses(x, y, 8, 8, 0.9)
-      const tone = 0.8 + 0.36 * hash2(c.id, 1, 101)
+      const tone = 0.74 + 0.48 * hash2(c.id, 1, 101)
       const moss = hash2(c.id, 2, 102) < 0.02 ? 0.5 : 0
-      const lap = 0.58 + 0.5 * smooth((1 - c.inRow) / 0.75)
-      const curve = 0.9 + 0.14 * Math.sin(c.inBlock * Math.PI)
-      const w = weather(x, y, 103) * tone * lap * curve
+      // every row lies on the one below: light at its lower edge, and a dark line of shade right under that edge
+      const lap = (0.6 + 0.5 * smooth((1 - c.inRow) / 0.75)) * (c.inRow < 0.16 ? 0.62 : 1)
+      const curve = 0.86 + 0.2 * Math.sin(c.inBlock * Math.PI)
+      // between two tiles of a row runs a dark joint
+      const joint = 0.72 + 0.28 * smooth(Math.min(c.inBlock, 1 - c.inBlock) / 0.1)
+      const w = weather(x, y, 103) * tone * lap * curve * joint
       return [(166 - 50 * moss) * w, (96 + 20 * moss) * w, (68 - 6 * moss) * w]
     },
   },
@@ -162,9 +165,10 @@ const RECIPES: Record<Mat, { base: [number, number, number]; at: Texel }> = {
     base: [96, 104, 122],
     at: (x, y) => {
       const c = courses(x, y, 8, 16, 0.8)
-      const tone = 0.82 + 0.32 * hash2(c.id, 1, 111)
-      const lap = 0.64 + 0.42 * smooth((1 - c.inRow) / 0.7)
-      const w = weather(x, y, 112) * tone * lap
+      const tone = 0.76 + 0.44 * hash2(c.id, 1, 111)
+      const lap = (0.64 + 0.42 * smooth((1 - c.inRow) / 0.7)) * (c.inRow < 0.16 ? 0.64 : 1)
+      const joint = 0.74 + 0.26 * smooth(Math.min(c.inBlock, 1 - c.inBlock) / 0.06)
+      const w = weather(x, y, 112) * tone * lap * joint
       return [100 * w, 108 * w, 126 * w]
     },
   },

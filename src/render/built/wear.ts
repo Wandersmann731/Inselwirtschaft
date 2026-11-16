@@ -96,15 +96,15 @@ export function wear(g: Ctx, w: number, h: number, kind: 'wall' | 'roof', mat: M
   g.translate(-ox, -oy)
   g.globalCompositeOperation = 'multiply'
   // on a roof the rain washes most of it away again
-  g.globalAlpha = kind === 'roof' ? 0.6 * age : age
+  g.globalAlpha = kind === 'roof' ? 0.38 * age : age
   g.fillStyle = made.stains
   g.fillRect(ox - 1, oy - 1, w + 2, h + 2)
   g.globalCompositeOperation = 'source-over'
   g.fillStyle = made.moss
   if (kind === 'roof' && mat !== 'verdigris' && mat !== 'cloth') {
-    g.globalAlpha = 0.3 * age
+    g.globalAlpha = 0.16 * age
     g.fillRect(ox - 1, oy - 1, w + 2, h + 2)
-    g.globalAlpha = 0.5 * age
+    g.globalAlpha = 0.34 * age
     g.fillRect(ox - 1, oy + h * 0.58, w + 2, h * 0.42 + 2)
   } else if (kind === 'wall' && onGround && h > 8) {
     // rain splashes earth up the foot of a wall
